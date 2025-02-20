@@ -1,0 +1,3 @@
+server_url: "http://localhost:8080"
+upload_dir: "./uploads"
+download_dir: "./downloads"
