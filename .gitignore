@@ -78,5 +78,5 @@ Temporary Items
 
 # End of https://www.toptal.com/developers/gitignore/api/go,visualstudiocode,macos
 
-client/uploads/*
-client/downloads/*
+/client/uploads/**
+/client/downloads/**
