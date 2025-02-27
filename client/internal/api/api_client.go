@@ -7,7 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"time"
+	"path/filepath"
 )
 
 type ApiClient struct {
@@ -22,7 +22,8 @@ func NewApiClient(baseURL string) *ApiClient {
 	}
 }
 
-func (c *ApiClient) UploadFile(filePath string) error {
+// LongPollingUploadFile lädt eine ganze Datei via POST hoch.
+func (c *ApiClient) LongPollingUploadFile(filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -31,7 +32,8 @@ func (c *ApiClient) UploadFile(filePath string) error {
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
-	part, err := writer.CreateFormFile("file", file.Name())
+	// Mit filepath.Base anstatt file.Name() wird lediglich der Dateiname genutzt.
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
 	if err != nil {
 		return err
 	}
@@ -40,7 +42,7 @@ func (c *ApiClient) UploadFile(filePath string) error {
 	}
 	writer.Close()
 
-	req, err := http.NewRequest("POST", c.BaseURL+"/upload", &buf)
+	req, err := http.NewRequest("POST", c.BaseURL+"/poll/upload", &buf)
 	if err != nil {
 		return err
 	}
@@ -50,112 +52,42 @@ func (c *ApiClient) UploadFile(filePath string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	// Direktes Schließen statt defer inside der Schleife
+	resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to upload file: %s", resp.Status)
 	}
-
 	return nil
 }
 
-func (c *ApiClient) DownloadFile(fileID string) ([]byte, error) {
-	resp, err := c.HTTPClient.Get(c.BaseURL + "/download/" + fileID)
+// LongPollingDownloadFile lädt per GET den Dateiinhalt vom Backend herunter und speichert ihn im Download-Verzeichnis.
+func (c *ApiClient) LongPollingDownloadFile(fileID, downloadDir string) error {
+	// Erstelle den Ziel-Dateipfad
+	filePath := filepath.Join(downloadDir, fileID)
+	outFile, err := os.Create(filePath)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	defer outFile.Close()
+
+	// Erzeuge die GET-Anfrage mit dem Query-Parameter id
+	req, err := http.NewRequest("GET", c.BaseURL+"/poll/download?id="+fileID, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to download file: %s", resp.Status)
+		return fmt.Errorf("failed to download file: %s", resp.Status)
 	}
 
-	return io.ReadAll(resp.Body)
-}
-
-func (c *ApiClient) LongPollingUploadFile(filePath string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	for {
-		var buf bytes.Buffer
-		writer := multipart.NewWriter(&buf)
-		part, err := writer.CreateFormFile("file", file.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := io.CopyN(part, file, 1024*1024); err != nil && err != io.EOF {
-			return err
-		}
-		writer.Close()
-
-		req, err := http.NewRequest("POST", c.BaseURL+"/poll/upload", &buf)
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Content-Type", writer.FormDataContentType())
-
-		resp, err := c.HTTPClient.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to upload file chunk: %s", resp.Status)
-		}
-
-		// Simulate a delay for long polling
-		time.Sleep(1 * time.Second)
-
-		// Check if the upload is complete
-		if err == io.EOF {
-			break
-		}
-	}
-
-	return nil
-}
-
-func (c *ApiClient) LongPollingDownloadFile(fileID, downloadDir string) error {
-	filePath := downloadDir + "/" + fileID
-	file, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	for {
-		resp, err := c.HTTPClient.Get(c.BaseURL + "/poll/download/" + fileID)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to download file chunk: %s", resp.Status)
-		}
-
-		chunk, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if _, err := file.Write(chunk); err != nil {
-			return err
-		}
-
-		// Simulate a delay for long polling
-		time.Sleep(1 * time.Second)
-
-		// Check if the download is complete
-		if len(chunk) < 1024*1024 {
-			break
-		}
-	}
-
-	return nil
+	// Kopiere den Antwort-Body in die Zieldatei
+	_, err = io.Copy(outFile, resp.Body)
+	return err
 }
