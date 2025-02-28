@@ -3,27 +3,33 @@ package config
 import (
 	"log"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
+type Job struct {
+	ID            string `yaml:"id"`
+	UploadToken   string `yaml:"uploadToken"`
+	DownloadToken string `yaml:"downloadToken"`
+}
+
 type Config struct {
-	Port           string
-	FileUploadPath string
-	LogLevel       string
+	Port           string `yaml:"port"`
+	FileUploadPath string `yaml:"fileUploadPath"`
+	LogLevel       string `yaml:"logLevel"`
+	Jobs           []Job  `yaml:"jobs"`
 }
 
 func LoadConfig() *Config {
-	return &Config{
-		Port:           getEnv("PORT", "8080"),
-		FileUploadPath: getEnv("FILE_UPLOAD_PATH", "./uploads"),
-		LogLevel:       getEnv("LOG_LEVEL", "info"),
+	data, err := os.ReadFile("config.yml")
+	if err != nil {
+		log.Fatalf("Error reading config.yml: %v", err)
 	}
-}
 
-func getEnv(key, fallback string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		log.Printf("Environment variable %s not set, using default: %s", key, fallback)
-		return fallback
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		log.Fatalf("Error parsing config.yml: %v", err)
 	}
-	return value
+
+	return &cfg
 }

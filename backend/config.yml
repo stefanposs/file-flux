@@ -1,0 +1,10 @@
+port: "8080"
+fileUploadPath: "./uploads"
+logLevel: "info"
+jobs:
+  - id: "job-12345"
+    uploadToken: "upload-abc"
+    downloadToken: "download-def"
+  - id: "job-67890"
+    uploadToken: "upload-ghi"
+    downloadToken: "download-jkl"

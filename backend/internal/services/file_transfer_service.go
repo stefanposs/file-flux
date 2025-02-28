@@ -5,30 +5,64 @@ import (
 	"io"
 	"net/http"
 	"sync"
+
+	"github.com/stefanposs/file-flux/backend/pkg/config"
 )
 
-type FileTransferService struct{}
-
-var (
-	// fileStorage speichert die Dateiinhalte (Schlüssel: Dateiname)
-	fileStorage = make(map[string][]byte)
-	// storageMu schützt fileStorage
-	storageMu sync.Mutex
-)
-
-func NewFileTransferService() *FileTransferService {
-	return &FileTransferService{}
+type Job struct {
+	ID            string
+	UploadToken   string
+	DownloadToken string
 }
 
-// LongPollingUpload liest die hochgeladene Datei vollständig ein und speichert sie im Speicher.
+type FileTransferService struct {
+	// jobs: Map jobID -> Job (aus config.yml geladen)
+	jobs map[string]Job
+}
+
+// fileStorage speichert den Dateiinhalt pro Job (In-Memory, z. B. als Zwischenpuffer)
+var (
+	fileStorage = make(map[string][]byte)
+	storageMu   sync.Mutex
+)
+
+// NewFileTransferService erstellt einen FileTransferService und lädt die Jobs aus der Backend-Konfiguration.
+func NewFileTransferService(cfg *config.Config) *FileTransferService {
+	jobs := make(map[string]Job)
+	for _, j := range cfg.Jobs {
+		jobs[j.ID] = Job{
+			ID:            j.ID,
+			UploadToken:   j.UploadToken,
+			DownloadToken: j.DownloadToken,
+		}
+	}
+	return &FileTransferService{
+		jobs: jobs,
+	}
+}
+
+// LongPollingUpload liest den Dateiinhalt aus dem Request und speichert ihn unter der jeweiligen Job-ID.
+// Es wird geprüft, ob die übermittelten Parameter job und token gültig sind.
 func (s *FileTransferService) LongPollingUpload(w http.ResponseWriter, r *http.Request) error {
+	jobID := r.URL.Query().Get("job")
+	token := r.URL.Query().Get("token")
+	if jobID == "" || token == "" {
+		http.Error(w, "Job ID and token required", http.StatusBadRequest)
+		return errors.New("job id and token required")
+	}
+	job, exists := s.jobs[jobID]
+	if !exists || token != job.UploadToken {
+		http.Error(w, "Invalid job or upload token", http.StatusUnauthorized)
+		return errors.New("invalid job or token")
+	}
+
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
 		http.Error(w, "File is required", http.StatusBadRequest)
 		return err
 	}
 
-	file, fileHeader, err := r.FormFile("file")
+	file, _, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Failed to open file", http.StatusInternalServerError)
 		return err
@@ -41,9 +75,8 @@ func (s *FileTransferService) LongPollingUpload(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	// Datei im In-Memory-Speicher ablegen
 	storageMu.Lock()
-	fileStorage[fileHeader.Filename] = data
+	fileStorage[jobID] = data
 	storageMu.Unlock()
 
 	w.WriteHeader(http.StatusOK)
@@ -51,23 +84,29 @@ func (s *FileTransferService) LongPollingUpload(w http.ResponseWriter, r *http.R
 	return nil
 }
 
-// LongPollingDownload sucht die Datei anhand der Dateiname (fileID)
-// und schreibt den Inhalt in den Response-Body, danach wird sie gelöscht.
+// LongPollingDownload liefert den im In-Memory-Speicher abgelegten Dateicontent zurück und löscht diesen anschließend.
+// Auch hier erfolgt die Prüfung mit Job-ID und passendem Download-Token.
 func (s *FileTransferService) LongPollingDownload(w http.ResponseWriter, r *http.Request) error {
-	fileID := r.URL.Query().Get("id")
-	if fileID == "" {
-		http.Error(w, "File ID is required", http.StatusBadRequest)
-		return errors.New("file ID is required")
+	jobID := r.URL.Query().Get("job")
+	token := r.URL.Query().Get("token")
+	if jobID == "" || token == "" {
+		http.Error(w, "Job ID and token required", http.StatusBadRequest)
+		return errors.New("job id and token required")
+	}
+	job, exists := s.jobs[jobID]
+	if !exists || token != job.DownloadToken {
+		http.Error(w, "Invalid job or download token", http.StatusUnauthorized)
+		return errors.New("invalid job or token")
 	}
 
 	storageMu.Lock()
-	data, ok := fileStorage[fileID]
+	data, ok := fileStorage[jobID]
 	if !ok {
 		storageMu.Unlock()
 		http.Error(w, "File not found", http.StatusNotFound)
 		return errors.New("file not found")
 	}
-	delete(fileStorage, fileID)
+	delete(fileStorage, jobID)
 	storageMu.Unlock()
 
 	w.WriteHeader(http.StatusOK)

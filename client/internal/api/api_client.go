@@ -22,8 +22,8 @@ func NewApiClient(baseURL string) *ApiClient {
 	}
 }
 
-// LongPollingUploadFile lädt eine ganze Datei via POST hoch.
-func (c *ApiClient) LongPollingUploadFile(filePath string) error {
+// LongPollingUploadFile lädt eine Datei via POST hoch und sendet dabei die Job-ID und den Upload-Token mit.
+func (c *ApiClient) LongPollingUploadFile(filePath, jobID, uploadToken string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -32,7 +32,6 @@ func (c *ApiClient) LongPollingUploadFile(filePath string) error {
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
-	// Mit filepath.Base anstatt file.Name() wird lediglich der Dateiname genutzt.
 	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
 	if err != nil {
 		return err
@@ -42,7 +41,9 @@ func (c *ApiClient) LongPollingUploadFile(filePath string) error {
 	}
 	writer.Close()
 
-	req, err := http.NewRequest("POST", c.BaseURL+"/poll/upload", &buf)
+	// URL mit Query-Parameter für Job und Token
+	reqURL := fmt.Sprintf("%s/poll/upload?job=%s&token=%s", c.BaseURL, jobID, uploadToken)
+	req, err := http.NewRequest("POST", reqURL, &buf)
 	if err != nil {
 		return err
 	}
@@ -52,8 +53,7 @@ func (c *ApiClient) LongPollingUploadFile(filePath string) error {
 	if err != nil {
 		return err
 	}
-	// Direktes Schließen statt defer inside der Schleife
-	resp.Body.Close()
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to upload file: %s", resp.Status)
@@ -61,9 +61,9 @@ func (c *ApiClient) LongPollingUploadFile(filePath string) error {
 	return nil
 }
 
-// LongPollingDownloadFile lädt per GET den Dateiinhalt vom Backend herunter und speichert ihn im Download-Verzeichnis.
-func (c *ApiClient) LongPollingDownloadFile(fileID, downloadDir string) error {
-	// Erstelle den Ziel-Dateipfad
+// LongPollingDownloadFile lädt den Dateiinhalt via GET vom Server herunter, speichert ihn im angegebenen Download-Verzeichnis
+// und sendet dabei Job-ID sowie Download-Token.
+func (c *ApiClient) LongPollingDownloadFile(fileID, downloadDir, jobID, downloadToken string) error {
 	filePath := filepath.Join(downloadDir, fileID)
 	outFile, err := os.Create(filePath)
 	if err != nil {
@@ -71,8 +71,9 @@ func (c *ApiClient) LongPollingDownloadFile(fileID, downloadDir string) error {
 	}
 	defer outFile.Close()
 
-	// Erzeuge die GET-Anfrage mit dem Query-Parameter id
-	req, err := http.NewRequest("GET", c.BaseURL+"/poll/download?id="+fileID, nil)
+	// URL mit Query-Parameter für Job und Token
+	reqURL := fmt.Sprintf("%s/poll/download?job=%s&token=%s", c.BaseURL, jobID, downloadToken)
+	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,6 @@ func (c *ApiClient) LongPollingDownloadFile(fileID, downloadDir string) error {
 		return fmt.Errorf("failed to download file: %s", resp.Status)
 	}
 
-	// Kopiere den Antwort-Body in die Zieldatei
 	_, err = io.Copy(outFile, resp.Body)
 	return err
 }

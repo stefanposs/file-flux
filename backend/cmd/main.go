@@ -14,8 +14,8 @@ func main() {
 	// Konfiguration laden
 	cfg := config.LoadConfig()
 
-	// Service initialisieren
-	fileTransferService := services.NewFileTransferService()
+	// Service initialisieren (Jobs aus config werden geladen)
+	fileTransferService := services.NewFileTransferService(cfg)
 
 	// Handler initialisieren
 	fileTransferHandler := handlers.NewFileTransferHandler(fileTransferService)

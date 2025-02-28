@@ -113,3 +113,17 @@ fmt.Println("File downloaded successfully.")
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
+
+## TODOs
+
+- [ ] Remove internal und pkg in client und backend
+- [ ] Add unit tests for the client and server
+- [ ] Improve error handling and logging
+- [ ] Add support for additional file transfer protocols
+- [ ] Create detailed documentation for API endpoints
+- [ ] Implement a web-based dashboard for monitoring transfers
+- [ ] Optimize data compression algorithms
+- [ ] Enhance security features (e.g., encryption, authentication)
+- [ ] Set up continuous integration and deployment (CI/CD) pipeline
+- [ ] Write integration tests for ngrok functionality
+- [ ] Add examples for different use cases in the documentation

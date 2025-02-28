@@ -10,75 +10,81 @@ import (
 	"github.com/stefanposs/file-flux/client/pkg/config"
 )
 
+func startJobWatcher(job config.ClientJob, client *api.ApiClient) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Printf("[%s] Error creating file watcher: %v", job.JobID, err)
+		return
+	}
+	defer watcher.Close()
+
+	// Add the job-specific upload directory to the watcher.
+	err = watcher.Add(job.UploadDir)
+	if err != nil {
+		log.Printf("[%s] Error adding directory to watcher: %v", job.JobID, err)
+		return
+	}
+
+	log.Printf("[%s] Watching directory: %s", job.JobID, job.UploadDir)
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Op&fsnotify.Create == fsnotify.Create {
+				filePath := event.Name
+				log.Printf("[%s] New file detected: %s", job.JobID, filePath)
+
+				// Upload the file (Job-ID und Upload-Token werden übergeben)
+				if err := client.LongPollingUploadFile(filePath, job.JobID, job.UploadToken); err != nil {
+					log.Printf("[%s] Error uploading file: %v", job.JobID, err)
+					continue
+				}
+				log.Printf("[%s] File uploaded successfully: %s", job.JobID, filePath)
+
+				// Download the file (Job-ID und Download-Token werden übergeben)
+				fileName := filepath.Base(filePath)
+				if err := client.LongPollingDownloadFile(fileName, job.DownloadDir, job.JobID, job.DownloadToken); err != nil {
+					log.Printf("[%s] Error downloading file: %v", job.JobID, err)
+					continue
+				}
+				log.Printf("[%s] File downloaded successfully: %s", job.JobID, fileName)
+
+				// Lösche die hochgeladene Datei
+				if err := os.Remove(filePath); err != nil {
+					log.Printf("[%s] Error deleting file: %v", job.JobID, err)
+				} else {
+					log.Printf("[%s] File deleted successfully: %s", job.JobID, filePath)
+				}
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Printf("[%s] Error watching files: %v", job.JobID, err)
+		}
+	}
+}
+
 func main() {
-	// Load configuration
+	// Konfiguration laden (enthält nun mehrere Jobs)
 	configPath := "pkg/config/config.yml"
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Could not load config: %v", err)
 	}
 
-	// Initialize the API client
+	// API-Client initialisieren
 	client := api.NewApiClient(cfg.ServerURL)
 
-	// Watch the uploads directory for new files
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatalf("Error creating file watcher: %v", err)
-	}
-	defer watcher.Close()
-
-	done := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				if event.Op&fsnotify.Create == fsnotify.Create {
-					filePath := event.Name
-					log.Printf("New file detected: %s", filePath)
-
-					// Upload the file
-					err := client.LongPollingUploadFile(filePath)
-					if err != nil {
-						log.Printf("Error uploading file: %v", err)
-						continue
-					}
-					log.Printf("File uploaded successfully: %s", filePath)
-
-					// Download the file
-					fileName := filepath.Base(filePath)
-					err = client.LongPollingDownloadFile(fileName, cfg.DownloadDir)
-					if err != nil {
-						log.Printf("Error downloading file: %v", err)
-						continue
-					}
-					log.Printf("File downloaded successfully: %s", fileName)
-
-					// Delete the uploaded file
-					err = os.Remove(filePath)
-					if err != nil {
-						log.Printf("Error deleting file: %v", err)
-					} else {
-						log.Printf("File deleted successfully: %s", filePath)
-					}
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Printf("Error watching files: %v", err)
-			}
-		}
-	}()
-
-	err = watcher.Add(cfg.UploadDir)
-	if err != nil {
-		log.Fatalf("Error adding directory to watcher: %v", err)
+	// Für jeden definierten Job einen separaten Watcher starten
+	for _, job := range cfg.Jobs {
+		go startJobWatcher(job, client)
+		log.Printf("Started watcher for JobID: %s", job.JobID)
 	}
 
-	<-done
+	// Blockiere main(), damit die Goroutinen weiterlaufen
+	select {}
 }
