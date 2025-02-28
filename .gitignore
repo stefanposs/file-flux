@@ -80,3 +80,6 @@ Temporary Items
 
 /client/uploads/**
 /client/downloads/**
+
+# ngrok
+ngrok.yml
