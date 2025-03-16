@@ -1,105 +1,172 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import { isDemoMode, getDemoJobs } from '../../demo-mode';
 
-if (!customElements.get('ff-job-detail')) {
-  @customElement('ff-job-detail')
-  export class JobDetail extends LitElement {
-    @property({ type: String }) jobId = '';
+@customElement('ff-job-detail')
+export class JobDetail extends LitElement {
+  @property({ type: String }) jobId = '';
+  @state() private isLoading = true;
+  @state() private job = null;
+  @state() private error = null;
 
-    render() {
-      return html`<div>Job-Details für ID: ${this.jobId} werden geladen...</div>`;
+  static styles = css`
+    :host {
+      display: block;
+    }
+    
+    .loading-container, .error-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 48px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    _formatCronExpression(cron: string): string {
-      // Vereinfachte Darstellung von Cron-Ausdrücken
-      if (cron === '0 0 * * *') return 'Täglich um Mitternacht';
-      if (cron === '0 12 * * 1-5') return 'Werktags um 12 Uhr';
-      if (cron === '0 23 * * *') return 'Täglich um 23 Uhr';
-      return cron;
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(18, 46, 83, 0.1);
+      border-left-color: #122e53;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
 
-    _formatDate(dateStr: string): string {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    _formatDateTime(dateStr: string): string {
-      const date = new Date(dateStr);
-      return date.toLocaleString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    .error-message {
+      color: #dc3545;
+      text-align: center;
     }
+    
+    /* Weitere CSS-Stile hier */
+  `;
 
-    _formatFileSize(bytes: number): string {
-      if (bytes === 0) return '0 Bytes';
+  connectedCallback() {
+    super.connectedCallback();
+    this._loadJobDetails();
+  }
+
+  async _loadJobDetails() {
+    try {
+      this.isLoading = true;
       
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    _formatSpeed(bytesPerSecond: number): string {
-      return this._formatFileSize(bytesPerSecond) + '/s';
-    }
-
-    _formatStatus(status: string): string {
-      switch (status) {
-        case 'completed': return 'Erfolgreich';
-        case 'failed': return 'Fehlgeschlagen';
-        case 'running': return 'Wird ausgeführt';
-        case 'pending': return 'Ausstehend';
-        default: return status;
+      if (isDemoMode()) {
+        // Im Demo-Modus Daten aus den Demo-Daten laden
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simuliere Netzwerklatenz
+        const jobs = getDemoJobs();
+        const job = jobs.find(j => j.id === this.jobId);
+        
+        if (job) {
+          this.job = job;
+        } else {
+          this.error = 'Job nicht gefunden';
+        }
+      } else {
+        // Hier würde später der API-Aufruf kommen
+        this.error = 'API noch nicht implementiert';
       }
+    } catch (err) {
+      this.error = 'Fehler beim Laden des Jobs: ' + (err instanceof Error ? err.message : String(err));
+      console.error('Error loading job:', err);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  render() {
+    if (this.isLoading) {
+      return html`
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+        </div>
+      `;
     }
 
-    _navigateBack() {
-      window.location.href = '/jobs';
+    if (this.error) {
+      return html`
+        <div class="error-container">
+          <div class="error-message">
+            <div>🚫 ${this.error}</div>
+            <button @click=${this._loadJobDetails}>Erneut versuchen</button>
+          </div>
+        </div>
+      `;
     }
 
-    _editJob() {
-      if (this.job) {
-        window.location.href = `/jobs/edit/${this.job.id}`;
-      }
+    if (!this.job) {
+      return html`
+        <div class="error-container">
+          <div class="error-message">
+            <div>Job nicht gefunden</div>
+            <button @click=${this._navigateBack}>Zurück zur Job-Liste</button>
+          </div>
+        </div>
+      `;
     }
 
-    _pauseJob() {
+    // Der Hauptinhalt der Job-Detailansicht
+    return html`
+      <div>
+        <div class="header">
+          <button class="back-button" @click=${this._navigateBack}>
+            ← Zurück zur Job-Liste
+          </button>
+          
+          <h1 class="job-name">${this.job.name}</h1>
+          
+          <div class="job-actions">
+            <button class="job-action-button" @click=${this._editJob}>
+              ✏️ Bearbeiten
+            </button>
+            <button class="job-action-button delete-button" @click=${this._deleteJob}>
+              🗑️ Löschen
+            </button>
+          </div>
+        </div>
+        
+        <!-- Hier weitere Details des Jobs anzeigen -->
+        <div class="job-details">
+          <div class="detail-item">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+              <span class="status-badge status-${this.job.status}">
+                ${this._formatStatus(this.job.status)}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Weitere Eigenschaften des Jobs hier anzeigen -->
+        </div>
+      </div>
+    `;
+  }
+
+  _formatStatus(status) {
+    switch (status) {
+      case 'completed': return 'Abgeschlossen';
+      case 'running': return 'Wird ausgeführt';
+      case 'pending': return 'Ausstehend';
+      case 'failed': return 'Fehlgeschlagen';
+      default: return status;
+    }
+  }
+
+  _navigateBack() {
+    window.location.href = '/jobs';
+  }
+
+  _editJob() {
+    window.location.href = `/jobs/edit/${this.jobId}`;
+  }
+
+  _deleteJob() {
+    if (confirm(`Möchten Sie den Job "${this.job.name}" wirklich löschen?`)) {
       // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      if (this.job) {
-        this.job = { ...this.job, status: 'inactive' };
-      }
-    }
-
-    _startJob() {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      if (this.job) {
-        this.job = { ...this.job, status: 'active' };
-      }
-    }
-
-    _showDeleteConfirm() {
-      this.showConfirmDelete = true;
-    }
-
-    _cancelDelete() {
-      this.showConfirmDelete = false;
-    }
-
-    _confirmDelete() {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      alert(`Job "${this.job?.name}" würde jetzt gelöscht werden.`);
-      this.showConfirmDelete = false;
+      alert(`Job "${this.job.name}" würde jetzt gelöscht werden.`);
       this._navigateBack();
     }
   }
