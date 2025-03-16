@@ -1,11 +1,17 @@
 module github.com/stefanposs/file-flux/backend
 
-go 1.23
+go 1.21.0
 
 require (
-	github.com/gin-gonic/gin v1.10.0
-	github.com/joho/godotenv v1.5.1
+	github.com/gin-gonic/gin v1.9.1
+	github.com/google/uuid v1.3.1
+	github.com/stretchr/testify v1.8.4
+	go.uber.org/zap v1.26.0
+	gorm.io/driver/postgres v1.5.2
+	gorm.io/gorm v1.25.4
 )
+
+// weitere Abhängigkeiten werden automatisch durch go mod tidy hinzugefügt
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

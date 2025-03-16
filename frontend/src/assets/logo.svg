@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hintergrund-Kreis -->
+  <circle cx="100" cy="100" r="90" fill="#122e53" />
+  
+  <!-- "F" Buchstabe stilisiert -->
+  <path d="M60 50H140V150H60V50Z" fill="#ffd202" />
+  <path d="M60 50H140V70H60V50Z" fill="#122e53" />
+  <path d="M85 90H125V110H85V90Z" fill="#122e53" />
+  <path d="M60 50V150H140V50H60ZM130 140H70V60H130V140Z" fill="#122e53" />
+  
+  <!-- Pfeile für Dateitransfer -->
+  <path d="M40 100L20 80V95H5V105H20V120L40 100Z" fill="#ffd202" />
+  <path d="M160 100L180 120V105H195V95H180V80L160 100Z" fill="#ffd202" />
+</svg> 

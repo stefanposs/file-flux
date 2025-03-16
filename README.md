@@ -1,4 +1,29 @@
-# File Flux
+# file flux
+
+Eine skalierbare SaaS-Plattform zum Streamen von Daten aus Legacy-Systemen an andere Rechner oder Cloud-Speicher.
+
+## Komponenten
+
+- **Backend**: Go-basierte RESTful API mit Job-Management, Event-Logging und Agent-Kommunikation
+- **Frontend**: Responsives Dashboard mit lit.js und TypeScript
+- **Agent**: Go-basierter Client mit YAML-Konfiguration für Dateiüberwachung und -übertragung
+
+## Entwicklung
+
+```bash
+# Backend starten
+cd backend && go run cmd/server/main.go
+
+# Frontend entwickeln
+cd frontend && npm run dev
+
+# Agent bauen
+cd agent && go build -o fileflux-agent cmd/agent/main.go
+```
+
+## Dokumentation
+
+Detaillierte Dokumentation finden Sie im `docs/`-Verzeichnis.
 
 ## Overview
 
