@@ -47,7 +47,7 @@ export class AgentDetail extends LitElement {
       width: 40px;
       height: 40px;
       border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -129,7 +129,7 @@ export class AgentDetail extends LitElement {
     .back-button {
       background: none;
       border: none;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       cursor: pointer;
       font-size: 14px;
       padding: 0;
@@ -141,7 +141,7 @@ export class AgentDetail extends LitElement {
     .agent-name {
       font-size: 24px;
       margin: 0;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
     }
     
     .agent-actions {
@@ -178,8 +178,8 @@ export class AgentDetail extends LitElement {
     }
     
     .tab.active {
-      color: #122e53;
-      border-bottom: 2px solid #122e53;
+      color: var(--primary-color, #4f46e5);
+      border-bottom: 2px solid var(--primary-color, #4f46e5);
       font-weight: 500;
     }
     
@@ -191,7 +191,7 @@ export class AgentDetail extends LitElement {
     }
     
     .section-title {
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       margin-top: 0;
     }
     
@@ -357,7 +357,7 @@ export class AgentDetail extends LitElement {
     
     .copy-button {
       padding: 8px 16px;
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
       border: none;
       border-radius: 4px;

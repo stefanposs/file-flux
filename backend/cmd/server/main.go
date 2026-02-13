@@ -17,6 +17,9 @@ import (
 	tokensvc "github.com/stefanposs/file-flux/backend/application/token"
 	transfersvc "github.com/stefanposs/file-flux/backend/application/transfer"
 
+	// Domain Layer
+	transferdomain "github.com/stefanposs/file-flux/backend/domain/transfer"
+
 	// Adapter Layer
 	httpadapter "github.com/stefanposs/file-flux/backend/adapter/http"
 	jwtadapter "github.com/stefanposs/file-flux/backend/adapter/jwt"
@@ -27,6 +30,17 @@ import (
 	"github.com/stefanposs/file-flux/backend/internal/middleware"
 	"github.com/stefanposs/file-flux/backend/internal/websocket"
 )
+
+// transferUpdaterAdapter adapts the transfer repo to the websocket.TransferUpdater interface.
+type transferUpdaterAdapter struct {
+	repo interface {
+		UpdateStatus(ctx context.Context, id int, status transferdomain.Status, errorMsg string) error
+	}
+}
+
+func (a *transferUpdaterAdapter) UpdateStatus(ctx context.Context, id int, status string, errorMsg string) error {
+	return a.repo.UpdateStatus(ctx, id, transferdomain.Status(status), errorMsg)
+}
 
 func main() {
 	// Logger erstellen
@@ -78,7 +92,7 @@ func main() {
 	tokenRepo := postgres.NewTokenRepo(pgDB)
 
 	// WebSocket-Manager (nutzt jetzt Domain-Repos)
-	wsManager := websocket.NewManager(logger, agentRepo, tokenRepo)
+	wsManager := websocket.NewManager(logger, agentRepo, tokenRepo, &transferUpdaterAdapter{repo: transferRepo})
 
 	// ─── Application Layer (Services) ───────────────────────────────
 

@@ -13,7 +13,8 @@ export class Header extends LitElement {
     :host {
       display: block;
       background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
     }
     
     .header-container {
@@ -32,17 +33,28 @@ export class Header extends LitElement {
     }
     
     .logo {
-      font-size: 20px;
-      font-weight: bold;
-      color: #122e53;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gray-900, #111827);
       display: flex;
       align-items: center;
       margin-right: 40px;
+      letter-spacing: -0.3px;
     }
     
     .logo-icon {
-      margin-right: 8px;
-      font-size: 24px;
+      margin-right: 10px;
+      background: var(--primary-color, #4f46e5);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
     }
     
     .toggle-button {
@@ -69,22 +81,24 @@ export class Header extends LitElement {
     }
     
     .nav-link {
-      padding: 8px 16px;
+      padding: 8px 14px;
       text-decoration: none;
-      color: #6c757d;
-      border-radius: 4px;
+      color: var(--gray-500, #6b7280);
+      border-radius: var(--radius-sm, 6px);
       font-weight: 500;
+      font-size: 14px;
       transition: all 0.2s;
     }
     
     .nav-link:hover {
-      background-color: #f8f9fa;
-      color: #122e53;
+      background-color: var(--gray-100, #f3f4f6);
+      color: var(--gray-700, #374151);
     }
     
     .nav-link.active {
-      background-color: rgba(18, 46, 83, 0.05);
-      color: #122e53;
+      background-color: var(--primary-light, #eef2ff);
+      color: var(--primary-color, #4f46e5);
+      font-weight: 600;
     }
     
     .header-right {
@@ -135,12 +149,13 @@ export class Header extends LitElement {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 13px;
     }
     
     .user-name {
@@ -171,12 +186,12 @@ export class Header extends LitElement {
 
     .user-menu-header .menu-name {
       font-weight: 600;
-      color: #122e53;
+      color: var(--gray-900, #111827);
     }
 
     .user-menu-header .menu-email {
       font-size: 13px;
-      color: #6c757d;
+      color: var(--gray-500, #6b7280);
       margin-top: 2px;
     }
 
@@ -185,8 +200,8 @@ export class Header extends LitElement {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      color: #122e53;
-      background: rgba(18, 46, 83, 0.08);
+      color: var(--primary-color, #4f46e5);
+      background: var(--primary-light, #eef2ff);
       padding: 2px 8px;
       border-radius: 4px;
       margin-top: 6px;
@@ -255,8 +270,8 @@ export class Header extends LitElement {
           </button>
           
           <div class="logo">
-            <span class="logo-icon">🔄</span>
-            <span>File Flux</span>
+            <span class="logo-icon">FF</span>
+            <span>FileFlux</span>
           </div>
           
           <nav class="navigation ${this.sidebarOpen ? 'mobile-visible' : 'mobile-hidden'}">
@@ -299,10 +314,6 @@ export class Header extends LitElement {
         </div>
         
         <div class="header-right">
-          <div class="notifications">
-            <span class="notification-icon">🔔</span>
-          </div>
-          
           <div class="user-menu-wrapper">
             <div class="user-profile" @click=${this._toggleUserMenu}>
               <div class="user-avatar">
@@ -319,7 +330,7 @@ export class Header extends LitElement {
                   <span class="menu-role">${this.user?.role || 'user'}</span>
                 </div>
                 <button class="user-menu-item danger" @click=${this._handleLogout}>
-                  🚪 Abmelden
+                  Abmelden
                 </button>
               </div>
             ` : ''}

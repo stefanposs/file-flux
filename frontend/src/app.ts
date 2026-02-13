@@ -62,15 +62,47 @@ export class FileFluxApp extends LitElement {
   static styles = css`
     :host {
       display: block;
-      font-family: 'Roboto', 'Helvetica Neue', sans-serif;
-      color: #333;
-      --primary-color: #122e53;
-      --secondary-color: #ffb951;
-      --error-color: #d9534f;
-      --success-color: #5cb85c;
-      --warning-color: #f0ad4e;
-      --light-bg: #f8f9fa;
-      --border-color: #e9ecef;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #1e293b;
+      /* Primary */
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --primary-dark: #3730a3;
+      /* Secondary */
+      --secondary-color: #06b6d4;
+      /* Status */
+      --success-color: #10b981;
+      --success-light: #ecfdf5;
+      --warning-color: #f59e0b;
+      --warning-light: #fffbeb;
+      --error-color: #ef4444;
+      --error-light: #fef2f2;
+      --info-color: #3b82f6;
+      --info-light: #eff6ff;
+      /* Neutrals */
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      /* Surfaces */
+      --light-bg: #f9fafb;
+      --border-color: #e5e7eb;
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+      /* Radius */
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
       height: 100vh;
     }
 
@@ -86,8 +118,8 @@ export class FileFluxApp extends LitElement {
 
     main {
       flex: 1;
-      background-color: #f8f9fa;
-      padding: 20px;
+      background-color: var(--gray-50);
+      padding: 24px;
       overflow-y: auto;
     }
 
@@ -106,7 +138,7 @@ export class FileFluxApp extends LitElement {
     .loading-spinner {
       width: 50px;
       height: 50px;
-      border: 5px solid rgba(18, 46, 83, 0.1);
+      border: 4px solid var(--gray-200);
       border-left-color: var(--primary-color);
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -117,40 +149,114 @@ export class FileFluxApp extends LitElement {
     }
 
     .login-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 100%;
+    }
+
+    .login-branding {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #312e81 100%);
       display: flex;
       flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      color: white;
+    }
+
+    .login-branding h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .login-branding p {
+      font-size: 17px;
+      opacity: 0.85;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .login-features {
+      margin-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .login-feature-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 15px;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    .login-feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.12);
+      display: flex;
       align-items: center;
       justify-content: center;
-      height: 100%;
-      background: linear-gradient(135deg, #122e53 0%, #1a4b8a 100%);
-      color: white;
+      flex-shrink: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #a5b4fc;
+    }
+
+    .login-form-side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray-50);
     }
 
     .login-box {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      padding: 30px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 40px;
       width: 100%;
-      max-width: 400px;
-      color: #333;
+      max-width: 420px;
+      color: var(--gray-800);
     }
 
     .login-logo {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
+    }
+
+    .login-logo-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--primary-color);
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
     }
 
     .login-logo h1 {
-      color: var(--primary-color);
+      color: var(--gray-900);
       margin: 0;
+      font-size: 22px;
+      font-weight: 700;
     }
 
     .login-title {
-      font-size: 24px;
+      font-size: 15px;
       margin-bottom: 24px;
       text-align: center;
-      color: var(--primary-color);
+      color: var(--gray-500);
+      font-weight: 400;
     }
 
     .login-form {
@@ -170,26 +276,38 @@ export class FileFluxApp extends LitElement {
 
     .form-input {
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 16px;
+      padding: 10px 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
 
     .login-button {
       background-color: var(--primary-color);
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       padding: 12px;
-      font-size: 16px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.1s;
+      width: 100%;
     }
 
     .login-button:hover {
-      background-color: #0d2241;
+      background-color: var(--primary-hover);
+    }
+
+    .login-button:active {
+      transform: scale(0.98);
     }
 
     .demo-mode-container {
@@ -216,31 +334,46 @@ export class FileFluxApp extends LitElement {
     }
 
     .demo-mode-banner {
-      background-color: var(--secondary-color);
-      color: #333;
+      background-color: var(--warning-light);
+      color: var(--gray-800);
       text-align: center;
-      padding: 6px;
+      padding: 8px;
       font-weight: 500;
+      font-size: 14px;
+      border-bottom: 1px solid var(--warning-color);
     }
 
     .login-error {
       color: var(--error-color);
       margin-bottom: 16px;
-      padding: 8px;
-      background-color: rgba(217, 83, 79, 0.1);
-      border-radius: 4px;
+      padding: 10px 12px;
+      background-color: var(--error-light);
+      border-radius: var(--radius-sm);
       text-align: center;
+      font-size: 14px;
     }
 
     /* Mobile-Anpassungen */
     @media (max-width: 768px) {
       main {
-        padding: 15px;
+        padding: 16px;
+      }
+
+      .login-container {
+        grid-template-columns: 1fr;
+      }
+
+      .login-branding {
+        display: none;
+      }
+
+      .login-form-side {
+        height: 100vh;
       }
       
       .login-box {
         width: 90%;
-        padding: 20px;
+        padding: 24px;
       }
     }
   `;
@@ -511,10 +644,11 @@ export class FileFluxApp extends LitElement {
       default:
         return html`
           <div style="text-align:center;padding:80px 20px;">
-            <h1 style="font-size:72px;margin:0;color:#122e53;">404</h1>
-            <p style="font-size:18px;color:#6c757d;margin:16px 0 24px;">Die Seite <code>${this.currentRoute}</code> wurde nicht gefunden.</p>
+            <div style="width:64px;height:64px;border-radius:12px;background:var(--primary-light);color:var(--primary-color);display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin-bottom:20px;">?</div>
+            <h1 style="font-size:48px;margin:0;color:var(--gray-900);font-weight:700;">404</h1>
+            <p style="font-size:16px;color:var(--gray-500);margin:12px 0 28px;line-height:1.5;">Die Seite <code style="background:var(--gray-100);padding:2px 8px;border-radius:4px;font-size:14px;">${this.currentRoute}</code> wurde nicht gefunden.</p>
             <button
-              style="background:#122e53;color:#fff;border:none;border-radius:4px;padding:10px 24px;font-size:16px;cursor:pointer;"
+              style="background:var(--primary-color);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 24px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s;"
               @click=${() => this._navigate('/')}
             >Zurück zum Dashboard</button>
           </div>
@@ -534,36 +668,57 @@ export class FileFluxApp extends LitElement {
     if (!this.isAuthenticated) {
       return html`
         <div class="login-container">
-          <div class="login-box">
-            <div class="login-logo">
-              <h1>File Flux</h1>
+          <div class="login-branding">
+            <h1>FileFlux</h1>
+            <p>Sichere Dateiübertragung zwischen Servern und Clients — automatisiert, zuverlässig, überall.</p>
+            <div class="login-features">
+              <div class="login-feature-item">
+                <div class="login-feature-icon">↔</div>
+                <div><strong>Agent-basierter Transfer</strong><br>Installieren Sie Agents auf beliebigen Systemen und steuern Sie Transfers zentral.</div>
+              </div>
+              <div class="login-feature-item">
+                <div class="login-feature-icon">⚡</div>
+                <div><strong>Automatisierte Jobs</strong><br>Zeitgesteuerte Übertragungen mit Cron-ähnlicher Planung.</div>
+              </div>
+              <div class="login-feature-item">
+                <div class="login-feature-icon">🔒</div>
+                <div><strong>Token-basierte Sicherheit</strong><br>Jeder Agent erhält ein eigenes Token mit kontrollierbarem Zugriff.</div>
+              </div>
             </div>
-            
-            <h2 class="login-title">Anmelden</h2>
-            
-            ${this.loginError ? html`
-              <div class="login-error">${this.loginError}</div>
-            ` : ''}
-            
-            <form class="login-form" @submit=${this._handleLogin}>
-              <div class="form-group">
-                <label class="form-label" for="email">E-Mail</label>
-                <input class="form-input" type="email" id="email" name="email" required>
+          </div>
+          <div class="login-form-side">
+            <div class="login-box">
+              <div class="login-logo">
+                <div class="login-logo-badge">FF</div>
+                <h1>FileFlux</h1>
               </div>
               
-              <div class="form-group">
-                <label class="form-label" for="password">Passwort</label>
-                <input class="form-input" type="password" id="password" name="password" required>
-              </div>
+              <p class="login-title">Melden Sie sich an, um fortzufahren</p>
               
-              <button type="submit" class="login-button">Anmelden</button>
-            </form>
-            
-            <div class="demo-mode-container">
-              <p>Oder testen Sie die Anwendung im Demo-Modus</p>
-              <button class="demo-mode-button" @click=${this._activateDemoMode}>
-                Demo starten
-              </button>
+              ${this.loginError ? html`
+                <div class="login-error">${this.loginError}</div>
+              ` : ''}
+              
+              <form class="login-form" @submit=${this._handleLogin}>
+                <div class="form-group">
+                  <label class="form-label" for="email">E-Mail</label>
+                  <input class="form-input" type="email" id="email" name="email" placeholder="name@beispiel.de" required>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label" for="password">Passwort</label>
+                  <input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="login-button">Anmelden</button>
+              </form>
+              
+              <div class="demo-mode-container">
+                <p>Oder testen Sie die Anwendung im Demo-Modus</p>
+                <button class="demo-mode-button" @click=${this._activateDemoMode}>
+                  Demo starten
+                </button>
+              </div>
             </div>
           </div>
         </div>

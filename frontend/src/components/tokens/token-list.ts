@@ -38,7 +38,7 @@ export class TokenList extends LitElement {
     
     .title {
       font-size: 24px;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       margin: 0;
     }
     
@@ -53,7 +53,7 @@ export class TokenList extends LitElement {
     }
     
     .primary-button {
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
       border: none;
     }
@@ -123,7 +123,7 @@ export class TokenList extends LitElement {
     .token-action {
       background: none;
       border: none;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       cursor: pointer;
       padding: 4px 8px;
       font-size: 13px;
@@ -153,7 +153,7 @@ export class TokenList extends LitElement {
       width: 40px;
       height: 40px;
       border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -226,7 +226,7 @@ export class TokenList extends LitElement {
       font-size: 20px;
       margin-top: 0;
       margin-bottom: 24px;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
     }
     
     .form-group {

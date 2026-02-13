@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoAgents } from '../../demo-mode';
 import { showToast } from '../shared/toast';
 import { api } from '../../services/api-service';
+import './agent-onboarding';
 
 @customElement('ff-agent-list')
 export class AgentList extends LitElement {
@@ -16,6 +17,7 @@ export class AgentList extends LitElement {
   @state() private sortField = 'lastSeen';
   @state() private sortDirection = 'desc';
   @state() private isInstallModalOpen = false;
+  @state() private isOnboardingOpen = false;
 
   static styles = css`
     :host {
@@ -35,8 +37,9 @@ export class AgentList extends LitElement {
     
     .title {
       font-size: 24px;
-      color: #122e53;
+      color: var(--gray-900, #111827);
       margin: 0;
+      font-weight: 700;
     }
     
     .action-button {
@@ -50,9 +53,14 @@ export class AgentList extends LitElement {
     }
     
     .primary-button {
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
       border: none;
+      transition: background 0.2s;
+    }
+
+    .primary-button:hover {
+      background-color: var(--primary-hover, #4338ca);
     }
     
     .filters {
@@ -87,8 +95,9 @@ export class AgentList extends LitElement {
     
     .agent-card {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--gray-200, #e5e7eb);
       padding: 20px;
       display: flex;
       flex-direction: column;
@@ -97,8 +106,8 @@ export class AgentList extends LitElement {
     }
     
     .agent-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
     }
     
     .agent-header {
@@ -110,9 +119,9 @@ export class AgentList extends LitElement {
     
     .agent-name {
       font-size: 18px;
-      font-weight: 500;
+      font-weight: 600;
       margin: 0 0 4px 0;
-      color: #122e53;
+      color: var(--gray-900, #111827);
     }
     
     .agent-type {
@@ -121,26 +130,28 @@ export class AgentList extends LitElement {
     }
     
     .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full, 9999px);
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
     }
     
     .status-online {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
+      background-color: var(--success-light, #ecfdf5);
+      color: var(--success-color, #10b981);
     }
     
     .status-offline {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
+      background-color: var(--gray-100, #f3f4f6);
+      color: var(--gray-500, #6b7280);
     }
     
     .status-error {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
+      background-color: var(--error-light, #fef2f2);
+      color: var(--error-color, #ef4444);
     }
     
     .agent-info {
@@ -178,8 +189,8 @@ export class AgentList extends LitElement {
     .loading-spinner {
       width: 40px;
       height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border: 3px solid var(--gray-200, #e5e7eb);
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -239,7 +250,7 @@ export class AgentList extends LitElement {
       padding: 16px 20px;
       border-bottom: 1px solid #e9ecef;
     }
-    .modal-header h2 { margin: 0; font-size: 18px; color: #122e53; }
+    .modal-header h2 { margin: 0; font-size: 18px; color: var(--gray-900, #111827); }
     .modal-close {
       background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;
     }
@@ -250,7 +261,7 @@ export class AgentList extends LitElement {
       margin: 0 0 12px 0; color: #495057; font-size: 14px; line-height: 1.5;
     }
     .modal-body h3 {
-      margin: 20px 0 8px 0; font-size: 15px; color: #122e53;
+      margin: 20px 0 8px 0; font-size: 15px; color: var(--primary-color, #4f46e5);
     }
     .modal-body h3:first-child { margin-top: 0; }
     .code-block {
@@ -595,8 +606,8 @@ paths:
       <div class="agent-list-container">
         <div class="header">
           <h1 class="title">Agents</h1>
-          <button class="action-button primary-button" @click=${this._showAgentInstallModal}>
-            + Neuen Agent installieren
+          <button class="action-button primary-button" @click=${() => { this.isOnboardingOpen = true; }}>
+            + Neuen Agent einrichten
           </button>
         </div>
         
@@ -633,9 +644,9 @@ paths:
         
         ${this.filteredAgents.length === 0 ? html`
           <div class="empty-message">
-            <p>Keine Agents gefunden. Installieren Sie einen neuen Agent, um zu beginnen.</p>
-            <button class="action-button primary-button" @click=${this._showAgentInstallModal}>
-              Agent installieren
+            <p>Keine Agents gefunden. Richten Sie einen neuen Agent ein, um zu beginnen.</p>
+            <button class="action-button primary-button" @click=${() => { this.isOnboardingOpen = true; }}>
+              Agent einrichten
             </button>
             
             <div class="install-code">
@@ -689,6 +700,9 @@ paths:
         `}
       </div>
       ${this._renderInstallModal()}
+      ${this.isOnboardingOpen ? html`
+        <ff-agent-onboarding @close=${() => { this.isOnboardingOpen = false; this._loadAgents(); }}></ff-agent-onboarding>
+      ` : ''}
     `;
   }
 } 

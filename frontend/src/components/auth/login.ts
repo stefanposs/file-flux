@@ -30,7 +30,7 @@ export class Login extends LitElement {
       
       h2 {
         text-align: center;
-        color: #122e53;
+        color: var(--primary-color, #4f46e5);
         margin-bottom: 24px;
       }
       
@@ -54,7 +54,7 @@ export class Login extends LitElement {
       button {
         width: 100%;
         padding: 12px;
-        background-color: #122e53;
+        background-color: var(--primary-color, #4f46e5);
         color: white;
         border: none;
         border-radius: 4px;

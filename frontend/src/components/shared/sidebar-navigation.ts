@@ -34,7 +34,7 @@ export class SidebarNavigation extends LitElement {
     }
 
     .logo-text {
-      color: #ffd202;
+      color: #a5b4fc;
       font-weight: bold;
       font-size: 18px;
       margin-left: 8px;
@@ -93,9 +93,11 @@ export class SidebarNavigation extends LitElement {
     }
 
     .nav-link.active {
-      background-color: #ffd202;
-      color: #122e53;
-      font-weight: bold;
+      background-color: var(--primary-color, #4f46e5);
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 6px;
+      margin: 0 8px;
     }
 
     .nav-icon {
@@ -161,26 +163,26 @@ export class SidebarNavigation extends LitElement {
           <div class="nav-group">
             <div class="nav-group-title">Hauptmenü</div>
             <a href="/" class="nav-link ${this._isActive('/')}">
-              <span class="nav-icon">📊</span> <span class="nav-text">Dashboard</span>
+              <span class="nav-icon">◉</span> <span class="nav-text">Dashboard</span>
             </a>
             <a href="/jobs" class="nav-link ${this._isActive('/jobs')}">
-              <span class="nav-icon">🔄</span> <span class="nav-text">Jobs</span>
+              <span class="nav-icon">⇄</span> <span class="nav-text">Jobs</span>
             </a>
             <a href="/transfers" class="nav-link ${this._isActive('/transfers')}">
-              <span class="nav-icon">📁</span> <span class="nav-text">Transfers</span>
+              <span class="nav-icon">↗</span> <span class="nav-text">Transfers</span>
             </a>
           </div>
           
           <div class="nav-group">
             <div class="nav-group-title">Administration</div>
             <a href="/agents" class="nav-link ${this._isActive('/agents')}">
-              <span class="nav-icon">🤖</span> <span class="nav-text">Agenten</span>
+              <span class="nav-icon">◎</span> <span class="nav-text">Agenten</span>
             </a>
             <a href="/tokens" class="nav-link ${this._isActive('/tokens')}">
-              <span class="nav-icon">🔑</span> <span class="nav-text">Tokens</span>
+              <span class="nav-icon">⚿</span> <span class="nav-text">Tokens</span>
             </a>
             <a href="/settings" class="nav-link ${this._isActive('/settings')}">
-              <span class="nav-icon">⚙️</span> <span class="nav-text">Einstellungen</span>
+              <span class="nav-icon">⊛</span> <span class="nav-text">Einstellungen</span>
             </a>
           </div>
         </nav>

@@ -15,6 +15,12 @@ import (
 // AgentStatusUpdater defines the agent status operations the WS manager needs.
 type AgentStatusUpdater interface {
 	UpdateStatus(ctx context.Context, id int, status string) error
+	UpdateInfo(ctx context.Context, id int, system, ipAddress, version string) error
+}
+
+// TransferUpdater defines the transfer status operations the WS manager needs.
+type TransferUpdater interface {
+	UpdateStatus(ctx context.Context, id int, status string, errorMsg string) error
 }
 
 // TokenValidator defines the token validation operation the WS manager needs.
@@ -27,6 +33,7 @@ type Manager struct {
 	clients     map[int]*Client
 	clientsLock sync.RWMutex
 	agents      AgentStatusUpdater
+	transfers   TransferUpdater
 	tokens      TokenValidator
 	logger      *log.Logger
 	upgrader    websocket.Upgrader
@@ -40,12 +47,13 @@ type Client struct {
 }
 
 // NewManager erstellt einen neuen WebSocket-Manager
-func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValidator) *Manager {
+func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValidator, transfers TransferUpdater) *Manager {
 	return &Manager{
-		clients: make(map[int]*Client),
-		agents:  agents,
-		tokens:  tokens,
-		logger:  logger,
+		clients:   make(map[int]*Client),
+		agents:    agents,
+		tokens:    tokens,
+		transfers: transfers,
+		logger:    logger,
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -215,12 +223,18 @@ func (c *Client) readPump(m *Manager) {
 				continue
 			}
 
-			// TODO: Update des Agenten in der Datenbank
+			// Agent-Informationen in der Datenbank speichern
+			ctx := context.Background()
+			if err := m.agents.UpdateInfo(ctx, c.agentID, info.System, info.IPAddress, info.Version); err != nil {
+				m.logger.Printf("Fehler beim Aktualisieren der Agent-Info: %v", err)
+			} else {
+				m.logger.Printf("Agent %d Info aktualisiert: system=%s, ip=%s, version=%s", c.agentID, info.System, info.IPAddress, info.Version)
+			}
 
 		case MessageTypeTransferProgress:
 			// Fortschritt eines Transfers aktualisieren
 			var progress struct {
-				TransferID string  `json:"transfer_id"`
+				TransferID int     `json:"transfer_id"`
 				Progress   float64 `json:"progress"`
 			}
 			if err := json.Unmarshal(msg.Data, &progress); err != nil {
@@ -228,24 +242,36 @@ func (c *Client) readPump(m *Manager) {
 				continue
 			}
 
-			// TODO: Update des Transfers in der Datenbank
+			// Transfer als laufend markieren
+			ctx := context.Background()
+			if err := m.transfers.UpdateStatus(ctx, progress.TransferID, "running", ""); err != nil {
+				m.logger.Printf("Fehler beim Aktualisieren des Transfer-Fortschritts: %v", err)
+			} else {
+				m.logger.Printf("Transfer %d Fortschritt: %.1f%%", progress.TransferID, progress.Progress*100)
+			}
 
 		case MessageTypeTransferComplete:
 			// Transfer als abgeschlossen markieren
 			var complete struct {
-				TransferID string `json:"transfer_id"`
+				TransferID int `json:"transfer_id"`
 			}
 			if err := json.Unmarshal(msg.Data, &complete); err != nil {
 				m.logger.Printf("Fehler beim Parsen der Transfer-Fertigstellung: %v", err)
 				continue
 			}
 
-			// TODO: Transfer als abgeschlossen markieren
+			// Transfer als abgeschlossen in der Datenbank markieren
+			ctx := context.Background()
+			if err := m.transfers.UpdateStatus(ctx, complete.TransferID, "completed", ""); err != nil {
+				m.logger.Printf("Fehler beim Abschließen des Transfers %d: %v", complete.TransferID, err)
+			} else {
+				m.logger.Printf("Transfer %d abgeschlossen", complete.TransferID)
+			}
 
 		case MessageTypeTransferError:
 			// Fehlermeldung für einen Transfer
 			var errorMsg struct {
-				TransferID string `json:"transfer_id"`
+				TransferID int    `json:"transfer_id"`
 				Error      string `json:"error"`
 			}
 			if err := json.Unmarshal(msg.Data, &errorMsg); err != nil {
@@ -253,7 +279,13 @@ func (c *Client) readPump(m *Manager) {
 				continue
 			}
 
-			// TODO: Transfer als fehlgeschlagen markieren
+			// Transfer als fehlgeschlagen in der Datenbank markieren
+			ctx := context.Background()
+			if err := m.transfers.UpdateStatus(ctx, errorMsg.TransferID, "failed", errorMsg.Error); err != nil {
+				m.logger.Printf("Fehler beim Markieren des Transfer-Fehlers %d: %v", errorMsg.TransferID, err)
+			} else {
+				m.logger.Printf("Transfer %d fehlgeschlagen: %s", errorMsg.TransferID, errorMsg.Error)
+			}
 
 		default:
 			m.logger.Printf("Unbekannter Nachrichtentyp: %s", msg.Type)

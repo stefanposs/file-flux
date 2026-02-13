@@ -80,6 +80,14 @@ func (r *AgentRepo) Update(ctx context.Context, a *agent.Agent) error {
 	return err
 }
 
+func (r *AgentRepo) UpdateInfo(ctx context.Context, id int, system, ipAddress, version string) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE agents SET system = $1, ip_address = $2, version = $3, last_seen = NOW()
+		WHERE id = $4
+	`, system, ipAddress, version, id)
+	return err
+}
+
 func (r *AgentRepo) UpdateStatus(ctx context.Context, id int, status string) error {
 	_, err := r.db.ExecContext(ctx, `
 		UPDATE agents SET status = $1, last_seen = NOW() WHERE id = $2

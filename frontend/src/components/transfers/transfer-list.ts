@@ -55,14 +55,16 @@ export class TransferList extends LitElement {
     
     h1 {
       font-size: 24px;
-      color: #122e53;
+      color: var(--gray-900, #111827);
       margin: 0;
+      font-weight: 700;
     }
     
     .transfers-container {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--gray-200, #e5e7eb);
       padding: 16px;
     }
     
@@ -113,7 +115,7 @@ export class TransferList extends LitElement {
       width: 40px;
       height: 40px;
       border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -142,8 +144,12 @@ export class TransferList extends LitElement {
     }
     
     th {
-      color: #495057;
-      font-weight: 500;
+      color: var(--gray-600, #4b5563);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background-color: var(--gray-50, #f9fafb);
       position: relative;
       cursor: pointer;
       user-select: none;
@@ -183,31 +189,33 @@ export class TransferList extends LitElement {
     }
     
     .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full, 9999px);
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
     }
     
     .status-completed {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
+      background-color: var(--success-light, #ecfdf5);
+      color: var(--success-color, #10b981);
     }
     
     .status-failed {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
+      background-color: var(--error-light, #fef2f2);
+      color: var(--error-color, #ef4444);
     }
     
     .status-running {
-      background-color: rgba(13, 110, 253, 0.1);
-      color: #0d6efd;
+      background-color: var(--info-light, #eff6ff);
+      color: var(--info-color, #3b82f6);
     }
     
     .status-pending {
-      background-color: rgba(217, 119, 6, 0.1);
-      color: #92400e;
+      background-color: var(--warning-light, #fffbeb);
+      color: var(--warning-color, #f59e0b);
     }
     
     .pagination {
@@ -243,9 +251,9 @@ export class TransferList extends LitElement {
     }
     
     .pagination-button.active {
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
-      border-color: #122e53;
+      border-color: var(--primary-color, #4f46e5);
     }
     
     .empty-message {

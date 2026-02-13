@@ -33,7 +33,7 @@ export class JobDetail extends LitElement {
       width: 40px;
       height: 40px;
       border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -59,7 +59,7 @@ export class JobDetail extends LitElement {
     .back-button {
       background: none;
       border: none;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       cursor: pointer;
       font-size: 14px;
       padding: 0;
@@ -71,7 +71,7 @@ export class JobDetail extends LitElement {
     .job-name {
       font-size: 24px;
       margin: 0;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
     }
     
     .job-actions {
@@ -90,7 +90,7 @@ export class JobDetail extends LitElement {
     }
     
     .primary-button {
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
       border: none;
     }
@@ -117,7 +117,7 @@ export class JobDetail extends LitElement {
     
     .section-title {
       font-size: 18px;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       margin-top: 0;
       margin-bottom: 16px;
     }
@@ -320,7 +320,7 @@ export class JobDetail extends LitElement {
       display: block;
       text-align: right;
       margin-top: 10px;
-      color: #122e53;
+      color: var(--primary-color, #4f46e5);
       text-decoration: underline;
       cursor: pointer;
     }

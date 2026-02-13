@@ -56,8 +56,9 @@ export class Dashboard extends LitElement {
     
     .dashboard-title {
       font-size: 24px;
-      color: #122e53;
+      color: var(--gray-900, #111827);
       margin: 0;
+      font-weight: 700;
     }
     
     .dashboard-actions {
@@ -68,13 +69,21 @@ export class Dashboard extends LitElement {
     .refresh-button {
       padding: 8px 16px;
       background-color: white;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
+      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--radius-sm, 6px);
       cursor: pointer;
       font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700, #374151);
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .refresh-button:hover {
+      border-color: var(--gray-300, #d1d5db);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
     }
     
     .loading-container {
@@ -87,8 +96,8 @@ export class Dashboard extends LitElement {
     .loading-spinner {
       width: 40px;
       height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border: 3px solid var(--gray-200, #e5e7eb);
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -106,42 +115,67 @@ export class Dashboard extends LitElement {
     
     .stat-card {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      padding: 20px;
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      padding: 24px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      align-items: flex-start;
+      gap: 16px;
+      border: 1px solid var(--gray-200, #e5e7eb);
+      border-left: 4px solid var(--primary-color, #4f46e5);
+      transition: box-shadow 0.2s, transform 0.15s;
     }
+
+    .stat-card:hover {
+      box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+      transform: translateY(-1px);
+    }
+
+    .stat-card:nth-child(2) { border-left-color: var(--success-color, #10b981); }
+    .stat-card:nth-child(3) { border-left-color: var(--error-color, #ef4444); }
+    .stat-card:nth-child(4) { border-left-color: var(--info-color, #3b82f6); }
+    .stat-card:nth-child(5) { border-left-color: var(--secondary-color, #06b6d4); }
     
     .stat-value {
-      font-size: 32px;
-      font-weight: 500;
-      color: #122e53;
-      margin: 10px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900, #111827);
+      margin: 0 0 2px 0;
+      line-height: 1.1;
     }
     
     .stat-label {
-      font-size: 14px;
-      color: #6c757d;
+      font-size: 13px;
+      color: var(--gray-500, #6b7280);
+      font-weight: 500;
     }
     
     .stat-icon {
-      font-size: 24px;
-      margin-bottom: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md, 8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+      background-color: var(--primary-light, #eef2ff);
+      color: var(--primary-color, #4f46e5);
     }
     
     .section-title {
-      font-size: 18px;
-      color: #122e53;
+      font-size: 17px;
+      color: var(--gray-900, #111827);
       margin: 30px 0 15px 0;
+      font-weight: 600;
     }
     
     .transfers-container {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--gray-200, #e5e7eb);
       overflow: hidden;
     }
     
@@ -158,9 +192,12 @@ export class Dashboard extends LitElement {
     }
     
     .transfers-table th {
-      background-color: #f8f9fa;
-      color: #495057;
-      font-weight: 500;
+      background-color: var(--gray-50, #f9fafb);
+      color: var(--gray-600, #4b5563);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
     
     .transfers-table tr:last-child td {
@@ -181,23 +218,23 @@ export class Dashboard extends LitElement {
     }
     
     .status-completed {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
+      background-color: var(--success-light, #ecfdf5);
+      color: var(--success-color, #10b981);
     }
     
     .status-failed {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
+      background-color: var(--error-light, #fef2f2);
+      color: var(--error-color, #ef4444);
     }
     
     .status-running {
-      background-color: rgba(0, 123, 255, 0.1);
-      color: #007bff;
+      background-color: var(--info-light, #eff6ff);
+      color: var(--info-color, #3b82f6);
     }
     
     .status-pending {
-      background-color: rgba(217, 119, 6, 0.1);
-      color: #92400e;
+      background-color: var(--warning-light, #fffbeb);
+      color: var(--warning-color, #f59e0b);
     }
     
     .error-container {
@@ -211,11 +248,17 @@ export class Dashboard extends LitElement {
     .view-all-link {
       display: block;
       text-align: right;
-      padding: 10px 16px;
-      color: #122e53;
-      text-decoration: underline;
+      padding: 12px 16px;
+      color: var(--primary-color, #4f46e5);
+      text-decoration: none;
       cursor: pointer;
-      border-top: 1px solid #f0f0f0;
+      border-top: 1px solid var(--gray-100, #f3f4f6);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .view-all-link:hover {
+      background: var(--gray-50, #f9fafb);
     }
     
     .empty-message {
@@ -226,8 +269,9 @@ export class Dashboard extends LitElement {
     
     .job-status-section {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--gray-200, #e5e7eb);
       padding: 20px;
       margin-bottom: 30px;
     }
@@ -272,18 +316,19 @@ export class Dashboard extends LitElement {
     
     .detailed-stats-card {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--gray-200, #e5e7eb);
       padding: 20px;
     }
     
     .detailed-stats-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      color: #122e53;
+      color: var(--gray-900, #111827);
       margin: 0 0 16px 0;
       padding-bottom: 8px;
-      border-bottom: 2px solid #e9ecef;
+      border-bottom: 2px solid var(--gray-200, #e5e7eb);
     }
     
     .detailed-stats-item {
@@ -306,7 +351,7 @@ export class Dashboard extends LitElement {
     .detailed-stats-value {
       font-size: 14px;
       font-weight: 600;
-      color: #122e53;
+      color: var(--gray-900, #111827);
     }
     
     @media (max-width: 768px) {
@@ -449,40 +494,50 @@ export class Dashboard extends LitElement {
           <h1 class="dashboard-title">Dashboard</h1>
           <div class="dashboard-actions">
             <button class="refresh-button" @click=${this._refreshData}>
-              🔄 Aktualisieren
+              Aktualisieren
             </button>
           </div>
         </div>
         
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-icon">📋</div>
-            <div class="stat-value">${this.stats.activeJobs}</div>
-            <div class="stat-label">Aktive Jobs</div>
+            <div class="stat-icon">J</div>
+            <div>
+              <div class="stat-value">${this.stats.activeJobs}</div>
+              <div class="stat-label">Aktive Jobs</div>
+            </div>
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value">${this.stats.completedTransfers}</div>
-            <div class="stat-label">Abgeschlossene Transfers</div>
+            <div class="stat-icon" style="background:var(--success-light,#ecfdf5);color:var(--success-color,#10b981);">✓</div>
+            <div>
+              <div class="stat-value">${this.stats.completedTransfers}</div>
+              <div class="stat-label">Abgeschlossene Transfers</div>
+            </div>
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon">❌</div>
-            <div class="stat-value">${this.stats.failedTransfers}</div>
-            <div class="stat-label">Fehlgeschlagene Transfers</div>
+            <div class="stat-icon" style="background:var(--error-light,#fef2f2);color:var(--error-color,#ef4444);">!</div>
+            <div>
+              <div class="stat-value">${this.stats.failedTransfers}</div>
+              <div class="stat-label">Fehlgeschlagene Transfers</div>
+            </div>
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon">🖥️</div>
-            <div class="stat-value">${this.stats.onlineAgents} / ${this.stats.totalAgents}</div>
-            <div class="stat-label">Online Agents</div>
+            <div class="stat-icon" style="background:var(--info-light,#eff6ff);color:var(--info-color,#3b82f6);">A</div>
+            <div>
+              <div class="stat-value">${this.stats.onlineAgents} / ${this.stats.totalAgents}</div>
+              <div class="stat-label">Online Agents</div>
+            </div>
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-value">${this._formatFileSize(this.stats.transferVolume)}</div>
-            <div class="stat-label">Übertragenes Volumen</div>
+            <div class="stat-icon" style="background:#ecfeff;color:#06b6d4;">↕</div>
+            <div>
+              <div class="stat-value">${this._formatFileSize(this.stats.transferVolume)}</div>
+              <div class="stat-label">Übertragenes Volumen</div>
+            </div>
           </div>
         </div>
         

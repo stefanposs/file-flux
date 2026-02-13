@@ -50,25 +50,28 @@ export class JobList extends LitElement {
     
     h1 {
       font-size: 24px;
-      color: #122e53;
+      color: var(--gray-900, #111827);
       margin: 0;
+      font-weight: 700;
     }
     
     .add-job-button {
-      background-color: #122e53;
+      background-color: var(--primary-color, #4f46e5);
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: var(--radius-sm, 6px);
       padding: 8px 16px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-size: 14px;
+      transition: background 0.2s;
     }
     
     .add-job-button:hover {
-      background-color: #0a1c33;
+      background-color: var(--primary-hover, #4338ca);
     }
     
     .filters {
@@ -125,22 +128,23 @@ export class JobList extends LitElement {
     
     .job-card {
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--gray-200, #e5e7eb);
       overflow: hidden;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       cursor: pointer;
     }
     
     .job-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
     }
     
     .job-header {
-      background-color: #122e53;
+      background: linear-gradient(135deg, var(--primary-color, #4f46e5), var(--primary-dark, #3730a3));
       color: white;
-      padding: 16px;
+      padding: 16px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -191,11 +195,11 @@ export class JobList extends LitElement {
     }
     
     .status-active {
-      background-color: #28a745;
+      background-color: var(--success-color, #10b981);
     }
     
     .status-inactive {
-      background-color: #6c757d;
+      background-color: var(--gray-400, #9ca3af);
     }
     
     .job-schedule {
@@ -216,7 +220,7 @@ export class JobList extends LitElement {
       width: 40px;
       height: 40px;
       border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: #122e53;
+      border-left-color: var(--primary-color, #4f46e5);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -259,7 +263,7 @@ export class JobList extends LitElement {
       padding: 16px 20px;
       border-bottom: 1px solid #e9ecef;
     }
-    .modal-header h2 { margin: 0; font-size: 18px; color: #122e53; }
+    .modal-header h2 { margin: 0; font-size: 18px; color: var(--primary-color, #4f46e5); }
     .modal-close {
       background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;
     }
@@ -286,7 +290,7 @@ export class JobList extends LitElement {
       border-radius: 4px; cursor: pointer;
     }
     .btn-submit {
-      padding: 8px 16px; border: none; background: #122e53; color: #fff;
+      padding: 8px 16px; border: none; background: var(--primary-color, #4f46e5); color: #fff;
       border-radius: 4px; cursor: pointer; font-weight: 500;
     }
     .btn-submit:hover { background: #0a1c33; }

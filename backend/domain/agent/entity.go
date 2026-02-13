@@ -26,6 +26,7 @@ type Repository interface {
 	GetByID(ctx context.Context, id int) (*Agent, error)
 	Create(ctx context.Context, agent *Agent) error
 	Update(ctx context.Context, agent *Agent) error
+	UpdateInfo(ctx context.Context, id int, system, ipAddress, version string) error
 	UpdateStatus(ctx context.Context, id int, status string) error
 	Delete(ctx context.Context, id int) error
 }
