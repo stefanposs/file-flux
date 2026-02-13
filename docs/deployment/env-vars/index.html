@@ -1925,17 +1925,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#transfers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Transfers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#admin" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2061,17 +2050,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#transfers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Transfers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#admin" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2130,7 +2108,8 @@
 
 
 <h1 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h1>
-<p>Complete reference of all environment variables for FileFlux components.</p>
+<p>Complete reference of all environment variables for FileFlux components.
+Environment variables override YAML configuration values.</p>
 <h2 id="backend">Backend<a class="headerlink" href="#backend" title="Permanent link">&para;</a></h2>
 <h3 id="server">Server<a class="headerlink" href="#server" title="Permanent link">&para;</a></h3>
 <table>
@@ -2153,34 +2132,24 @@
 <td>HTTP API port</td>
 </tr>
 <tr>
-<td><code>SERVER_WS_PORT</code></td>
+<td><code>WEBSOCKET_PORT</code></td>
 <td><code>3002</code></td>
 <td>WebSocket port</td>
 </tr>
 <tr>
-<td><code>SERVER_READ_TIMEOUT</code></td>
-<td><code>30s</code></td>
-<td>HTTP read timeout</td>
-</tr>
-<tr>
-<td><code>SERVER_WRITE_TIMEOUT</code></td>
-<td><code>30s</code></td>
-<td>HTTP write timeout</td>
-</tr>
-<tr>
-<td><code>SERVER_TIMEZONE</code></td>
-<td><code>UTC</code></td>
-<td>Timezone for scheduling</td>
+<td><code>STORAGE_DIR</code></td>
+<td><code>/app/storage</code></td>
+<td>File storage directory</td>
 </tr>
 <tr>
 <td><code>LOG_LEVEL</code></td>
 <td><code>info</code></td>
-<td>Logging level</td>
+<td>Logging level (<code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>)</td>
 </tr>
 <tr>
-<td><code>LOG_FORMAT</code></td>
-<td><code>json</code></td>
-<td>Log format (<code>json</code>, <code>text</code>)</td>
+<td><code>LOG_FILE</code></td>
+<td><code>fileflux.log</code></td>
+<td>Log file path</td>
 </tr>
 </tbody>
 </table>
@@ -2222,22 +2191,7 @@
 <tr>
 <td><code>DB_SSLMODE</code></td>
 <td><code>disable</code></td>
-<td>SSL mode</td>
-</tr>
-<tr>
-<td><code>DB_MAX_OPEN_CONNS</code></td>
-<td><code>25</code></td>
-<td>Max open connections</td>
-</tr>
-<tr>
-<td><code>DB_MAX_IDLE_CONNS</code></td>
-<td><code>5</code></td>
-<td>Max idle connections</td>
-</tr>
-<tr>
-<td><code>DB_CONN_MAX_LIFETIME</code></td>
-<td><code>5m</code></td>
-<td>Connection max lifetime</td>
+<td>SSL mode (<code>disable</code>, <code>require</code>, <code>verify-full</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -2254,54 +2208,12 @@
 <tr>
 <td><code>JWT_SECRET</code></td>
 <td><em>(required)</em></td>
-<td>JWT signing secret</td>
+<td>JWT signing secret (min. 32 Zeichen)</td>
 </tr>
 <tr>
-<td><code>JWT_EXPIRY</code></td>
-<td><code>24h</code></td>
-<td>Token expiry</td>
-</tr>
-<tr>
-<td><code>BCRYPT_COST</code></td>
-<td><code>12</code></td>
-<td>Password hash cost</td>
-</tr>
-<tr>
-<td><code>CORS_ORIGINS</code></td>
-<td><code>*</code></td>
-<td>Allowed CORS origins</td>
-</tr>
-</tbody>
-</table>
-<h3 id="transfers">Transfers<a class="headerlink" href="#transfers" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>TRANSFER_CHUNK_SIZE</code></td>
-<td><code>1048576</code></td>
-<td>Chunk size (bytes)</td>
-</tr>
-<tr>
-<td><code>TRANSFER_MAX_RETRIES</code></td>
-<td><code>3</code></td>
-<td>Max retry attempts</td>
-</tr>
-<tr>
-<td><code>TRANSFER_TIMEOUT</code></td>
-<td><code>30m</code></td>
-<td>Transfer timeout</td>
-</tr>
-<tr>
-<td><code>TRANSFER_TEMP_DIR</code></td>
-<td><code>/tmp/fileflux</code></td>
-<td>Temp chunk storage</td>
+<td><code>TOKEN_EXPIRES_IN</code></td>
+<td><code>24</code></td>
+<td>JWT token expiry in hours</td>
 </tr>
 </tbody>
 </table>
@@ -2339,57 +2251,47 @@
 </thead>
 <tbody>
 <tr>
-<td><code>FILEFLUX_SERVER_URL</code></td>
-<td><code>ws://localhost:3002/ws</code></td>
+<td><code>AGENT_ID</code></td>
+<td><em>(auto)</em></td>
+<td>Agent identifier</td>
+</tr>
+<tr>
+<td><code>AGENT_NAME</code></td>
+<td><code>FileFlux-Agent</code></td>
+<td>Agent display name</td>
+</tr>
+<tr>
+<td><code>AGENT_TYPE</code></td>
+<td><code>client</code></td>
+<td>Agent type (<code>server</code>, <code>client</code>)</td>
+</tr>
+<tr>
+<td><code>AGENT_DESCRIPTION</code></td>
+<td><em>(empty)</em></td>
+<td>Agent description</td>
+</tr>
+<tr>
+<td><code>CONNECTION_SERVER_URL</code></td>
+<td><code>ws://localhost:3002/ws/agent</code></td>
 <td>Backend WebSocket URL</td>
 </tr>
 <tr>
-<td><code>FILEFLUX_AGENT_TOKEN</code></td>
+<td><code>CONNECTION_TOKEN</code></td>
 <td><em>(required)</em></td>
 <td>Agent registration token</td>
 </tr>
 <tr>
-<td><code>FILEFLUX_AGENT_NAME</code></td>
-<td>hostname</td>
-<td>Agent display name</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_WORK_DIR</code></td>
-<td><code>/var/lib/fileflux</code></td>
-<td>Working directory</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_UPLOAD_DIR</code></td>
-<td><code>$WORK_DIR/uploads</code></td>
-<td>Upload staging dir</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_DOWNLOAD_DIR</code></td>
-<td><code>$WORK_DIR/downloads</code></td>
-<td>Download target dir</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_CHUNK_SIZE</code></td>
-<td><code>1048576</code></td>
-<td>Chunk size (bytes)</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_MAX_CONCURRENT</code></td>
-<td><code>4</code></td>
-<td>Max parallel transfers</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_LOG_LEVEL</code></td>
-<td><code>info</code></td>
-<td>Log level</td>
-</tr>
-<tr>
-<td><code>FILEFLUX_LOG_FORMAT</code></td>
-<td><code>json</code></td>
-<td>Log format</td>
+<td><code>CONNECTION_HTTP_URL</code></td>
+<td><code>http://localhost:3001</code></td>
+<td>Backend HTTP URL (for polling fallback)</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Agent-Konfiguration</p>
+<p>Weitere Agent-Einstellungen (chunk_size, concurrent_transfers, compression, transport_mode etc.)
+werden aktuell nur über die <code>config.yaml</code> konfiguriert.</p>
+</div>
 <hr />
 <h2 id="docker-compose">Docker Compose<a class="headerlink" href="#docker-compose" title="Permanent link">&para;</a></h2>
 <table>
@@ -2463,7 +2365,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

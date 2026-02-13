@@ -2091,7 +2091,7 @@
 </tr>
 <tr>
 <td><strong>Real-Time Monitoring</strong></td>
-<td>Live dashboard with transfer progress via Server-Sent Events.</td>
+<td>Live dashboard with transfer progress via WebSocket events and polling.</td>
 </tr>
 <tr>
 <td><strong>Multi-Platform Agent</strong></td>
@@ -2106,6 +2106,18 @@
 <td>Real-time agent communication via persistent WebSocket connections.</td>
 </tr>
 <tr>
+<td><strong>Adaptive Transport</strong></td>
+<td>Automatic fallback to HTTPS Long-Polling when firewalls block WebSocket.</td>
+</tr>
+<tr>
+<td><strong>Compression</strong></td>
+<td>Built-in zstd and LZ4 compression for efficient data transfer.</td>
+</tr>
+<tr>
+<td><strong>Polling Fallback</strong></td>
+<td>HTTP Long-Polling transport for restricted network environments.</td>
+</tr>
+<tr>
 <td><strong>REST API</strong></td>
 <td>Full REST API for automation and integration. Every resource is programmable.</td>
 </tr>
@@ -2113,10 +2125,10 @@
 </table>
 <h2 id="architecture-at-a-glance">Architecture at a Glance<a class="headerlink" href="#architecture-at-a-glance" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph LR
-    A[Agent A] --&gt;|WebSocket| B[FileFlux Backend]
-    C[Agent B] --&gt;|WebSocket| B
-    D[Agent C] --&gt;|WebSocket| B
-    B --&gt;|REST / SSE| E[Frontend Dashboard]
+    A[Agent A] --&gt;|WebSocket / HTTPS| B[FileFlux Backend]
+    C[Agent B] --&gt;|WebSocket / HTTPS| B
+    D[Agent C] --&gt;|WebSocket / HTTPS| B
+    B --&gt;|REST| E[Frontend Dashboard]
     B --&gt;|SQL| F[(PostgreSQL)]</code></pre>
 <table>
 <thead>
@@ -2128,7 +2140,7 @@
 <tbody>
 <tr>
 <td><strong>Backend</strong></td>
-<td>Go 1.22 · Clean Architecture · gorilla/mux · gorilla/websocket</td>
+<td>Go 1.23 · Clean Architecture · gorilla/mux · gorilla/websocket</td>
 </tr>
 <tr>
 <td><strong>Frontend</strong></td>
@@ -2136,7 +2148,7 @@
 </tr>
 <tr>
 <td><strong>Agent</strong></td>
-<td>Go 1.21 · Single Binary · Multi-Platform</td>
+<td>Go 1.23 · Single Binary · Multi-Platform</td>
 </tr>
 <tr>
 <td><strong>Database</strong></td>
@@ -2171,12 +2183,12 @@
 <tr>
 <td><a href="architecture/overview/">Architecture</a></td>
 <td>Developers</td>
-<td>System design, WebSocket protocol, database layer, clean architecture.</td>
+<td>System design, dual-transport protocol, database layer, clean architecture.</td>
 </tr>
 <tr>
 <td><a href="api/rest/">API Reference</a></td>
 <td>Developers</td>
-<td>REST endpoints, WebSocket messages, request/response schemas.</td>
+<td>REST endpoints, WebSocket messages, HTTPS polling API, request/response schemas.</td>
 </tr>
 <tr>
 <td><a href="development/contributing/">Development</a></td>
@@ -2239,7 +2251,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

@@ -2070,13 +2070,12 @@
 <td>Authenticate agent connections</td>
 <td>Configurable</td>
 </tr>
-<tr>
-<td>API Token</td>
-<td>Authenticate REST API calls</td>
-<td>Configurable</td>
-</tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">User-Authentifizierung</p>
+<p>User authentifizieren sich per JWT-Token über <code>POST /auth/login</code>, nicht über Agent-Tokens.</p>
+</div>
 <h2 id="creating-tokens">Creating Tokens<a class="headerlink" href="#creating-tokens" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Navigate to <strong>Tokens</strong></li>
@@ -2086,7 +2085,8 @@
 </ol>
 <div class="admonition warning">
 <p class="admonition-title">Token Security</p>
-<p>Tokens are hashed before storage. The plaintext token cannot be retrieved after creation. Store it securely.</p>
+<p>The plaintext token is shown only once at creation time. Store it securely.
+Tokens are currently stored as plain text in the database (<code>tokens.token_value</code>).</p>
 </div>
 <h2 id="token-states">Token States<a class="headerlink" href="#token-states" title="Permanent link">&para;</a></h2>
 <table>
@@ -2160,7 +2160,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

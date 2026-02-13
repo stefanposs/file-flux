@@ -32,7 +32,7 @@ backend/
 ├── internal/                   # Infrastructure
 │   ├── config/                 # YAML + env configuration
 │   ├── db/                     # Schema migration, SQL
-│   ├── dispatch/               # Hybrid WS + polling agent dispatcher
+    ├── dispatch/               # Hybrid dispatcher (WebSocket + HTTPS polling)
 │   ├── engine/                 # Chunked transfer engine
 │   │   ├── chunker/            # File splitting / reassembly
 │   │   ├── compress/           # Compression (zstd, LZ4, none)
@@ -116,7 +116,8 @@ type ChunkRepository interface {
 | Component | Library | Purpose |
 |-----------|---------|---------|
 | HTTP Router | gorilla/mux | REST API routing |
-| WebSocket | gorilla/websocket | Agent communication |
+| WebSocket | gorilla/websocket | Real-time agent communication (primary transport) |
+| HTTPS Polling | gorilla/mux | Agent communication fallback for restricted networks |
 | Database | database/sql + lib/pq | PostgreSQL driver |
 | JWT | golang-jwt/jwt/v5 | Token generation + validation |
 | Scheduling | robfig/cron/v3 | Job scheduling |

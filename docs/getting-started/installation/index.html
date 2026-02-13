@@ -2223,18 +2223,17 @@
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>mv<span class="w"> </span>fileflux-agent-linux-amd64<span class="w"> </span>/usr/local/bin/fileflux-agent
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># Configure</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>fileflux-agent<span class="w"> </span>init<span class="w"> </span>--server<span class="w"> </span>https://your-fileflux-server:3002
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>fileflux-agent<span class="w"> </span>-config<span class="w"> </span>/path/to/config.yaml
 </code></pre></div>
 <h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c"># Run the PowerShell installer</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">irm </span><span class="n">https</span><span class="p">://</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="p">/</span><span class="n">stefanposs</span><span class="p">/</span><span class="n">file-flux</span><span class="p">/</span><span class="n">releases</span><span class="p">/</span><span class="n">latest</span><span class="p">/</span><span class="n">download</span><span class="p">/</span><span class="n">install</span><span class="p">.</span><span class="n">ps1</span> <span class="p">|</span> <span class="nb">iex</span>
 </code></pre></div>
 <h3 id="verify-installation">Verify Installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>fileflux-agent<span class="w"> </span>version
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>fileflux-agent<span class="w"> </span>status
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>fileflux-agent<span class="w"> </span>-version
 </code></pre></div>
 <h2 id="build-from-source">Build from Source<a class="headerlink" href="#build-from-source" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Prerequisites: Go 1.22+, Node.js 20+, just</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Prerequisites: Go 1.23+, Node.js 20+, just</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>just<span class="w"> </span>setup
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>just<span class="w"> </span>build
 </code></pre></div>
@@ -2283,7 +2282,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

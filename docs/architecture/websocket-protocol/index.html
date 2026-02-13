@@ -2112,18 +2112,19 @@
 <h1 id="websocket-protocol">WebSocket Protocol<a class="headerlink" href="#websocket-protocol" title="Permanent link">&para;</a></h1>
 <p>The WebSocket protocol defines communication between agents and the backend.</p>
 <h2 id="connection">Connection<a class="headerlink" href="#connection" title="Permanent link">&para;</a></h2>
-<p>Agents connect to <code>ws(s)://host:3002/ws</code> with a token in the query string:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>wss://fileflux.example.com:3002/ws?token=YOUR_AGENT_TOKEN
+<p>Agents connect to the WebSocket server on port 3002. Authentication is via HTTP <code>Authorization</code> header during the WebSocket upgrade:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>GET ws(s)://host:3002/ws/agent
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Authorization: Bearer YOUR_AGENT_TOKEN
 </code></pre></div>
 <h2 id="message-format">Message Format<a class="headerlink" href="#message-format" title="Permanent link">&para;</a></h2>
-<p>All control messages use JSON:</p>
+<p>All control messages use JSON text frames:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;message_type&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;payload&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-15T10:30:00Z&quot;</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
 </code></pre></div>
-<p>File chunks use binary WebSocket frames with a 24-byte header:</p>
+<p>File chunks use binary WebSocket frames with a <strong>57-byte header</strong>:</p>
 <table>
 <thead>
 <tr>
@@ -2135,8 +2136,13 @@
 <tbody>
 <tr>
 <td>0</td>
-<td>8 bytes</td>
-<td>Transfer ID (uint64, big-endian)</td>
+<td>4 bytes</td>
+<td>Magic (<code>0x46465846</code> = "FFXF")</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4 bytes</td>
+<td>Transfer ID (uint32, big-endian)</td>
 </tr>
 <tr>
 <td>8</td>
@@ -2146,22 +2152,32 @@
 <tr>
 <td>12</td>
 <td>4 bytes</td>
-<td>Chunk size (uint32, big-endian)</td>
-</tr>
-<tr>
-<td>16</td>
-<td>4 bytes</td>
 <td>Total chunks (uint32, big-endian)</td>
 </tr>
 <tr>
-<td>20</td>
-<td>4 bytes</td>
-<td>Reserved</td>
+<td>16</td>
+<td>32 bytes</td>
+<td>Chunk SHA-256 hash (raw bytes)</td>
 </tr>
 <tr>
-<td>24+</td>
+<td>48</td>
+<td>4 bytes</td>
+<td>Uncompressed size (uint32, big-endian)</td>
+</tr>
+<tr>
+<td>52</td>
+<td>4 bytes</td>
+<td>Compressed size (uint32, big-endian)</td>
+</tr>
+<tr>
+<td>56</td>
+<td>1 byte</td>
+<td>Compression type (0=none, 1=zstd, 2=LZ4)</td>
+</tr>
+<tr>
+<td>57+</td>
 <td>variable</td>
-<td>Chunk data</td>
+<td>Compressed chunk data</td>
 </tr>
 </tbody>
 </table>
@@ -2177,34 +2193,39 @@
 </thead>
 <tbody>
 <tr>
-<td><code>AUTH</code></td>
-<td>Authentication</td>
-<td><code>{ token: string }</code></td>
-</tr>
-<tr>
-<td><code>HEARTBEAT</code></td>
+<td><code>heartbeat</code></td>
 <td>Keep-alive ping</td>
 <td><code>{ uptime: number }</code></td>
 </tr>
 <tr>
-<td><code>SYSTEM_INFO</code></td>
+<td><code>agent_info</code></td>
 <td>System metrics</td>
-<td><code>{ hostname, os, arch, cpu, memory, disk }</code></td>
+<td><code>{ hostname, os, arch, ip, version }</code></td>
 </tr>
 <tr>
-<td><code>CHUNK_ACK</code></td>
-<td>Chunk received</td>
+<td><code>transfer_progress</code></td>
+<td>Progress update</td>
+<td><code>{ transfer_id, progress, bytes_sent, total_bytes }</code></td>
+</tr>
+<tr>
+<td><code>transfer_complete</code></td>
+<td>Transfer finished</td>
+<td><code>{ transfer_id, file_hash }</code></td>
+</tr>
+<tr>
+<td><code>transfer_error</code></td>
+<td>Transfer failed</td>
+<td><code>{ transfer_id, error }</code></td>
+</tr>
+<tr>
+<td><code>chunk_ack</code></td>
+<td>Chunk received OK</td>
 <td><code>{ transfer_id, chunk_index }</code></td>
 </tr>
 <tr>
-<td><code>TRANSFER_COMPLETE</code></td>
-<td>Transfer finished</td>
-<td><code>{ transfer_id, checksum }</code></td>
-</tr>
-<tr>
-<td><code>TRANSFER_ERROR</code></td>
-<td>Transfer failed</td>
-<td><code>{ transfer_id, error }</code></td>
+<td><code>chunk_nack</code></td>
+<td>Chunk failed</td>
+<td><code>{ transfer_id, chunk_index, error }</code></td>
 </tr>
 </tbody>
 </table>
@@ -2219,63 +2240,63 @@
 </thead>
 <tbody>
 <tr>
-<td><code>AUTH_OK</code></td>
-<td>Auth successful</td>
-<td><code>{ agent_id }</code></td>
-</tr>
-<tr>
-<td><code>AUTH_FAIL</code></td>
-<td>Auth failed</td>
-<td><code>{ reason }</code></td>
-</tr>
-<tr>
-<td><code>TRANSFER_START</code></td>
+<td><code>transfer_request</code></td>
 <td>Begin transfer</td>
-<td><code>{ transfer_id, job_id, filename, size, dest_path }</code></td>
+<td><code>{ id, job_id, filename, size, source_path, destination_path, protocol, compression }</code></td>
 </tr>
 <tr>
-<td><code>TRANSFER_CANCEL</code></td>
+<td><code>cancel_transfer</code></td>
 <td>Abort transfer</td>
 <td><code>{ transfer_id }</code></td>
 </tr>
 <tr>
-<td><code>HEARTBEAT_ACK</code></td>
-<td>Pong</td>
+<td><code>transfer_resume</code></td>
+<td>Resume transfer</td>
+<td><code>{ transfer_id, from_chunk }</code></td>
+</tr>
+<tr>
+<td><code>chunk_request</code></td>
+<td>Request chunk</td>
+<td><code>{ transfer_id, chunk_index }</code></td>
+</tr>
+<tr>
+<td><code>connection_test</code></td>
+<td>Connectivity test</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Keine AUTH-Nachrichten</p>
+<p>Die Authentifizierung erfolgt beim WebSocket-Upgrade über den HTTP <code>Authorization: Bearer</code> Header — nicht als separate WebSocket-Nachricht.</p>
+</div>
 <h2 id="heartbeat">Heartbeat<a class="headerlink" href="#heartbeat" title="Permanent link">&para;</a></h2>
-<p>Agents send <code>HEARTBEAT</code> every 30 seconds. If the backend receives no heartbeat for 90 seconds, the agent is marked as offline.</p>
+<p>Agents senden <code>heartbeat</code> alle <strong>60 Sekunden</strong> (konfigurierbar über <code>connection.heartbeat_interval</code>). Wenn der Backend für ~60 Sekunden keinen Heartbeat oder Pong empfängt, wird der Agent als offline markiert.</p>
 <h2 id="reconnection">Reconnection<a class="headerlink" href="#reconnection" title="Permanent link">&para;</a></h2>
-<p>On connection loss, agents use exponential backoff:</p>
+<p>Bei Verbindungsverlust nutzt der Agent exponentielles Backoff mit Jitter:</p>
 <table>
 <thead>
 <tr>
-<th>Attempt</th>
-<th>Delay</th>
+<th>Parameter</th>
+<th>Wert</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>1</td>
-<td>1s</td>
+<td>Basis-Delay</td>
+<td>10 Sekunden (konfigurierbar)</td>
 </tr>
 <tr>
-<td>2</td>
-<td>2s</td>
+<td>Maximales Backoff</td>
+<td>5 Minuten</td>
 </tr>
 <tr>
-<td>3</td>
-<td>4s</td>
+<td>Strategie</td>
+<td>Exponentiell mit Jitter</td>
 </tr>
 <tr>
-<td>4</td>
-<td>8s</td>
-</tr>
-<tr>
-<td>5+</td>
-<td>30s (max)</td>
+<td>Max. Versuche</td>
+<td>5 (konfigurierbar, 0 = unbegrenzt)</td>
 </tr>
 </tbody>
 </table>
@@ -2319,7 +2340,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

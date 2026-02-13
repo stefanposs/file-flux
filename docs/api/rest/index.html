@@ -1844,6 +1844,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#agent-long-polling-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Long-Polling (Fallback)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Long-Polling (Fallback)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#post-apiagentconnect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/agent/connect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiagentpoll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/agent/poll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apiagentmessages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/agent/messages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apiagentack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/agent/ack
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#error-format" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2767,6 +2828,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#agent-long-polling-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Long-Polling (Fallback)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Long-Polling (Fallback)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#post-apiagentconnect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/agent/connect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiagentpoll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /api/agent/poll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apiagentmessages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/agent/messages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-apiagentack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/agent/ack
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#error-format" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2798,7 +2920,7 @@
 
 
 <h1 id="rest-api-endpoints">REST API Endpoints<a class="headerlink" href="#rest-api-endpoints" title="Permanent link">&para;</a></h1>
-<p>Base URL: <code>http://localhost:3001/api/v1</code></p>
+<p>Base URL: <code>http://localhost:3001/api</code></p>
 <p>Alle Endpoints (außer <code>/auth/login</code>, <code>/health</code> und <code>/api/info</code>) erfordern <code>Authorization: Bearer &lt;jwt-token&gt;</code>.</p>
 <hr />
 <h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h2>
@@ -2941,15 +3063,27 @@
 <h3 id="get-health">GET /health<a class="headerlink" href="#get-health" title="Permanent link">&para;</a></h3>
 <p>Health-Check (keine Authentifizierung). Prüft Datenbank-Konnektivität.</p>
 <p><strong>Response (healthy):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;healthy&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;database&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;connected&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;components&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;database&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;api&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div></p>
 <p><strong>Response (unhealthy, HTTP 503):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;unhealthy&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;database&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;disconnected&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;degraded&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;components&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;database&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;api&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div></p>
 <h3 id="get-apiinfo">GET /api/info<a class="headerlink" href="#get-apiinfo" title="Permanent link">&para;</a></h3>
 <p>API-Informationen.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FileFlux API&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FileFlux API&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;docs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/api/docs&quot;</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
+<hr />
+<h2 id="agent-long-polling-fallback">Agent Long-Polling (Fallback)<a class="headerlink" href="#agent-long-polling-fallback" title="Permanent link">&para;</a></h2>
+<p>Diese Endpoints werden vom Agent als Fallback-Transport genutzt, wenn keine WebSocket-Verbindung möglich ist.
+Authentifizierung erfolgt per <code>Authorization: Bearer &lt;agent-token&gt;</code>.</p>
+<h3 id="post-apiagentconnect">POST /api/agent/connect<a class="headerlink" href="#post-apiagentconnect" title="Permanent link">&para;</a></h3>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m5.6-4c-.8-2.3-3-4-5.6-4-3.3 0-6 2.7-6 6s2.7 6 6 6c2.6 0 4.8-1.7 5.6-4H16v4h4v-4h3v-4z"/></svg></span> Agent-Registrierung über Polling-Transport.</p>
+<h3 id="get-apiagentpoll">GET /api/agent/poll<a class="headerlink" href="#get-apiagentpoll" title="Permanent link">&para;</a></h3>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m5.6-4c-.8-2.3-3-4-5.6-4-3.3 0-6 2.7-6 6s2.7 6 6 6c2.6 0 4.8-1.7 5.6-4H16v4h4v-4h3v-4z"/></svg></span> Long-Polling — wartet auf neue Nachrichten vom Server.</p>
+<h3 id="post-apiagentmessages">POST /api/agent/messages<a class="headerlink" href="#post-apiagentmessages" title="Permanent link">&para;</a></h3>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m5.6-4c-.8-2.3-3-4-5.6-4-3.3 0-6 2.7-6 6s2.7 6 6 6c2.6 0 4.8-1.7 5.6-4H16v4h4v-4h3v-4z"/></svg></span> Agent sendet Nachrichten (Heartbeat, Transfer-Status) an den Server.</p>
+<h3 id="post-apiagentack">POST /api/agent/ack<a class="headerlink" href="#post-apiagentack" title="Permanent link">&para;</a></h3>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m5.6-4c-.8-2.3-3-4-5.6-4-3.3 0-6 2.7-6 6s2.7 6 6 6c2.6 0 4.8-1.7 5.6-4H16v4h4v-4h3v-4z"/></svg></span> Agent bestätigt den Empfang einer Nachricht.</p>
 <hr />
 <h2 id="error-format">Error Format<a class="headerlink" href="#error-format" title="Permanent link">&para;</a></h2>
 <p>Alle Fehler folgen einem einheitlichen Format:</p>
@@ -3038,7 +3172,7 @@ Zugriffe auf fremde Ressourcen geben <code>404 Not Found</code> zurück — nich
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

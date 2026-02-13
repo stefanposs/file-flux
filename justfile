@@ -256,7 +256,7 @@ docs:
 docs-build:
     @echo "📚 Building documentation..."
     mkdocs build
-    @echo "✅ Documentation → docs-site/"
+    @echo "✅ Documentation → docs/"
 
 # ============================================================================
 # Database

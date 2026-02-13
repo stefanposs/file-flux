@@ -2010,7 +2010,7 @@
 
 
 <h1 id="database-schema">Database Schema<a class="headerlink" href="#database-schema" title="Permanent link">&para;</a></h1>
-<p>FileFlux uses PostgreSQL 14+ with schema migrations managed by <code>golang-migrate</code>.</p>
+<p>FileFlux uses PostgreSQL 16 with auto-migration from <code>backend/internal/db/schema.sql</code>.</p>
 <h2 id="entity-relationship-diagram">Entity Relationship Diagram<a class="headerlink" href="#entity-relationship-diagram" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>erDiagram
     users ||--o{ tokens : creates
@@ -2018,78 +2018,110 @@
     agents ||--o{ tokens : "registered via"
     jobs ||--o{ transfers : triggers
     agents ||--o{ transfers : "source/dest"
+    transfers ||--o{ transfer_chunks : contains
 
     users {
-        bigserial id PK
+        serial id PK
         varchar email UK
+        varchar name
         varchar password_hash
         varchar role
+        timestamp last_login
         timestamp created_at
-        timestamp updated_at
     }
 
     agents {
-        bigserial id PK
+        serial id PK
         varchar name
         varchar type
         varchar status
-        inet ip_address
-        jsonb system_info
+        varchar ip_address
+        varchar system
         varchar version
+        varchar description
+        varchar transport_mode
         timestamp last_seen
+        timestamp last_poll_at
         timestamp created_at
     }
 
     tokens {
-        bigserial id PK
-        varchar token_hash UK
+        serial id PK
+        varchar token_value UK
         varchar name
-        bigint created_by FK
-        bigint agent_id FK
-        varchar status
+        int agent_id FK
+        varchar description
         timestamp expires_at
+        timestamp last_used
         timestamp created_at
     }
 
     jobs {
-        bigserial id PK
+        serial id PK
         varchar name
         varchar type
         varchar status
-        bigint source_agent_id FK
+        int source_agent_id FK
         varchar source_path
-        bigint dest_agent_id FK
-        varchar dest_path
+        int destination_agent_id FK
+        varchar destination_path
         varchar schedule
-        varchar file_pattern
         text description
-        bigint created_by FK
-        timestamp last_run_at
+        int user_id FK
+        timestamp last_run
         timestamp created_at
-        timestamp updated_at
     }
 
     transfers {
-        bigserial id PK
-        bigint job_id FK
+        serial id PK
+        int job_id FK
         varchar filename
         bigint size
         varchar status
-        bigint source_agent_id FK
-        bigint dest_agent_id FK
+        int source_agent_id FK
+        int destination_agent_id FK
+        varchar source_path
+        varchar destination_path
         varchar checksum
         real progress
-        timestamp started_at
-        timestamp completed_at
         text error
+        varchar file_hash
+        varchar compression
+        int chunk_size
+        int total_chunks
+        int completed_chunks
+        bigint bytes_transferred
+        int retry_count
+        int max_retries
+        timestamp start_time
+        timestamp end_time
+        timestamp created_at
+    }
+
+    transfer_chunks {
+        serial id PK
+        int transfer_id FK
+        int chunk_index
+        varchar chunk_hash
+        int size_compressed
+        int size_original
+        varchar status
+        timestamp received_at
+    }
+
+    agent_message_queue {
+        serial id PK
+        int agent_id FK
+        varchar message_type
+        jsonb payload
+        varchar status
+        timestamp created_at
+        timestamp processed_at
     }</code></pre>
 <h2 id="migrations">Migrations<a class="headerlink" href="#migrations" title="Permanent link">&para;</a></h2>
-<p>Migrations are stored in <code>backend/migrations/</code> and applied automatically on startup:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Apply all pending migrations</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>just<span class="w"> </span>db-migrate
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Reset database (destroys data!)</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>just<span class="w"> </span>db-reset
+<p>Schema is defined in <code>backend/internal/db/schema.sql</code> and applied automatically on startup via <code>pgDB.Migrate()</code>. All DDL statements use <code>IF NOT EXISTS</code> / <code>IF NOT EXISTS</code> for idempotent re-runs.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Reset database (destroys data!)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>just<span class="w"> </span>db-reset
 </code></pre></div>
 <h2 id="indexes">Indexes<a class="headerlink" href="#indexes" title="Permanent link">&para;</a></h2>
 <p>Key indexes for query performance:</p>
@@ -2097,8 +2129,10 @@
 <li><code>transfers(job_id)</code> — Fast lookup by job</li>
 <li><code>transfers(status)</code> — Filter by status</li>
 <li><code>agents(status)</code> — Active agent queries</li>
-<li><code>tokens(token_hash)</code> — Token validation</li>
-<li><code>jobs(source_agent_id, dest_agent_id)</code> — Agent relationship queries</li>
+<li><code>tokens(token_value)</code> — Token validation</li>
+<li><code>jobs(source_agent_id, destination_agent_id)</code> — Agent relationship queries</li>
+<li><code>transfer_chunks(transfer_id)</code> — Chunk lookup by transfer</li>
+<li><code>agent_message_queue(agent_id, status)</code> — Pending message lookup</li>
 </ul>
 
 
@@ -2140,7 +2174,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

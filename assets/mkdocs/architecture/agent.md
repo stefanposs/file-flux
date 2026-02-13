@@ -33,14 +33,14 @@ agent/
 
 ```
 main.go
-  ├── config.LoadConfig()         # YAML laden
-  ├── system.CollectSystemInfo()  # OS, Hostname, IP
-  ├── api.NewClient()             # HTTP-Client für File-API
-  ├── transfer.NewManager()       # Transfer-Engine
-  ├── websocket.NewClient()       # WS-Client erstellen
-  │     ├── SetSystemInfo()
-  │     └── SetTransferManager()
-  └── go wsClient.Connect()       # Verbindung in Goroutine
+  ├── config.LoadConfig()         # Load YAML configuration
+  ├── system.CollectSystemInfo()  # OS, hostname, IP
+  ├── api.NewClient()             # HTTP client for file API
+  ├── transfer.NewManager()       # Transfer engine
+  ├── NewAutoTransport()          # Adaptive transport layer
+  │     ├── Try WebSocket first
+  │     └── Fallback to HTTPS polling
+  └── go transport.Connect()      # Connect in goroutine
 ```
 
 ## Connection Management
@@ -49,58 +49,66 @@ main.go
 stateDiagram-v2
     [*] --> Connecting
     Connecting --> Connected: WebSocket open
+    Connecting --> TryPolling: WebSocket blocked
+    TryPolling --> PollingActive: HTTPS registered
     Connecting --> Backoff: Connection failed
     Backoff --> Connecting: Exponential retry (2s → 5min)
     Connected --> Authenticated: Token validated
     Authenticated --> Ready: System info sent
+    PollingActive --> Ready: System info sent
     Ready --> Ready: Heartbeat loop
     Ready --> Transferring: Transfer command
     Transferring --> Ready: Transfer complete
     Ready --> Reconnecting: Connection lost
+    Ready --> ProbeWS: WS probe (every 5min)
+    ProbeWS --> Connected: WS available → upgrade
+    ProbeWS --> Ready: WS still blocked
     Reconnecting --> Connecting: Backoff + jitter
 ```
 
-Der Agent nutzt **unbegrenztes exponentielles Backoff mit Jitter** (2 Sekunden bis maximal 5 Minuten) und startet sich nach Verbindungsverlust automatisch neu.
+The agent uses **unlimited exponential backoff with jitter** (2 seconds up to 5 minutes max) and automatically reconnects after connection loss. When running in polling mode, the agent periodically probes whether WebSocket has become available and upgrades transparently.
 
 ## Transfer Engine
 
-1. **Chunk-basiert** — Dateien werden in konfigurierbaren Chunks gelesen (Standard 8 MB)
-2. **Binary WebSocket** — Chunks werden als 57-Byte-Header + komprimierte Payload über WebSocket gesendet (Phase 2, Protokoll `binary_ws`)
-3. **HTTP-Upload (Legacy)** — Chunks werden als `PUT /api/files/{transferId}/upload` an den Server gesendet
-4. **HTTP-Download** — Dateien werden via `GET /api/files/{transferId}/download` empfangen
-5. **Kompression** — zstd (Standard) oder LZ4 Kompression pro Chunk
-6. **Integrität** — SHA-256 Hash pro Chunk und für die gesamte Datei
-7. **Progress-Reporting** — Fortschritt wird per WebSocket an den Server gemeldet
-8. **Concurrency** — Mehrere Transfers können parallel laufen (konfigurierbar)
-9. **Retry** — Exponentielles Backoff mit Jitter bei Chunk-Fehlern (max. 3 Versuche)
+| Capability | Description |
+|-----------|-------------|
+| **Chunk-based** | Files are split into configurable chunks (default 8 MB) for resumable transfers |
+| **Binary WebSocket** | Chunks are sent as 57‑byte header + compressed payload via WebSocket (Phase 2, protocol `binary_ws`) |
+| **HTTPS Upload** | Chunks can also be uploaded via `PUT /api/files/{transferId}/upload` over standard HTTPS |
+| **HTTPS Download** | Files are downloaded via `GET /api/files/{transferId}/download` |
+| **Compression** | zstd (default) or LZ4 compression per chunk — reducing bandwidth by up to 80% |
+| **Integrity** | SHA-256 hash per chunk and for the entire file — cryptographic proof of correctness |
+| **Progress Reporting** | Real-time progress updates sent to the backend (via WS or HTTPS) |
+| **Concurrency** | Multiple transfers can run in parallel (configurable) |
+| **Retry** | Exponential backoff with jitter on chunk errors (max 3 attempts) |
 
 ## Message Types
 
-Der Agent verarbeitet folgende WebSocket-Nachrichten:
+The agent processes the following messages (via WebSocket or HTTPS polling):
 
-| Type | Richtung | Beschreibung |
-|------|----------|-------------|
-| `heartbeat` | Agent → Server | Regelmäßiger Lebenszeichen-Ping (alle 60s) |
-| `agent_info` | Agent → Server | Systeminformationen senden |
-| `transfer_request` | Server → Agent | Transfer starten |
-| `transfer_progress` | Agent → Server | Fortschritt melden |
-| `transfer_complete` | Agent → Server | Transfer abgeschlossen |
-| `transfer_error` | Agent → Server | Fehler melden |
-| `chunk_ack` | Bidirektional | Chunk erfolgreich empfangen |
-| `chunk_nack` | Bidirektional | Chunk-Empfang fehlgeschlagen |
-| `chunk_request` | Server → Agent | Bestimmten Chunk anfordern |
-| `transfer_resume` | Server → Agent | Unterbrochenen Transfer fortsetzen |
-| `cancel_transfer` | Server → Agent | Transfer abbrechen |
-| `connection_test` | Server → Agent | Verbindungstest |
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `heartbeat` | Agent → Server | Keep-alive ping every 60s |
+| `agent_info` | Agent → Server | Send system information |
+| `transfer_request` | Server → Agent | Start a transfer |
+| `transfer_progress` | Agent → Server | Report transfer progress |
+| `transfer_complete` | Agent → Server | Transfer finished successfully |
+| `transfer_error` | Agent → Server | Report transfer error |
+| `chunk_ack` | Bidirectional | Chunk received successfully |
+| `chunk_nack` | Bidirectional | Chunk reception failed |
+| `chunk_request` | Server → Agent | Request a specific chunk |
+| `transfer_resume` | Server → Agent | Resume interrupted transfer |
+| `cancel_transfer` | Server → Agent | Cancel a transfer |
+| `connection_test` | Server → Agent | Connectivity test |
 
 ## Cross-Platform Support
 
-Der Agent kompiliert zu einem einzelnen statischen Binary pro Plattform:
+The agent compiles to a single static binary per platform — no runtime dependencies, no installation required:
 
-| Target | Binary |
-|--------|--------|
-| Linux amd64 | `fileflux-agent-linux-amd64` |
-| Linux arm64 | `fileflux-agent-linux-arm64` |
-| macOS amd64 | `fileflux-agent-darwin-amd64` |
-| macOS arm64 | `fileflux-agent-darwin-arm64` |
-| Windows amd64 | `fileflux-agent-windows-amd64.exe` |
+| Target | Binary | Size |
+|--------|--------|------|
+| Linux amd64 | `fileflux-agent-linux-amd64` | ~15 MB |
+| Linux arm64 | `fileflux-agent-linux-arm64` | ~15 MB |
+| macOS amd64 | `fileflux-agent-darwin-amd64` | ~15 MB |
+| macOS arm64 | `fileflux-agent-darwin-arm64` | ~15 MB |
+| Windows amd64 | `fileflux-agent-windows-amd64.exe` | ~16 MB |

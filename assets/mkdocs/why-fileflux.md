@@ -33,7 +33,7 @@ Per-agent licensing with unlimited transfers. No per-GB fees, no hidden costs. S
 
 ### Developer-Friendly
 - RESTful API for automation
-- WebSocket protocol for real-time agent communication
+- WebSocket + HTTPS dual-transport protocol for any network
 - Docker-first deployment
 - Comprehensive documentation
 
@@ -46,6 +46,7 @@ Per-agent licensing with unlimited transfers. No per-GB fees, no hidden costs. S
 | Container-native | ✅ | ❌ | ❌ | ❌ |
 | Real-time dashboard | ✅ | ✅ | ✅ | ✅ |
 | Chunked transfers | ✅ | ✅ | ✅ | ✅ |
+| Adaptive transport | ✅ WS + HTTPS | ❌ | ❌ | ❌ |
 | REST API | ✅ | ✅ | ✅ | ✅ |
 | Cron scheduling | ✅ | ✅ | ✅ | ✅ |
 | Modern UI | ✅ | ❌ | ❌ | ❌ |

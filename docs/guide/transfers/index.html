@@ -864,6 +864,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Chunked Transfer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compression
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2020,6 +2037,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Chunked Transfer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compression
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2150,14 +2184,39 @@
 </tbody>
 </table>
 <h2 id="chunked-transfer">Chunked Transfer<a class="headerlink" href="#chunked-transfer" title="Permanent link">&para;</a></h2>
-<p>Files are split into chunks (default 1 MB) for reliable transfer:</p>
+<p>Files are split into chunks (default 8 MB) for reliable transfer:</p>
 <ol>
 <li>Source agent reads a chunk from disk</li>
-<li>Chunk is sent as a binary WebSocket frame to the backend</li>
+<li>Chunk is compressed (zstd or LZ4)</li>
+<li>SHA-256 hash is computed per chunk</li>
+<li>Chunk is sent as a binary WebSocket frame (57-byte header + compressed data)</li>
 <li>Backend relays the chunk to the destination agent</li>
-<li>Destination agent writes the chunk to disk</li>
-<li>After all chunks, both sides verify the SHA-256 checksum</li>
+<li>Destination agent verifies the hash, decompresses, and writes to disk</li>
+<li>After all chunks, the full file SHA-256 is verified</li>
 </ol>
+<h3 id="compression">Compression<a class="headerlink" href="#compression" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>zstd</td>
+<td>Standard — gute Balance aus Geschwindigkeit und Kompressionsrate</td>
+</tr>
+<tr>
+<td>LZ4</td>
+<td>Ultra-schnell — ideal für LAN-Transfers mit geringer Latenz</td>
+</tr>
+<tr>
+<td>none</td>
+<td>Keine Kompression — für bereits komprimierte Dateien</td>
+</tr>
+</tbody>
+</table>
 <h2 id="retry-behavior">Retry Behavior<a class="headerlink" href="#retry-behavior" title="Permanent link">&para;</a></h2>
 <p>Failed chunks are automatically retried up to <code>TRANSFER_MAX_RETRIES</code> times (default: 3). If all retries fail, the transfer is marked as failed and the job reports an error.</p>
 <h2 id="filtering-transfers">Filtering Transfers<a class="headerlink" href="#filtering-transfers" title="Permanent link">&para;</a></h2>
@@ -2215,7 +2274,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

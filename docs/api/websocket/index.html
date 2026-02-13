@@ -1467,22 +1467,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-sent-events-sse" class="md-nav__link">
+  <a href="#message-types" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Server-Sent Events (SSE)
+        Message Types
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Server-Sent Events (SSE)">
+    <nav class="md-nav" aria-label="Message Types">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#event-types" class="md-nav__link">
+  <a href="#agent-backend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Event Types
+        Agent → Backend
       
     </span>
   </a>
@@ -1490,10 +1490,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#javascript-example" class="md-nav__link">
+  <a href="#backend-agent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JavaScript Example
+        Backend → Agent
       
     </span>
   </a>
@@ -1502,6 +1502,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-time-updates-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Updates (Frontend)
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1985,22 +1996,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#server-sent-events-sse" class="md-nav__link">
+  <a href="#message-types" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Server-Sent Events (SSE)
+        Message Types
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Server-Sent Events (SSE)">
+    <nav class="md-nav" aria-label="Message Types">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#event-types" class="md-nav__link">
+  <a href="#agent-backend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Event Types
+        Agent → Backend
       
     </span>
   </a>
@@ -2008,10 +2019,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#javascript-example" class="md-nav__link">
+  <a href="#backend-agent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JavaScript Example
+        Backend → Agent
       
     </span>
   </a>
@@ -2020,6 +2031,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-time-updates-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Updates (Frontend)
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2044,95 +2066,111 @@
 
 
 <h1 id="websocket-api">WebSocket API<a class="headerlink" href="#websocket-api" title="Permanent link">&para;</a></h1>
-<p>WebSocket endpoint: <code>ws(s)://host:3002/ws?token=AGENT_TOKEN</code></p>
+<p>WebSocket endpoint: <code>ws(s)://host:3002/ws/agent</code></p>
+<p>Authentication is done via HTTP header during the WebSocket upgrade:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Authorization: Bearer &lt;AGENT_TOKEN&gt;
+</code></pre></div>
 <p>See <a href="../../architecture/websocket-protocol/">WebSocket Protocol</a> for the full protocol specification.</p>
 <h2 id="connection-example-go">Connection Example (Go)<a class="headerlink" href="#connection-example-go" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="s">&quot;github.com/gorilla/websocket&quot;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">websocket</span><span class="p">.</span><span class="nx">DefaultDialer</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="s">&quot;wss://fileflux.example.com:3002/ws?token=ffx_abc123&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kc">nil</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">defer</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1">// Send heartbeat</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nx">msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}{</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="s">&quot;type&quot;</span><span class="p">:</span><span class="w">    </span><span class="s">&quot;HEARTBEAT&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="s">&quot;payload&quot;</span><span class="p">:</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}{</span><span class="s">&quot;uptime&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3600</span><span class="p">},</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">}</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nx">conn</span><span class="p">.</span><span class="nx">WriteJSON</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="s">&quot;net/http&quot;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="s">&quot;github.com/gorilla/websocket&quot;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">)</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nx">header</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">Header</span><span class="p">{}</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nx">header</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bearer ffx_abc123...&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">websocket</span><span class="p">.</span><span class="nx">DefaultDialer</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="s">&quot;wss://fileflux.example.com:3002/ws/agent&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="nx">header</span><span class="p">,</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">)</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="p">}</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">defer</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="c1">// Send heartbeat</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="nx">msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}{</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="s">&quot;type&quot;</span><span class="p">:</span><span class="w">    </span><span class="s">&quot;heartbeat&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="s">&quot;payload&quot;</span><span class="p">:</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}{</span><span class="s">&quot;uptime&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3600</span><span class="p">},</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">}</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nx">conn</span><span class="p">.</span><span class="nx">WriteJSON</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="server-sent-events-sse">Server-Sent Events (SSE)<a class="headerlink" href="#server-sent-events-sse" title="Permanent link">&para;</a></h2>
-<p>Frontend clients subscribe to real-time updates via SSE:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>GET /api/v1/events
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Accept: text/event-stream
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Authorization: Bearer &lt;jwt&gt;
-</code></pre></div>
-<h3 id="event-types">Event Types<a class="headerlink" href="#event-types" title="Permanent link">&para;</a></h3>
+<h2 id="message-types">Message Types<a class="headerlink" href="#message-types" title="Permanent link">&para;</a></h2>
+<p>All control messages use JSON text frames. File chunks use binary WebSocket frames.</p>
+<h3 id="agent-backend">Agent → Backend<a class="headerlink" href="#agent-backend" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Event</th>
-<th>Data</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>transfer.started</code></td>
-<td><code>{ transfer_id, job_id, filename }</code></td>
-<td>Transfer began</td>
+<td><code>heartbeat</code></td>
+<td>Keep-alive ping (every 60s)</td>
 </tr>
 <tr>
-<td><code>transfer.progress</code></td>
-<td><code>{ transfer_id, progress, speed }</code></td>
-<td>Progress update</td>
+<td><code>agent_info</code></td>
+<td>System info (hostname, OS, IP)</td>
 </tr>
 <tr>
-<td><code>transfer.completed</code></td>
-<td><code>{ transfer_id, checksum, duration }</code></td>
-<td>Transfer finished</td>
+<td><code>transfer_progress</code></td>
+<td>Transfer progress update</td>
 </tr>
 <tr>
-<td><code>transfer.failed</code></td>
-<td><code>{ transfer_id, error }</code></td>
+<td><code>transfer_complete</code></td>
+<td>Transfer finished with checksum</td>
+</tr>
+<tr>
+<td><code>transfer_error</code></td>
 <td>Transfer failed</td>
 </tr>
 <tr>
-<td><code>agent.connected</code></td>
-<td><code>{ agent_id, name }</code></td>
-<td>Agent came online</td>
+<td><code>chunk_ack</code></td>
+<td>Binary chunk received OK</td>
 </tr>
 <tr>
-<td><code>agent.disconnected</code></td>
-<td><code>{ agent_id, name }</code></td>
-<td>Agent went offline</td>
-</tr>
-<tr>
-<td><code>job.started</code></td>
-<td><code>{ job_id, name }</code></td>
-<td>Job execution began</td>
-</tr>
-<tr>
-<td><code>job.completed</code></td>
-<td><code>{ job_id, transfers_count }</code></td>
-<td>Job finished</td>
+<td><code>chunk_nack</code></td>
+<td>Binary chunk receive failed</td>
 </tr>
 </tbody>
 </table>
-<h3 id="javascript-example">JavaScript Example<a class="headerlink" href="#javascript-example" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">EventSource</span><span class="p">(</span><span class="s1">&#39;/api/v1/events&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s1">&#39;Authorization&#39;</span><span class="o">:</span><span class="w"> </span><span class="sb">`Bearer </span><span class="si">${</span><span class="nx">token</span><span class="si">}</span><span class="sb">`</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">});</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">events</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;transfer.progress&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Transfer </span><span class="si">${</span><span class="nx">data</span><span class="p">.</span><span class="nx">transfer_id</span><span class="si">}</span><span class="sb">: </span><span class="si">${</span><span class="nx">data</span><span class="p">.</span><span class="nx">progress</span><span class="si">}</span><span class="sb">%`</span><span class="p">);</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">});</span>
-</code></pre></div>
+<h3 id="backend-agent">Backend → Agent<a class="headerlink" href="#backend-agent" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>transfer_request</code></td>
+<td>Start a transfer (upload/download)</td>
+</tr>
+<tr>
+<td><code>cancel_transfer</code></td>
+<td>Abort a running transfer</td>
+</tr>
+<tr>
+<td><code>transfer_resume</code></td>
+<td>Resume a suspended transfer</td>
+</tr>
+<tr>
+<td><code>chunk_request</code></td>
+<td>Request a specific chunk</td>
+</tr>
+<tr>
+<td><code>connection_test</code></td>
+<td>Test agent connectivity</td>
+</tr>
+</tbody>
+</table>
+<h2 id="real-time-updates-frontend">Real-Time Updates (Frontend)<a class="headerlink" href="#real-time-updates-frontend" title="Permanent link">&para;</a></h2>
+<p>The frontend receives updates via polling the REST API and an in-app event bus.
+WebSocket connections are reserved for agent ↔ backend communication.</p>
 
 
 
@@ -2173,7 +2211,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

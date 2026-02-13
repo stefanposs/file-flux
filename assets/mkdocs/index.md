@@ -36,6 +36,7 @@ Move files between N-to-M endpoints with real-time monitoring, scheduling, and f
 | **Multi-Platform Agent** | Lightweight Go agent for Linux, macOS, and Windows. Single binary, zero dependencies. |
 | **Audit Trail** | Complete transfer history with timestamps, checksums, and user attribution. |
 | **WebSocket Control** | Real-time agent communication via persistent WebSocket connections. |
+| **Adaptive Transport** | Automatic fallback to HTTPS Long-Polling when firewalls block WebSocket. |
 | **Compression** | Built-in zstd and LZ4 compression for efficient data transfer. |
 | **Polling Fallback** | HTTP Long-Polling transport for restricted network environments. |
 | **REST API** | Full REST API for automation and integration. Every resource is programmable. |
@@ -44,9 +45,9 @@ Move files between N-to-M endpoints with real-time monitoring, scheduling, and f
 
 ```mermaid
 graph LR
-    A[Agent A] -->|WebSocket| B[FileFlux Backend]
-    C[Agent B] -->|WebSocket| B
-    D[Agent C] -->|WebSocket| B
+    A[Agent A] -->|WebSocket / HTTPS| B[FileFlux Backend]
+    C[Agent B] -->|WebSocket / HTTPS| B
+    D[Agent C] -->|WebSocket / HTTPS| B
     B -->|REST| E[Frontend Dashboard]
     B -->|SQL| F[(PostgreSQL)]
 ```
@@ -65,8 +66,8 @@ graph LR
 |---------|----------|-------------|
 | [Getting Started](getting-started/quick-start.md) | Everyone | Install, configure, first login — up and running in 5 minutes. |
 | [User Guide](guide/dashboard.md) | Operators | Jobs, agents, transfers, tokens, scheduling, and monitoring. |
-| [Architecture](architecture/overview.md) | Developers | System design, WebSocket protocol, database layer, clean architecture. |
-| [API Reference](api/rest.md) | Developers | REST endpoints, WebSocket messages, request/response schemas. |
+| [Architecture](architecture/overview.md) | Developers | System design, dual-transport protocol, database layer, clean architecture. |
+| [API Reference](api/rest.md) | Developers | REST endpoints, WebSocket messages, HTTPS polling API, request/response schemas. |
 | [Development](development/contributing.md) | Contributors | Code style, testing, CI/CD, how to contribute. |
 | [Deployment](deployment/installation-guide.md) | DevOps | Docker, production hardening, environment variables, TLS. |
 

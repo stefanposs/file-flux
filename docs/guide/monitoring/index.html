@@ -2066,20 +2066,19 @@
 <tbody>
 <tr>
 <td><code>GET /health</code></td>
-<td>Backend readiness check</td>
-</tr>
-<tr>
-<td><code>GET /health/live</code></td>
-<td>Liveness probe (for Kubernetes)</td>
-</tr>
-<tr>
-<td><code>GET /health/ready</code></td>
-<td>Readiness probe (DB + WebSocket)</td>
+<td>Backend readiness check (DB connectivity)</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Kubernetes Probes</p>
+<p>Dedizierte Liveness- (<code>/health/live</code>) und Readiness-Probes (<code>/health/ready</code>) sind für eine zukünftige Version geplant.</p>
+</div>
 <h2 id="prometheus-metrics">Prometheus Metrics<a class="headerlink" href="#prometheus-metrics" title="Permanent link">&para;</a></h2>
-<p>FileFlux exposes metrics at <code>/metrics</code> in Prometheus format:</p>
+<div class="admonition info">
+<p class="admonition-title">Geplant</p>
+<p>Prometheus-Metriken unter <code>/metrics</code> sind für eine zukünftige Version geplant. Die folgenden Metriken sind vorgesehen:</p>
+</div>
 <table>
 <thead>
 <tr>
@@ -2135,18 +2134,8 @@
 <li>System resource usage</li>
 </ul>
 <h2 id="structured-logging">Structured Logging<a class="headerlink" href="#structured-logging" title="Permanent link">&para;</a></h2>
-<p>FileFlux uses <code>log/slog</code> for structured JSON logging:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-15T10:30:00Z&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;msg&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;transfer completed&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;transfer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc-123&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">&quot;job_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;report.csv&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">&quot;size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1048576</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">&quot;duration_ms&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2340</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="nt">&quot;checksum&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sha256:a1b2c3...&quot;</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">}</span>
+<p>FileFlux uses the Go standard <code>log</code> package for logging. Migration to <code>log/slog</code> for structured JSON logging is planned (see ADR-009).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>2024/01/15 10:30:00 [Transfer] Transfer abc-123 completed: report.csv (1048576 bytes, 2340ms)
 </code></pre></div>
 <p>Configure log level via <code>LOG_LEVEL</code> environment variable (<code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>).</p>
 <h2 id="alerting">Alerting<a class="headerlink" href="#alerting" title="Permanent link">&para;</a></h2>
@@ -2196,7 +2185,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

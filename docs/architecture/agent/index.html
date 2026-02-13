@@ -2082,11 +2082,20 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── cmd/agent/main.go       # Entry point, signal handling
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── internal/
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── config/             # YAML configuration (config.go)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── websocket/          # WebSocket client, reconnect logic
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   ├── transfer/           # File upload/download, chunking
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   ├── api/                # HTTP client for file transfer API
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   └── system/             # System info collection (OS, IP, hostname)
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>└── go.mod
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── transport/          # Transport abstraction layer
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   │   ├── transport.go    # Transport interface
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   │   ├── ws_transport.go # WebSocket transport (primary)
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   │   ├── polling_transport.go  # HTTP Long-Polling (fallback)
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   │   └── auto_transport.go     # Auto-detect best transport
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   ├── engine/             # Transfer engine (Phase 2)
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   │   ├── chunker/        # File splitting / reassembly
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   │   ├── compress/       # Compression (zstd, LZ4, none)
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   │   ├── hasher/         # SHA-256 integrity hashing
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   │   └── protocol/       # Binary WebSocket frame codec
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│   ├── transfer/           # File upload/download, chunking
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│   ├── api/                # HTTP client for file transfer API
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│   └── system/             # System info collection (OS, IP, hostname)
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>└── go.mod
 </code></pre></div>
 <h2 id="startup-flow">Startup Flow<a class="headerlink" href="#startup-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>main.go
@@ -2115,11 +2124,15 @@
 <p>Der Agent nutzt <strong>unbegrenztes exponentielles Backoff mit Jitter</strong> (2 Sekunden bis maximal 5 Minuten) und startet sich nach Verbindungsverlust automatisch neu.</p>
 <h2 id="transfer-engine">Transfer Engine<a class="headerlink" href="#transfer-engine" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>Chunk-basiert</strong> — Dateien werden in konfigurierbaren Chunks gelesen (Standard 1 MB)</li>
-<li><strong>HTTP-Upload</strong> — Chunks werden als <code>PUT /api/files/{transferId}/upload</code> an den Server gesendet</li>
+<li><strong>Chunk-basiert</strong> — Dateien werden in konfigurierbaren Chunks gelesen (Standard 8 MB)</li>
+<li><strong>Binary WebSocket</strong> — Chunks werden als 57-Byte-Header + komprimierte Payload über WebSocket gesendet (Phase 2, Protokoll <code>binary_ws</code>)</li>
+<li><strong>HTTP-Upload (Legacy)</strong> — Chunks werden als <code>PUT /api/files/{transferId}/upload</code> an den Server gesendet</li>
 <li><strong>HTTP-Download</strong> — Dateien werden via <code>GET /api/files/{transferId}/download</code> empfangen</li>
+<li><strong>Kompression</strong> — zstd (Standard) oder LZ4 Kompression pro Chunk</li>
+<li><strong>Integrität</strong> — SHA-256 Hash pro Chunk und für die gesamte Datei</li>
 <li><strong>Progress-Reporting</strong> — Fortschritt wird per WebSocket an den Server gemeldet</li>
 <li><strong>Concurrency</strong> — Mehrere Transfers können parallel laufen (konfigurierbar)</li>
+<li><strong>Retry</strong> — Exponentielles Backoff mit Jitter bei Chunk-Fehlern (max. 3 Versuche)</li>
 </ol>
 <h2 id="message-types">Message Types<a class="headerlink" href="#message-types" title="Permanent link">&para;</a></h2>
 <p>Der Agent verarbeitet folgende WebSocket-Nachrichten:</p>
@@ -2135,7 +2148,7 @@
 <tr>
 <td><code>heartbeat</code></td>
 <td>Agent → Server</td>
-<td>Regelmäßiger Lebenszeichen-Ping</td>
+<td>Regelmäßiger Lebenszeichen-Ping (alle 60s)</td>
 </tr>
 <tr>
 <td><code>agent_info</code></td>
@@ -2161,6 +2174,36 @@
 <td><code>transfer_error</code></td>
 <td>Agent → Server</td>
 <td>Fehler melden</td>
+</tr>
+<tr>
+<td><code>chunk_ack</code></td>
+<td>Bidirektional</td>
+<td>Chunk erfolgreich empfangen</td>
+</tr>
+<tr>
+<td><code>chunk_nack</code></td>
+<td>Bidirektional</td>
+<td>Chunk-Empfang fehlgeschlagen</td>
+</tr>
+<tr>
+<td><code>chunk_request</code></td>
+<td>Server → Agent</td>
+<td>Bestimmten Chunk anfordern</td>
+</tr>
+<tr>
+<td><code>transfer_resume</code></td>
+<td>Server → Agent</td>
+<td>Unterbrochenen Transfer fortsetzen</td>
+</tr>
+<tr>
+<td><code>cancel_transfer</code></td>
+<td>Server → Agent</td>
+<td>Transfer abbrechen</td>
+</tr>
+<tr>
+<td><code>connection_test</code></td>
+<td>Server → Agent</td>
+<td>Verbindungstest</td>
 </tr>
 </tbody>
 </table>
@@ -2236,7 +2279,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

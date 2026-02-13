@@ -1752,7 +1752,7 @@
   <a href="#adr-006" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ADR-006: SSE for frontend updates
+        ADR-006: Polling + Event Bus for frontend updates
       
     </span>
   </a>
@@ -1774,7 +1774,7 @@
   <a href="#adr-008" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ADR-008: golang-migrate for migrations
+        ADR-008: Schema SQL with auto-migration
       
     </span>
   </a>
@@ -2114,7 +2114,7 @@
   <a href="#adr-006" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ADR-006: SSE for frontend updates
+        ADR-006: Polling + Event Bus for frontend updates
       
     </span>
   </a>
@@ -2136,7 +2136,7 @@
   <a href="#adr-008" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ADR-008: golang-migrate for migrations
+        ADR-008: Schema SQL with auto-migration
       
     </span>
   </a>
@@ -2229,7 +2229,7 @@
 </tr>
 <tr>
 <td>ADR-006</td>
-<td><a href="#adr-006">SSE for frontend updates</a></td>
+<td><a href="#adr-006">Polling + Event Bus for frontend updates</a></td>
 <td>Accepted</td>
 <td>2024-01</td>
 </tr>
@@ -2241,14 +2241,14 @@
 </tr>
 <tr>
 <td>ADR-008</td>
-<td><a href="#adr-008">golang-migrate for migrations</a></td>
+<td><a href="#adr-008">Schema SQL with auto-migration</a></td>
 <td>Accepted</td>
 <td>2024-01</td>
 </tr>
 <tr>
 <td>ADR-009</td>
 <td><a href="#adr-009">log/slog for logging</a></td>
-<td>Accepted</td>
+<td>Accepted (not yet implemented)</td>
 <td>2024-01</td>
 </tr>
 <tr>
@@ -2287,20 +2287,20 @@
 <p><strong>Decision:</strong> SHA-256 checksum computed incrementally during read/write, verified at transfer completion.</p>
 <p><strong>Rationale:</strong> Industry standard, hardware-accelerated on modern CPUs, sufficient collision resistance.</p>
 <hr />
-<h2 id="adr-006">ADR-006: SSE for frontend updates<a class="headerlink" href="#adr-006" title="Permanent link">&para;</a></h2>
+<h2 id="adr-006">ADR-006: Polling + Event Bus for frontend updates<a class="headerlink" href="#adr-006" title="Permanent link">&para;</a></h2>
 <p><strong>Context:</strong> How to push real-time updates to the web frontend?</p>
-<p><strong>Decision:</strong> Server-Sent Events (SSE) over HTTP/1.1.</p>
-<p><strong>Rationale:</strong> Simpler than WebSocket for unidirectional updates, works through proxies, auto-reconnects.</p>
+<p><strong>Decision:</strong> REST API polling combined with an in-app event bus (<code>event-bus.ts</code>).</p>
+<p><strong>Rationale:</strong> Simple, works through all proxies, no additional connection management. SSE was considered but not implemented due to limited browser <code>EventSource</code> API (no custom headers for auth).</p>
 <hr />
 <h2 id="adr-007">ADR-007: Keep Lit Web Components<a class="headerlink" href="#adr-007" title="Permanent link">&para;</a></h2>
 <p><strong>Context:</strong> Should we switch to React/Vue/Angular?</p>
 <p><strong>Decision:</strong> Keep Lit Web Components.</p>
 <p><strong>Rationale:</strong> Tiny bundle (~16KB), standards-based, no framework lock-in, existing code is functional.</p>
 <hr />
-<h2 id="adr-008">ADR-008: golang-migrate for migrations<a class="headerlink" href="#adr-008" title="Permanent link">&para;</a></h2>
+<h2 id="adr-008">ADR-008: Schema SQL with auto-migration<a class="headerlink" href="#adr-008" title="Permanent link">&para;</a></h2>
 <p><strong>Context:</strong> How to manage database schema changes?</p>
-<p><strong>Decision:</strong> Use <code>golang-migrate</code> with SQL files.</p>
-<p><strong>Rationale:</strong> Lightweight, supports PostgreSQL, CLI for manual operations, embeddable in Go binary.</p>
+<p><strong>Decision:</strong> Single <code>schema.sql</code> file in <code>backend/internal/db/</code> with idempotent DDL (<code>IF NOT EXISTS</code>). Applied automatically on startup via <code>pgDB.Migrate()</code>. <code>golang-migrate</code> CLI is available in Docker for optional manual migrations.</p>
+<p><strong>Rationale:</strong> Simple for single-instance deployment. The full schema is always visible in one file.</p>
 <hr />
 <h2 id="adr-009">ADR-009: log/slog for logging<a class="headerlink" href="#adr-009" title="Permanent link">&para;</a></h2>
 <p><strong>Context:</strong> Which logging library?</p>
@@ -2351,7 +2351,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   

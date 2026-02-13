@@ -65,20 +65,23 @@ File chunks use binary WebSocket frames with a **57-byte header**:
 | `chunk_request` | Request chunk | `{ transfer_id, chunk_index }` |
 | `connection_test` | Connectivity test | `{}` |
 
-!!! note "Keine AUTH-Nachrichten"
-    Die Authentifizierung erfolgt beim WebSocket-Upgrade über den HTTP `Authorization: Bearer` Header — nicht als separate WebSocket-Nachricht.
+!!! note "No AUTH Messages"
+    Authentication happens during the WebSocket upgrade via the HTTP `Authorization: Bearer` header — not as a separate WebSocket message.
+
+!!! tip "HTTPS Alternative"
+    All message types listed here are also available via the **HTTPS Long-Polling** API (`POST /api/agent/messages` and `GET /api/agent/poll`). Agents behind firewalls that block WebSocket use this transport transparently — see [Agent Architecture](agent.md) for details.
 
 ## Heartbeat
 
-Agents senden `heartbeat` alle **60 Sekunden** (konfigurierbar über `connection.heartbeat_interval`). Wenn der Backend für ~60 Sekunden keinen Heartbeat oder Pong empfängt, wird der Agent als offline markiert.
+Agents send a `heartbeat` every **60 seconds** (configurable via `connection.heartbeat_interval`). If the backend receives no heartbeat or pong for ~60 seconds, the agent is marked as offline.
 
 ## Reconnection
 
-Bei Verbindungsverlust nutzt der Agent exponentielles Backoff mit Jitter:
+On connection loss, the agent uses exponential backoff with jitter:
 
-| Parameter | Wert |
-|-----------|------|
-| Basis-Delay | 10 Sekunden (konfigurierbar) |
-| Maximales Backoff | 5 Minuten |
-| Strategie | Exponentiell mit Jitter |
-| Max. Versuche | 5 (konfigurierbar, 0 = unbegrenzt) |
+| Parameter | Value |
+|-----------|-------|
+| Base delay | 10 seconds (configurable) |
+| Maximum backoff | 5 minutes |
+| Strategy | Exponential with jitter |
+| Max attempts | 5 (configurable, 0 = unlimited) |

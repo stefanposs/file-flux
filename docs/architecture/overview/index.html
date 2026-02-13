@@ -1203,6 +1203,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Communication Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-transport-zero-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adaptive Transport — Zero Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2009,6 +2026,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Communication Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-transport-zero-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adaptive Transport — Zero Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2068,14 +2102,18 @@
         BE[Backend&lt;br/&gt;Go + gorilla/mux]
         DB[(PostgreSQL)]
         BE --&gt;|SQL| DB
-        FE --&gt;|REST + SSE| BE
+        FE --&gt;|REST| BE
     end
 
-    A1 --&gt;|WebSocket| BE
-    A2 --&gt;|WebSocket| BE
-    A3 --&gt;|WebSocket| BE
+    A1 --&gt;|WebSocket + HTTPS| BE
+    A2 --&gt;|WebSocket + HTTPS| BE
+    A3 --&gt;|WebSocket + HTTPS| BE
 
     U[User / Admin] --&gt;|Browser| FE</code></pre>
+<div class="admonition tip">
+<p class="admonition-title">Dual Transport</p>
+<p>Every agent connects via <strong>WebSocket</strong> for low-latency real-time communication. In networks where firewalls or proxies block WebSocket upgrades, agents <strong>automatically fall back to HTTPS Long-Polling</strong> — ensuring reliable connectivity in any enterprise environment.</p>
+</div>
 <h2 id="component-responsibilities">Component Responsibilities<a class="headerlink" href="#component-responsibilities" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2098,12 +2136,12 @@
 </tr>
 <tr>
 <td><strong>Agent</strong></td>
-<td>Go, Cobra CLI</td>
+<td>Go, flag (stdlib)</td>
 <td>Endpoint process for file operations</td>
 </tr>
 <tr>
 <td><strong>Database</strong></td>
-<td>PostgreSQL 14+</td>
+<td>PostgreSQL 16</td>
 <td>Persistent storage for all state</td>
 </tr>
 </tbody>
@@ -2120,26 +2158,39 @@
 <tbody>
 <tr>
 <td>Frontend → Backend</td>
-<td>REST (HTTP/1.1)</td>
+<td>REST over HTTPS</td>
 <td>CRUD operations, authentication</td>
 </tr>
 <tr>
 <td>Backend → Frontend</td>
-<td>SSE</td>
-<td>Real-time transfer updates, agent status</td>
-</tr>
-<tr>
-<td>Agent → Backend</td>
-<td>WebSocket</td>
-<td>Command &amp; control, heartbeat</td>
+<td>REST (Polling)</td>
+<td>Transfer updates, agent status</td>
 </tr>
 <tr>
 <td>Agent ↔ Backend</td>
-<td>WebSocket (binary)</td>
-<td>File chunk transfer</td>
+<td><strong>WebSocket</strong> (primary)</td>
+<td>Real-time command &amp; control, heartbeat, file transfer</td>
+</tr>
+<tr>
+<td>Agent ↔ Backend</td>
+<td><strong>HTTPS Long-Polling</strong> (fallback)</td>
+<td>Automatic fallback for restricted networks</td>
+</tr>
+<tr>
+<td>Agent ↔ Backend</td>
+<td>WebSocket (binary frames)</td>
+<td>Chunked file transfer with zstd/LZ4 compression</td>
 </tr>
 </tbody>
 </table>
+<h3 id="adaptive-transport-zero-configuration">Adaptive Transport — Zero Configuration<a class="headerlink" href="#adaptive-transport-zero-configuration" title="Permanent link">&para;</a></h3>
+<p>Agents use <strong>auto-detection</strong> by default (<code>transport_mode: auto</code>):</p>
+<ol>
+<li>Attempt WebSocket connection (low-latency, bidirectional)</li>
+<li>If blocked → seamless fallback to HTTPS Long-Polling</li>
+<li>Background probe every 5 minutes → auto-upgrade back to WebSocket</li>
+</ol>
+<p>This ensures <strong>zero-touch deployment</strong> in any network environment — from open dev setups to locked-down corporate networks behind proxies.</p>
 <h2 id="data-flow-file-transfer">Data Flow: File Transfer<a class="headerlink" href="#data-flow-file-transfer" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>sequenceDiagram
     participant User
@@ -2149,26 +2200,57 @@
     participant DestAgent
 
     User-&gt;&gt;Frontend: Click "Run Job"
-    Frontend-&gt;&gt;Backend: POST /api/v1/jobs/:id/run
+    Frontend-&gt;&gt;Backend: POST /api/jobs/:id/run
     Backend-&gt;&gt;Backend: Create transfer records
-    Backend-&gt;&gt;SourceAgent: WS: TRANSFER_START
-    SourceAgent-&gt;&gt;SourceAgent: Read file, split chunks
+    Backend-&gt;&gt;SourceAgent: transfer_request (via WS or HTTPS)
+    SourceAgent-&gt;&gt;SourceAgent: Read file, split into chunks
     loop For each chunk
-        SourceAgent-&gt;&gt;Backend: WS: CHUNK_DATA (binary)
-        Backend-&gt;&gt;DestAgent: WS: CHUNK_DATA (binary)
-        DestAgent-&gt;&gt;Backend: WS: CHUNK_ACK
+        SourceAgent-&gt;&gt;Backend: Binary frame (57-byte header + compressed data)
+        Backend-&gt;&gt;DestAgent: Binary frame (relayed)
+        DestAgent-&gt;&gt;Backend: chunk_ack
     end
-    DestAgent-&gt;&gt;Backend: WS: TRANSFER_COMPLETE + checksum
-    Backend-&gt;&gt;Frontend: SSE: transfer.completed
+    DestAgent-&gt;&gt;Backend: transfer_complete + SHA-256 hash
+    Backend-&gt;&gt;Frontend: Transfer status available via REST
     Frontend-&gt;&gt;User: Show success ✅</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Transport-Agnostic</p>
+<p>The transfer flow works identically regardless of whether agents are connected via WebSocket or HTTPS polling. The backend's dispatcher layer abstracts the transport — agents receive commands and deliver data through whichever channel is available.</p>
+</div>
 <h2 id="design-principles">Design Principles<a class="headerlink" href="#design-principles" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>Backend as relay</strong> — All file data flows through the backend. Agents never communicate directly.</li>
-<li><strong>Stateless agents</strong> — Agents hold no persistent state. All state lives in PostgreSQL.</li>
-<li><strong>Binary WebSocket</strong> — File chunks are sent as binary frames for efficiency.</li>
-<li><strong>Event-driven</strong> — Internal event bus decouples components within the backend.</li>
-<li><strong>Interface-based</strong> — All external dependencies are behind Go interfaces for testability.</li>
-</ol>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>What It Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Backend as Relay</strong></td>
+<td>All file data flows through the backend. Agents never communicate directly — ensuring full audit trails and centralized monitoring.</td>
+</tr>
+<tr>
+<td><strong>Dual Transport</strong></td>
+<td>Agents connect via WebSocket (primary) or HTTPS Long-Polling (fallback). Transport is auto-detected — zero manual configuration.</td>
+</tr>
+<tr>
+<td><strong>Stateless Agents</strong></td>
+<td>Agents hold no persistent state. All state lives in PostgreSQL — making agents disposable and easy to redeploy.</td>
+</tr>
+<tr>
+<td><strong>Chunked + Compressed</strong></td>
+<td>Files are split into 8 MB chunks with zstd/LZ4 compression and per-chunk SHA-256 verification — enabling resumable, integrity-verified transfers.</td>
+</tr>
+<tr>
+<td><strong>Event-Driven</strong></td>
+<td>Internal event bus decouples components — making the system extensible and testable.</td>
+</tr>
+<tr>
+<td><strong>Interface-Based</strong></td>
+<td>All external dependencies are behind Go interfaces — enabling thorough unit testing without infrastructure.</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -2209,7 +2291,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy; 2024–2025 FileFlux
+      &copy; 2024–2026 FileFlux
     </div>
   
   
