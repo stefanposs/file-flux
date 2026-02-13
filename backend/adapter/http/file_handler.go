@@ -14,7 +14,7 @@ import (
 
 // FileHandler verarbeitet Datei-Upload- und -Download-Anfragen von Agenten.
 type FileHandler struct {
-	storageDir string
+	storageDir     string
 	tokenValidator TokenValidatorFunc
 }
 

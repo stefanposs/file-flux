@@ -24,18 +24,18 @@ type ProgressReporter interface {
 
 // Manager verwaltet aktive Dateitransfers.
 type Manager struct {
-	logger     *log.Logger
-	config     config.TransferConfig
-	active     map[string]*activeTransfer
-	activeMu   sync.Mutex
-	apiClient  *api.Client
-	reporter   ProgressReporter
+	logger    *log.Logger
+	config    config.TransferConfig
+	active    map[string]*activeTransfer
+	activeMu  sync.Mutex
+	apiClient *api.Client
+	reporter  ProgressReporter
 }
 
 type activeTransfer struct {
-	id       string
-	cancel   chan struct{}
-	done     chan struct{}
+	id     string
+	cancel chan struct{}
+	done   chan struct{}
 }
 
 // NewManager erstellt einen neuen Transfer-Manager.

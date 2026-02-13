@@ -129,8 +129,8 @@ func (s *Service) Run(ctx context.Context, id int) error {
 
 	// TransferRequest-Nachricht an den Quell-Agenten senden
 	msg := struct {
-		Type     string      `json:"type"`
-		Data     interface{} `json:"data"`
+		Type string      `json:"type"`
+		Data interface{} `json:"data"`
 	}{
 		Type: "transfer_request",
 		Data: struct {
