@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoJobs, getDemoTransfers } from '../../demo-mode';
 import { showToast } from '../shared/toast';
+import { api } from '../../services/api-service';
 
 @customElement('ff-job-detail')
 export class JobDetail extends LitElement {
@@ -334,6 +335,54 @@ export class JobDetail extends LitElement {
     try {
       this.isLoading = true;
       
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const apiJobs = await api.getJobs();
+          const apiJob = apiJobs.find(j => String(j.ID) === this.jobId);
+          if (apiJob) {
+            this.job = {
+              id: String(apiJob.ID),
+              name: apiJob.Name,
+              description: apiJob.Description,
+              status: apiJob.Status,
+              type: apiJob.Type,
+              schedule: apiJob.Schedule || undefined,
+              lastRun: apiJob.LastRunAt || undefined,
+              nextRun: apiJob.NextRunAt,
+              source: apiJob.SourcePath,
+              destination: apiJob.DestinationPath,
+            };
+            // Load related transfers
+            try {
+              const apiTransfers = await api.getTransfers();
+              this.recentTransfers = apiTransfers
+                .filter(t => String(t.JobID) === this.jobId)
+                .map(t => ({
+                  id: String(t.ID),
+                  jobId: String(t.JobID),
+                  filename: t.FileName,
+                  size: t.FileSize,
+                  status: t.Status,
+                  startTime: t.StartedAt,
+                  endTime: t.CompletedAt || undefined,
+                  progress: t.Progress,
+                  error: t.Error || undefined,
+                }))
+                .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+                .slice(0, 10);
+            } catch (e) {
+              console.warn('Failed to load transfers for job', e);
+            }
+          } else {
+            this.error = 'Job nicht gefunden';
+          }
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         // Simuliere Netzwerklatenz
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -355,7 +404,7 @@ export class JobDetail extends LitElement {
         }
       } else {
         // Hier würde später der API-Aufruf kommen
-        this.error = 'API noch nicht implementiert';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden des Jobs: ' + (err instanceof Error ? err.message : String(err));

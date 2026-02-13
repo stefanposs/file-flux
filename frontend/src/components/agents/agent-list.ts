@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoAgents } from '../../demo-mode';
 import { showToast } from '../shared/toast';
+import { api } from '../../services/api-service';
 
 @customElement('ff-agent-list')
 export class AgentList extends LitElement {
@@ -225,6 +226,28 @@ export class AgentList extends LitElement {
       this.isLoading = true;
       this.error = null;
       
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const apiAgents = await api.getAgents();
+          this.agents = apiAgents.map(a => ({
+            id: String(a.ID),
+            name: a.Name,
+            type: a.Type,
+            status: a.Status,
+            ipAddress: a.IPAddress || '',
+            system: a.System || '',
+            version: a.Version || '',
+            lastSeen: a.LastSeen,
+            description: a.Description,
+          }));
+          this._applyFilters();
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         // Simuliere Netzwerklatenz für realistischeres Verhalten
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -236,7 +259,7 @@ export class AgentList extends LitElement {
         this._applyFilters();
       } else {
         // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden der Agents: ' + (err instanceof Error ? err.message : String(err));

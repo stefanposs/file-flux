@@ -81,3 +81,8 @@ func (db *DB) Migrate() error {
 	}
 	return nil
 }
+
+// Ping prüft die Datenbank-Konnektivitaet (fuer Health Checks).
+func (db *DB) Ping() error {
+	return db.Pool.Ping()
+}

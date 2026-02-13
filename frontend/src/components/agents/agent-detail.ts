@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoAgents, getDemoTransfers, getDemoTokens } from '../../demo-mode';
 import { showToast } from '../shared/toast';
+import { api } from '../../services/api-service';
 
 @customElement('ff-agent-detail')
 export class AgentDetail extends LitElement {
@@ -384,6 +385,69 @@ export class AgentDetail extends LitElement {
     try {
       this.isLoading = true;
       
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const apiAgents = await api.getAgents();
+          const apiAgent = apiAgents.find(a => String(a.ID) === this.agentId);
+          if (apiAgent) {
+            this.agent = {
+              id: String(apiAgent.ID),
+              name: apiAgent.Name,
+              type: apiAgent.Type,
+              status: apiAgent.Status,
+              ipAddress: apiAgent.IPAddress || '',
+              system: apiAgent.System || '',
+              version: apiAgent.Version || '',
+              lastSeen: apiAgent.LastSeen,
+              description: apiAgent.Description,
+            };
+            // Load related transfers
+            try {
+              const apiTransfers = await api.getTransfers();
+              this.transfers = apiTransfers
+                .filter(t => String(t.JobID) === this.agentId)
+                .map(t => ({
+                  id: String(t.ID),
+                  jobId: String(t.JobID),
+                  filename: t.FileName,
+                  size: t.FileSize,
+                  status: t.Status,
+                  startTime: t.StartedAt,
+                  endTime: t.CompletedAt || undefined,
+                  progress: t.Progress,
+                  error: t.Error || undefined,
+                }));
+            } catch (e) {
+              console.warn('Failed to load transfers for agent', e);
+            }
+            // Load related tokens
+            try {
+              const apiTokens = await api.getTokens();
+              this.tokens = apiTokens
+                .filter(t => t.AgentID === apiAgent.ID)
+                .map(t => ({
+                  id: String(t.ID),
+                  name: t.Name,
+                  token: t.Token,
+                  agentId: t.AgentID ? String(t.AgentID) : null,
+                  status: t.Revoked ? 'expired' : (new Date(t.ExpiresAt) < new Date() ? 'expired' : 'active'),
+                  createdAt: t.CreatedAt,
+                  expiresAt: t.ExpiresAt,
+                  lastUsedAt: t.LastUsedAt,
+                }));
+            } catch (e) {
+              console.warn('Failed to load tokens for agent', e);
+            }
+          } else {
+            this.error = 'Agent nicht gefunden';
+          }
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         // Im Demo-Modus Daten aus den Demo-Daten laden
         await new Promise(resolve => setTimeout(resolve, 800)); // Simuliere Netzwerklatenz
@@ -408,7 +472,7 @@ export class AgentDetail extends LitElement {
         }
       } else {
         // Hier würde später der API-Aufruf kommen
-        this.error = 'API noch nicht implementiert';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden des Agenten: ' + (err instanceof Error ? err.message : String(err));

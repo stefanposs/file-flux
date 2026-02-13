@@ -1,12 +1,13 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { showToast } from './toast';
 
 @customElement('ff-header')
 export class Header extends LitElement {
   @property({ type: Boolean }) sidebarOpen = false;
   @property({ type: String }) currentRoute = '/';
-  @property({ type: Object }) user = null;
+  @property({ type: Object }) user: any = null;
+  @state() private _userMenuOpen = false;
   
   static styles = css`
     :host {
@@ -145,6 +146,78 @@ export class Header extends LitElement {
     .user-name {
       font-weight: 500;
     }
+
+    .user-menu-wrapper {
+      position: relative;
+    }
+
+    .user-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      min-width: 200px;
+      z-index: 200;
+      overflow: hidden;
+    }
+
+    .user-menu-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .user-menu-header .menu-name {
+      font-weight: 600;
+      color: #122e53;
+    }
+
+    .user-menu-header .menu-email {
+      font-size: 13px;
+      color: #6c757d;
+      margin-top: 2px;
+    }
+
+    .user-menu-header .menu-role {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #122e53;
+      background: rgba(18, 46, 83, 0.08);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 6px;
+    }
+
+    .user-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .user-menu-item:hover {
+      background: #f8f9fa;
+    }
+
+    .user-menu-item.danger {
+      color: #dc3545;
+    }
+
+    .user-menu-item.danger:hover {
+      background: #fff5f5;
+    }
     
     @media (max-width: 768px) {
       .toggle-button {
@@ -231,11 +304,26 @@ export class Header extends LitElement {
             <span class="notification-badge">3</span>
           </div>
           
-          <div class="user-profile" @click=${this._showUserMenu}>
-            <div class="user-avatar">
-              ${this._getUserInitials()}
+          <div class="user-menu-wrapper">
+            <div class="user-profile" @click=${this._toggleUserMenu}>
+              <div class="user-avatar">
+                ${this._getUserInitials()}
+              </div>
+              <span class="user-name">${this.user?.name || 'Benutzer'}</span>
             </div>
-            <span class="user-name">${this.user?.name || 'Benutzer'}</span>
+
+            ${this._userMenuOpen ? html`
+              <div class="user-menu">
+                <div class="user-menu-header">
+                  <div class="menu-name">${this.user?.name || 'Benutzer'}</div>
+                  <div class="menu-email">${this.user?.email || ''}</div>
+                  <span class="menu-role">${this.user?.role || 'user'}</span>
+                </div>
+                <button class="user-menu-item danger" @click=${this._handleLogout}>
+                  🚪 Abmelden
+                </button>
+              </div>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -246,8 +334,29 @@ export class Header extends LitElement {
     this.dispatchEvent(new CustomEvent('toggle-sidebar'));
   }
 
-  _showUserMenu() {
-    showToast('Benutzermenü öffnet in einer zukünftigen Version.', 'info');
+  _toggleUserMenu() {
+    this._userMenuOpen = !this._userMenuOpen;
+    
+    if (this._userMenuOpen) {
+      // Close menu when clicking outside
+      const closeHandler = (e: MouseEvent) => {
+        const path = e.composedPath();
+        if (!path.includes(this)) {
+          this._userMenuOpen = false;
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      // Delay to prevent immediate close from the same click
+      setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    }
+  }
+
+  _handleLogout() {
+    this._userMenuOpen = false;
+    this.dispatchEvent(new CustomEvent('logout', {
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _handleNavClick(e: Event, path: string) {

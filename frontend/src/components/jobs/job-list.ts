@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoJobs } from '../../demo-mode';
 import { showToast } from '../shared/toast';
+import { api } from '../../services/api-service';
 
 interface Job {
   id: string;
@@ -244,12 +245,37 @@ export class JobList extends LitElement {
     try {
       this.isLoading = true;
       
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const apiJobs = await api.getJobs();
+          this.jobs = apiJobs.map(j => ({
+            id: String(j.ID),
+            name: j.Name,
+            description: j.Description,
+            status: j.Status,
+            type: j.Type,
+            schedule: j.Schedule || undefined,
+            lastRun: j.LastRunAt || undefined,
+            nextRun: j.NextRunAt,
+            source: j.SourcePath,
+            destination: j.DestinationPath,
+            uploadAgent: j.UploadAgentID ? String(j.UploadAgentID) : undefined,
+            downloadAgent: j.DownloadAgentID ? String(j.DownloadAgentID) : undefined,
+          }));
+          this._applyFilters();
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         // Im Demo-Modus Daten aus den Demo-Daten laden
         await new Promise(resolve => setTimeout(resolve, 1000)); // Simuliere Netzwerklatenz
         this.jobs = getDemoJobs();
       } else {
-        this.error = 'API noch nicht implementiert';
+        this.error = 'Bitte melden Sie sich an.';
       }
       
       this._applyFilters();

@@ -8,6 +8,7 @@ import {
   getDemoTokens,
   getTransferStats
 } from '../../demo-mode';
+import { api } from '../../services/api-service';
 
 interface DashboardStats {
   activeJobs: number;
@@ -333,27 +334,66 @@ export class Dashboard extends LitElement {
   async _loadData() {
     try {
       this.isLoading = true;
-      
+      this.error = null;
+
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const [jobs, transfers, agents] = await Promise.all([
+            api.getJobs(),
+            api.getTransfers(),
+            api.getAgents(),
+          ]);
+
+          const activeJobs = jobs.filter((j: any) => j.status === 'active').length;
+          const completedTransfers = transfers.filter((t: any) => t.status === 'completed').length;
+          const failedTransfers = transfers.filter((t: any) => t.status === 'failed').length;
+          const pendingTransfers = transfers.filter((t: any) => t.status === 'pending' || t.status === 'running');
+          const onlineAgents = agents.filter((a: any) => a.status === 'online').length;
+
+          const transferVolume = transfers
+            .filter((t: any) => t.status === 'completed')
+            .reduce((total: number, t: any) => total + (t.size || 0), 0);
+
+          const recentTransfers = [...transfers]
+            .filter((t: any) => t.status === 'completed' || t.status === 'failed')
+            .sort((a: any, b: any) => new Date(b.startTime || b.started_at).getTime() - new Date(a.startTime || a.started_at).getTime())
+            .slice(0, 5);
+
+          this.stats = {
+            activeJobs,
+            completedTransfers,
+            failedTransfers,
+            onlineAgents,
+            totalAgents: agents.length,
+            transferVolume,
+            recentTransfers,
+            pendingTransfers
+          };
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
+      // Fall back to demo mode
       if (isDemoMode()) {
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simuliere Netzwerklatenz
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         const jobs = getDemoJobs();
         const transfers = getDemoTransfers();
         const agents = getDemoAgents();
         
-        // Berechne Statistiken
         const activeJobs = jobs.filter(job => job.status === 'active').length;
         const completedTransfers = transfers.filter(t => t.status === 'completed').length;
         const failedTransfers = transfers.filter(t => t.status === 'failed').length;
         const pendingTransfers = transfers.filter(t => t.status === 'pending' || t.status === 'running');
         const onlineAgents = agents.filter(a => a.status === 'online').length;
         
-        // Berechne Gesamtvolumen der abgeschlossenen Transfers
         const transferVolume = transfers
           .filter(t => t.status === 'completed')
           .reduce((total, t) => total + t.size, 0);
         
-        // Sortiere Transfers nach Startzeit, neueste zuerst
         const recentTransfers = [...transfers]
           .filter(t => t.status === 'completed' || t.status === 'failed')
           .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
@@ -370,11 +410,9 @@ export class Dashboard extends LitElement {
           pendingTransfers
         };
 
-        // Lade detaillierte Statistiken
         this.detailedStats = getTransferStats();
       } else {
-        // Hier würde später die API-Anfrage kommen
-        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden der Dashboard-Daten: ' + (err instanceof Error ? err.message : String(err));

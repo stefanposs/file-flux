@@ -1,11 +1,8 @@
-// Kommentiere diese Importe zunächst aus
-// import './components/shared/header';
-// import './components/dashboard/dashboard';
-// usw.
-
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoUser, getDemoTransfers, getDemoJobs, getDemoAgents, getDemoTokens, initDemoMode } from './demo-mode';
+import { api, ApiRequestError } from './services/api-service';
+import { showToast } from './components/shared/toast';
 
 // Komponenten importieren
 import './components/shared/header';
@@ -284,27 +281,54 @@ export class FileFluxApp extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._checkAuth();
+
+    // Listen for auth expiration (e.g. 401 from API)
+    window.addEventListener('ff-auth-expired', () => {
+      this._handleLogout();
+      showToast('Sitzung abgelaufen – bitte erneut anmelden', 'warning');
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('ff-auth-expired', () => {});
   }
 
   async _checkAuth() {
     this.isLoading = true;
     
     try {
+      // 1. Try real API auth (stored token)
+      if (api.isAuthenticated()) {
+        const apiUser = await api.getCurrentUser();
+        this.isAuthenticated = true;
+        this.user = {
+          id: String(apiUser.id),
+          name: apiUser.name || apiUser.email,
+          email: apiUser.email,
+          role: apiUser.role,
+          avatar: null,
+        };
+        return;
+      }
+
+      // 2. Fall back to demo mode
       if (this.isDemoMode) {
         await new Promise(resolve => setTimeout(resolve, 800));
         const user = getDemoUser();
         this.isAuthenticated = true;
         this.user = user;
-        
-        // Demo-Daten nur laden, wenn authentifiziert
         this._loadDemoData();
-      } else {
-        // API-Aufruf würde hier kommen
-        this.isAuthenticated = false;
-        this.user = null;
+        return;
       }
+
+      // 3. Not authenticated
+      this.isAuthenticated = false;
+      this.user = null;
     } catch (error) {
       console.error('Auth check failed', error);
+      // Token might be expired — clear and show login
+      api.logout();
       this.isAuthenticated = false;
       this.user = null;
     } finally {
@@ -373,21 +397,61 @@ export class FileFluxApp extends LitElement {
     this.sidebarOpen = !this.sidebarOpen;
   }
 
-  _handleLogin(e: Event) {
+  async _handleLogin(e: Event) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+    this.loginError = null;
     
-    if (this.isDemoMode) {
-      // Im Demo-Modus Anmeldung simulieren
+    // 1. Try real API login first
+    try {
+      const response = await api.login(email, password);
       this.isAuthenticated = true;
-      this.user = getDemoUser();
+      this.user = {
+        id: String(response.user.id),
+        name: response.user.name || response.user.email,
+        email: response.user.email,
+        role: response.user.role,
+        avatar: null,
+      };
+      showToast('Erfolgreich angemeldet', 'success');
       this._navigate('/');
-    } else {
-      // Hier würde normalerweise ein API-Aufruf kommen
-      this.loginError = "Login ist nur im Demo-Modus verfügbar";
+      return;
+    } catch (error) {
+      if (error instanceof ApiRequestError) {
+        if (error.status === 401) {
+          this.loginError = 'Ungültige E-Mail oder Passwort';
+        } else if (error.status === 429) {
+          this.loginError = 'Zu viele Anmeldeversuche – bitte warten';
+        } else {
+          this.loginError = `Anmeldefehler: ${error.message}`;
+        }
+      } else {
+        // Network error — backend might be unreachable
+        console.warn('API login failed, trying demo mode', error);
+        
+        // 2. Fall back to demo mode if enabled
+        if (this.isDemoMode) {
+          this.isAuthenticated = true;
+          this.user = getDemoUser();
+          this._loadDemoData();
+          this._navigate('/');
+          return;
+        }
+        this.loginError = 'Server nicht erreichbar';
+      }
     }
+  }
+
+  _handleLogout() {
+    api.logout();
+    this.isAuthenticated = false;
+    this.user = null;
+    this.activeTransfers = [];
+    this.recentTransfers = [];
+    this.stats = { totalTransfers: 0, completedTransfers: 0, failedTransfers: 0, activeAgents: 0, totalJobs: 0 };
+    this._navigate('/');
   }
 
   _activateDemoMode() {
@@ -511,6 +575,7 @@ export class FileFluxApp extends LitElement {
           .currentRoute=${this.currentRoute}
           .user=${this.user}
           @toggle-sidebar=${this._toggleSidebar}
+          @logout=${this._handleLogout}
         ></ff-header>
         
         <main>

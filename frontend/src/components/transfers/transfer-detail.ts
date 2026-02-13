@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoTransfers, getDemoJobs, getDemoAgents } from '../../demo-mode';
 import { showToast } from '../shared/toast';
+import { api } from '../../services/api-service';
 
 @customElement('ff-transfer-detail')
 export class TransferDetail extends LitElement {
@@ -318,6 +319,53 @@ export class TransferDetail extends LitElement {
     try {
       this.isLoading = true;
       
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const apiTransfers = await api.getTransfers();
+          const apiTransfer = apiTransfers.find(t => String(t.ID) === this.transferId);
+          if (apiTransfer) {
+            this.transfer = {
+              id: String(apiTransfer.ID),
+              jobId: String(apiTransfer.JobID),
+              filename: apiTransfer.FileName,
+              size: apiTransfer.FileSize,
+              status: apiTransfer.Status,
+              startTime: apiTransfer.StartedAt,
+              endTime: apiTransfer.CompletedAt || undefined,
+              progress: apiTransfer.Progress,
+              error: apiTransfer.Error || undefined,
+            };
+            this.progress = apiTransfer.Progress || 0;
+            // Load related job
+            if (apiTransfer.JobID) {
+              try {
+                const apiJobs = await api.getJobs();
+                const j = apiJobs.find(j => j.ID === apiTransfer.JobID);
+                if (j) this.job = { id: String(j.ID), name: j.Name };
+              } catch (e) {
+                console.warn('Failed to load job for transfer', e);
+              }
+            }
+            // Load related agents
+            try {
+              const apiAgents = await api.getAgents();
+              // Agent mapping depends on transfer data available
+              if (apiAgents.length) {
+                this.sourceAgent = apiAgents[0] ? { id: String(apiAgents[0].ID), name: apiAgents[0].Name } : null;
+              }
+            } catch (e) {
+              console.warn('Failed to load agents for transfer', e);
+            }
+          } else {
+            this.error = 'Transfer nicht gefunden';
+          }
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         // Simuliere Netzwerklatenz
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -371,7 +419,7 @@ export class TransferDetail extends LitElement {
         }
       } else {
         // Hier würde später der API-Aufruf kommen
-        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden des Transfers: ' + (err instanceof Error ? err.message : String(err));

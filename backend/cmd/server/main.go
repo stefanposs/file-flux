@@ -41,6 +41,13 @@ func main() {
 	// JWT-Secret setzen
 	middleware.SetJWTSecret(cfg.Auth.JWTSecret)
 
+	// Konfiguration validieren (warnt bei unsicheren Defaults)
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "development"
+	}
+	middleware.ValidateConfig(logger, cfg.Auth.JWTSecret, cfg.Database.Password, env)
+
 	// ─── Infrastructure Layer ───────────────────────────────────────
 
 	// PostgreSQL-Verbindung (Clean Architecture Adapter)
@@ -91,6 +98,7 @@ func main() {
 		TransferService: transferService,
 		TokenService:    tokenService,
 		Logger:          logger,
+		DBPinger:        pgDB,
 	})
 
 	// ─── Server starten ─────────────────────────────────────────────

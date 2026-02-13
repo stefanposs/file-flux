@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoTokens, getDemoAgents, createDemoToken, deleteDemoToken } from '../../demo-mode';
 import { showToast } from '../shared/toast';
+import { api } from '../../services/api-service';
 
 @customElement('ff-token-list')
 export class TokenList extends LitElement {
@@ -307,6 +308,27 @@ export class TokenList extends LitElement {
       this.isLoading = true;
       this.error = null;
       
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const apiTokens = await api.getTokens();
+          this.tokens = apiTokens.map(t => ({
+            id: String(t.ID),
+            name: t.Name,
+            token: t.Token,
+            agentId: t.AgentID ? String(t.AgentID) : null,
+            status: t.Revoked ? 'expired' : (new Date(t.ExpiresAt) < new Date() ? 'expired' : 'active'),
+            createdAt: t.CreatedAt,
+            expiresAt: t.ExpiresAt,
+            lastUsedAt: t.LastUsedAt,
+          }));
+          this._applyFilters();
+          return;
+        } catch (apiErr) {
+          console.warn('API load failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         // Simuliere Netzwerklatenz für realistischeres Verhalten
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -318,7 +340,7 @@ export class TokenList extends LitElement {
         this._applyFilters();
       } else {
         // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden der Tokens: ' + (err instanceof Error ? err.message : String(err));
@@ -438,6 +460,31 @@ export class TokenList extends LitElement {
     }
     
     try {
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          const created = await api.createToken({
+            name: this.newTokenName,
+            agent_id: this.selectedAgentId ? Number(this.selectedAgentId) : 0,
+          });
+          this.generatedToken = created.Token;
+          this.tokens = [{
+            id: String(created.ID),
+            name: created.Name,
+            token: created.Token,
+            agentId: created.AgentID ? String(created.AgentID) : null,
+            status: 'active',
+            createdAt: created.CreatedAt,
+            expiresAt: created.ExpiresAt,
+            lastUsedAt: created.LastUsedAt,
+          }, ...this.tokens];
+          this._applyFilters();
+          return;
+        } catch (apiErr) {
+          console.warn('API create token failed, falling back to demo', apiErr);
+        }
+      }
+
       // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
       if (isDemoMode()) {
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -465,7 +512,7 @@ export class TokenList extends LitElement {
         this.tokens = [createdToken, ...this.tokens];
         this._applyFilters();
       } else {
-        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       showToast('Fehler beim Erstellen des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');
@@ -524,6 +571,19 @@ export class TokenList extends LitElement {
     }
     
     try {
+      // Try real API first
+      if (api.isAuthenticated()) {
+        try {
+          await api.revokeToken(Number(tokenId));
+          this.tokens = this.tokens.filter(token => token.id !== tokenId);
+          this._applyFilters();
+          showToast('Token erfolgreich widerrufen.', 'success');
+          return;
+        } catch (apiErr) {
+          console.warn('API revoke token failed, falling back to demo', apiErr);
+        }
+      }
+
       if (isDemoMode()) {
         await new Promise(resolve => setTimeout(resolve, 800));
         
@@ -535,7 +595,7 @@ export class TokenList extends LitElement {
         
         showToast('Token erfolgreich widerrufen.', 'success');
       } else {
-        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
+        this.error = 'Bitte melden Sie sich an.';
       }
     } catch (err) {
       showToast('Fehler beim Widerrufen des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');

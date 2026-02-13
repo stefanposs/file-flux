@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoUser } from '../../demo-mode';
+import { api, ApiRequestError } from '../../services/api-service';
 
 @customElement('ff-login')
 export class Login extends LitElement {
@@ -127,7 +128,7 @@ export class Login extends LitElement {
       `;
     }
 
-    _handleSubmit(e: Event) {
+    async _handleSubmit(e: Event) {
       e.preventDefault();
       
       this.isLoading = true;
@@ -147,8 +148,21 @@ export class Login extends LitElement {
           }
         }, 1000);
       } else {
-        this.error = 'API noch nicht implementiert';
-        this.isLoading = false;
+        // Try real API
+        try {
+          const response = await api.login(this.username, this.password);
+          this.dispatchEvent(new CustomEvent('login', {
+            detail: { success: true, user: response.user }
+          }));
+        } catch (err) {
+          if (err instanceof ApiRequestError && err.status === 401) {
+            this.error = 'Ungültige E-Mail oder Passwort';
+          } else {
+            this.error = 'Server nicht erreichbar';
+          }
+        } finally {
+          this.isLoading = false;
+        }
       }
     }
 }
