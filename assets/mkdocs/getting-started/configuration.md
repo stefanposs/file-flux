@@ -4,71 +4,52 @@ weight: 3
 ---
 # Configuration
 
-FileFlux is configured via YAML files and environment variables. Environment variables override YAML settings.
+FileFlux wird über YAML-Dateien und Umgebungsvariablen konfiguriert.
+Umgebungsvariablen überschreiben YAML-Einstellungen.
 
-## Backend Settings
+!!! tip "Vollständige Referenz"
+    Die komplette Liste aller Umgebungsvariablen finden Sie unter
+    [Deployment → Environment Variables](../deployment/env-vars.md).
 
-### Server
+## Konfigurationsdateien
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SERVER_HOST` | `0.0.0.0` | Bind address |
-| `SERVER_PORT` | `3001` | HTTP API port |
-| `SERVER_WS_PORT` | `3002` | WebSocket port |
-| `SERVER_READ_TIMEOUT` | `30s` | HTTP read timeout |
-| `SERVER_WRITE_TIMEOUT` | `30s` | HTTP write timeout |
+### Backend — `config.yaml`
 
-### Database
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DB_HOST` | `localhost` | PostgreSQL host |
-| `DB_PORT` | `5432` | PostgreSQL port |
-| `DB_USER` | `fileflux` | Database user |
-| `DB_PASSWORD` | `fileflux` | Database password |
-| `DB_NAME` | `fileflux` | Database name |
-| `DB_SSLMODE` | `disable` | SSL mode (`disable`, `require`, `verify-full`) |
-| `DB_MAX_OPEN_CONNS` | `25` | Max open connections |
-| `DB_MAX_IDLE_CONNS` | `5` | Max idle connections |
-| `DB_CONN_MAX_LIFETIME` | `5m` | Connection max lifetime |
-
-### Security
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `JWT_SECRET` | *(required)* | JWT signing secret (min 32 chars) |
-| `JWT_EXPIRY` | `24h` | Token expiry duration |
-| `BCRYPT_COST` | `12` | Password hashing cost |
-
-### Transfers
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `TRANSFER_CHUNK_SIZE` | `1048576` | Chunk size in bytes (default 1 MB) |
-| `TRANSFER_MAX_RETRIES` | `3` | Max retry attempts per chunk |
-| `TRANSFER_TIMEOUT` | `30m` | Transfer timeout |
-| `TRANSFER_TEMP_DIR` | `/tmp/fileflux` | Temporary chunk storage |
-
-### Initial Admin User
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `INITIAL_ADMIN_EMAIL` | `admin@fileflux.de` | Email for the auto-seeded admin |
-| `INITIAL_ADMIN_PASSWORD` | `admin123` | Password — **change in production!** |
-
----
-
-## Agent Settings
-
-The agent reads from `config.yaml` in its working directory or `~/.fileflux/config.yaml`.
+Das Backend lädt seine Konfiguration aus `config.yaml` im Arbeitsverzeichnis.
+Die wichtigsten Einstellungen:
 
 ```yaml
-# agent/config.yaml
+server:
+  host: 0.0.0.0
+  port: 3001
+  ws_port: 3002
+
+database:
+  host: localhost
+  port: 5432
+  user: fileflux
+  password: fileflux
+  name: fileflux
+  sslmode: disable
+
+jwt:
+  secret: "min-32-char-secret"   # HS256
+  expiry: 24h
+```
+
+Jede YAML-Einstellung kann per Umgebungsvariable überschrieben werden —
+Details in der [Variablen-Referenz](../deployment/env-vars.md#backend).
+
+### Agent — `config.yaml`
+
+Der Agent liest `config.yaml` aus seinem Arbeitsverzeichnis oder `~/.fileflux/config.yaml`:
+
+```yaml
 server:
   url: ws://localhost:3002/ws
   token: "your-agent-token"
   reconnect_interval: 5s
-  max_reconnect_attempts: 0  # 0 = unlimited
+  max_reconnect_attempts: 0   # 0 = unbegrenzt
 
 agent:
   name: "agent-01"
@@ -77,30 +58,23 @@ agent:
   download_dir: /var/lib/fileflux/downloads
 
 transfer:
-  chunk_size: 1048576  # 1 MB
+  chunk_size: 1048576   # 1 MB
   max_concurrent: 4
   checksum_algorithm: sha256
 
 logging:
-  level: info   # debug, info, warn, error
-  format: json  # json, text
+  level: info    # debug | info | warn | error
+  format: json   # json | text
 ```
 
-### Agent Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FILEFLUX_SERVER_URL` | `ws://localhost:3002/ws` | Backend WebSocket URL |
-| `FILEFLUX_AGENT_TOKEN` | *(required)* | Agent registration token |
-| `FILEFLUX_AGENT_NAME` | hostname | Agent display name |
-| `FILEFLUX_WORK_DIR` | `/var/lib/fileflux` | Working directory |
-| `FILEFLUX_LOG_LEVEL` | `info` | Log level |
+Alle Werte lassen sich auch per `FILEFLUX_*`-Variablen setzen —
+Details in der [Variablen-Referenz](../deployment/env-vars.md#agent).
 
 ---
 
-## Docker Compose Configuration
+## Schnellstart mit Docker Compose
 
-Override settings in `.env` or `docker-compose.override.yml`:
+Erstellen Sie eine `.env`-Datei im Projektverzeichnis:
 
 ```env
 # .env
@@ -112,7 +86,15 @@ JWT_SECRET=your-32-char-minimum-jwt-secret-here
 INITIAL_ADMIN_PASSWORD=change-me-in-production
 ```
 
-## Next Steps
+!!! warning "Standard-Passwort"
+    Das initiale Admin-Passwort ist `admin123`.
+    Ändern Sie es sofort nach der Installation über die [Einstellungsseite](../guide/settings.md)
+    oder per API (`POST /auth/password`).
 
-- [Quick Start](quick-start.md) — Run your first transfer
-- [Deployment / Production](../deployment/production.md) — Production hardening guide
+---
+
+## Nächste Schritte
+
+- [Quick Start](quick-start.md) — Ersten Transfer durchführen
+- [Environment Variables](../deployment/env-vars.md) — Vollständige Variablen-Referenz
+- [Production](../deployment/production.md) — Produktions-Härtung

@@ -63,4 +63,4 @@ The agent collects and reports:
 
 ## Agent Configuration
 
-See [Configuration](../getting-started/configuration.md#agent-settings) for all agent settings.
+See [Configuration](../getting-started/configuration.md#agent-configyaml) for all agent settings.

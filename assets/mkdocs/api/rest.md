@@ -6,12 +6,14 @@ weight: 1
 
 Base URL: `http://localhost:3001/api/v1`
 
-All endpoints require `Authorization: Bearer <token>` unless noted.
+Alle Endpoints (außer `/auth/login`, `/health` und `/api/info`) erfordern `Authorization: Bearer <jwt-token>`.
+
+---
 
 ## Authentication
 
 ### POST /auth/login
-Login and receive a JWT token.
+Login — gibt ein JWT-Token zurück.
 
 **Request:**
 ```json
@@ -23,42 +25,56 @@ Login and receive a JWT token.
 { "token": "eyJhbG...", "user": { "id": 1, "email": "admin@fileflux.de", "role": "admin" } }
 ```
 
-### POST /auth/register
-Register a new user (admin only).
+### POST /auth/refresh
+:material-lock: Erneuert ein JWT-Token.
+
+### GET /auth/user
+:material-lock: Gibt den aktuellen Benutzer zurück.
+
+### POST /auth/password
+:material-lock: Ändert das Passwort des aktuellen Benutzers.
+
+**Request:**
+```json
+{ "old_password": "oldpw", "new_password": "newpw" }
+```
 
 ---
 
 ## Agents
 
 ### GET /agents
-List all agents.
+:material-lock: Alle Agenten auflisten.
 
-**Query Parameters:**
+### POST /agents
+:material-shield-lock: Agent erstellen (Admin only).
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `status` | string | Filter by status (`online`, `offline`) |
-| `page` | int | Page number (default: 1) |
-| `limit` | int | Items per page (default: 20) |
+**Request:**
+```json
+{ "name": "prod-agent-01", "type": "server", "description": "Primary upload server" }
+```
 
 ### GET /agents/:id
-Get agent details including system info.
+:material-lock: Agent-Details abrufen.
+
+### PUT /agents/:id
+:material-shield-lock: Agent aktualisieren (Admin only).
 
 ### DELETE /agents/:id
-Deregister an agent.
+:material-shield-lock: Agent löschen (Admin only).
+
+### POST /agents/:id/test
+:material-shield-lock: Verbindung zum Agent testen (Admin only).
 
 ---
 
 ## Jobs
 
 ### GET /jobs
-List all jobs.
-
-### GET /jobs/:id
-Get job details.
+:material-lock: Alle Jobs des Benutzers auflisten (gefiltert nach `user_id`).
 
 ### POST /jobs
-Create a new job.
+:material-lock: Neuen Job erstellen.
 
 **Request:**
 ```json
@@ -66,102 +82,157 @@ Create a new job.
   "name": "Daily Report Transfer",
   "type": "push",
   "source_agent_id": 1,
+  "destination_agent_id": 2,
   "source_path": "/data/reports/",
-  "dest_agent_id": 2,
-  "dest_path": "/incoming/reports/",
-  "schedule": "0 6 * * *",
-  "file_pattern": "*.csv"
+  "destination_path": "/incoming/reports/",
+  "schedule": "0 0 6 * * *",
+  "description": "Täglicher Report-Transfer um 06:00"
 }
 ```
 
+### GET /jobs/:id
+:material-lock: Job-Details (Ownership-Prüfung — nur eigene Jobs).
+
 ### PUT /jobs/:id
-Update a job.
+:material-lock: Job aktualisieren (Ownership-Prüfung).
 
 ### DELETE /jobs/:id
-Delete a job.
+:material-lock: Job löschen (Ownership-Prüfung).
 
 ### POST /jobs/:id/run
-Trigger immediate job execution.
+:material-lock: Job sofort ausführen (Ownership-Prüfung). Erstellt einen neuen Transfer und dispatcht ihn an den Quell-Agenten.
 
 ---
 
 ## Transfers
 
 ### GET /transfers
-List transfers with filtering.
+:material-lock: Alle Transfers des Benutzers auflisten (gefiltert nach `user_id` über Job-Zugehörigkeit).
 
-**Query Parameters:**
+### POST /transfers
+:material-lock: Neuen Transfer erstellen.
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `status` | string | Filter by status |
-| `job_id` | int | Filter by job |
-| `page` | int | Page number |
-| `limit` | int | Items per page |
+**Request:**
+```json
+{
+  "job_id": 1,
+  "filename": "report.csv",
+  "size": 1048576,
+  "source_path": "/data/reports/report.csv",
+  "destination_path": "/incoming/report.csv",
+  "source_agent_id": 1,
+  "destination_agent_id": 2
+}
+```
 
 ### GET /transfers/:id
-Get transfer details.
-
-### POST /transfers/:id/retry
-Retry a failed transfer.
+:material-lock: Transfer-Details (Ownership-Prüfung über Job-Zugehörigkeit).
 
 ### POST /transfers/:id/cancel
-Cancel a running transfer.
+:material-lock: Laufenden Transfer abbrechen (Ownership-Prüfung).
 
 ---
 
 ## Tokens
 
 ### GET /tokens
-List all tokens.
+:material-lock: Alle Agent-Tokens auflisten.
 
 ### POST /tokens
-Create a new agent token.
+:material-shield-lock: Neues Agent-Token erstellen (Admin only).
 
 **Request:**
 ```json
-{ "name": "agent-prod-01", "expires_at": "2025-12-31T23:59:59Z" }
+{ "name": "agent-prod-01", "agent_id": 1, "description": "Production agent token" }
 ```
 
 **Response:**
-```json
-{ "id": 1, "name": "agent-prod-01", "token": "ffx_abc123...", "expires_at": "2025-12-31T23:59:59Z" }
-```
-
-### DELETE /tokens/:id
-Revoke a token.
-
----
-
-## Health
-
-### GET /health
-Health check (no auth required).
-
-**Response:**
-```json
-{ "status": "healthy", "version": "1.0.0", "uptime": "2h 15m" }
-```
-
-## Error Format
-
-All errors follow a consistent format:
-
 ```json
 {
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "source_agent_id is required",
-    "details": { "field": "source_agent_id" }
-  }
+  "token": { "id": 1, "name": "agent-prod-01", "agent_id": 1, "created_at": "...", "expires_at": null },
+  "value": "ffx_abc123..."
 }
 ```
 
-| HTTP Status | Code | Description |
-|-------------|------|-------------|
-| 400 | `VALIDATION_ERROR` | Invalid request body |
-| 401 | `UNAUTHORIZED` | Missing or invalid token |
-| 403 | `FORBIDDEN` | Insufficient permissions |
-| 404 | `NOT_FOUND` | Resource not found |
-| 409 | `CONFLICT` | Resource already exists |
-| 500 | `INTERNAL_ERROR` | Server error |
+!!! warning "Token-Wert wird nur einmal angezeigt"
+    Der `value` wird nur bei der Erstellung zurückgegeben. Speichern Sie ihn sofort.
+
+### DELETE /tokens/:id
+:material-shield-lock: Token widerrufen (Admin only).
+
+---
+
+## File Transfer (Agent-Authentifizierung)
+
+Diese Endpoints nutzen **Agent-Token** (nicht JWT) im `Authorization: Bearer <agent-token>` Header. Sie werden vom Agent für den eigentlichen Dateitransfer verwendet.
+
+### PUT /files/:transferId/upload
+:material-key: Datei hochladen.
+
+**Query Parameter:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `filename` | string | `file.dat` | Dateiname |
+
+**Request Body:** Raw file bytes (`application/octet-stream`).
+
+**Limits:** Max 5 GB Upload-Größe.
+
+**Response:**
+```json
+{ "transfer_id": 1, "filename": "report.csv", "size": 1048576, "agent_id": 3 }
+```
+
+### GET /files/:transferId/download
+:material-key: Datei herunterladen.
+
+**Response:** Datei als `application/octet-stream` mit `Content-Disposition: attachment`.
+
+---
+
+## Health & Info
+
+### GET /health
+Health-Check (keine Authentifizierung). Prüft Datenbank-Konnektivität.
+
+**Response (healthy):**
+```json
+{ "status": "healthy", "database": "connected" }
+```
+
+**Response (unhealthy, HTTP 503):**
+```json
+{ "status": "unhealthy", "database": "disconnected", "error": "..." }
+```
+
+### GET /api/info
+API-Informationen.
+
+```json
+{ "name": "FileFlux API", "version": "1.0.0" }
+```
+
+---
+
+## Error Format
+
+Alle Fehler folgen einem einheitlichen Format:
+
+```json
+{ "error": "Beschreibung des Fehlers" }
+```
+
+| HTTP Status | Bedeutung |
+|-------------|-----------|
+| 400 | Ungültige Anfrage / Validierungsfehler |
+| 401 | Nicht authentifiziert |
+| 403 | Unzureichende Berechtigungen |
+| 404 | Ressource nicht gefunden (oder kein Zugriff) |
+| 413 | Datei zu groß |
+| 429 | Rate Limit überschritten |
+| 500 | Interner Serverfehler |
+
+!!! info "IDOR-Schutz"
+    Alle Single-Resource-Endpoints (`/jobs/:id`, `/transfers/:id`) prüfen die Besitzverhältnisse.
+    Zugriffe auf fremde Ressourcen geben `404 Not Found` zurück — nicht `403` — um keine Informationen über die Existenz von Ressourcen preiszugeben.

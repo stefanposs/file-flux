@@ -10,25 +10,28 @@ The FileFlux agent is a standalone Go binary that runs on endpoint machines.
 
 ```
 agent/
-├── cmd/agent/main.go       # Entry point, Cobra CLI
+├── cmd/agent/main.go       # Entry point, signal handling
 ├── internal/
-│   ├── config/             # YAML + env configuration
-│   ├── connection/         # WebSocket client, reconnect logic
-│   ├── transfer/           # File read/write, chunking
-│   ├── checksum/           # SHA-256 computation
-│   ├── system/             # System info collection
-│   └── watcher/            # File system watcher (future)
+│   ├── config/             # YAML configuration (config.go)
+│   ├── websocket/          # WebSocket client, reconnect logic
+│   ├── transfer/           # File upload/download, chunking
+│   ├── api/                # HTTP client for file transfer API
+│   └── system/             # System info collection (OS, IP, hostname)
 └── go.mod
 ```
 
-## CLI Commands
+## Startup Flow
 
-```bash
-fileflux-agent              # Start agent (default)
-fileflux-agent start        # Start agent with options
-fileflux-agent init         # Generate config.yaml
-fileflux-agent status       # Check connection status
-fileflux-agent version      # Print version info
+```
+main.go
+  ├── config.LoadConfig()         # YAML laden
+  ├── system.CollectSystemInfo()  # OS, Hostname, IP
+  ├── api.NewClient()             # HTTP-Client für File-API
+  ├── transfer.NewManager()       # Transfer-Engine
+  ├── websocket.NewClient()       # WS-Client erstellen
+  │     ├── SetSystemInfo()
+  │     └── SetTransferManager()
+  └── go wsClient.Connect()       # Verbindung in Goroutine
 ```
 
 ## Connection Management
@@ -38,26 +41,42 @@ stateDiagram-v2
     [*] --> Connecting
     Connecting --> Connected: WebSocket open
     Connecting --> Backoff: Connection failed
-    Backoff --> Connecting: Retry after delay
+    Backoff --> Connecting: Exponential retry (2s → 5min)
     Connected --> Authenticated: Token validated
     Authenticated --> Ready: System info sent
     Ready --> Ready: Heartbeat loop
     Ready --> Transferring: Transfer command
     Transferring --> Ready: Transfer complete
     Ready --> Reconnecting: Connection lost
-    Reconnecting --> Connecting: Exponential backoff
+    Reconnecting --> Connecting: Backoff + jitter
 ```
+
+Der Agent nutzt **unbegrenztes exponentielles Backoff mit Jitter** (2 Sekunden bis maximal 5 Minuten) und startet sich nach Verbindungsverlust automatisch neu.
 
 ## Transfer Engine
 
-1. **Chunking** — Files are read in configurable chunks (default 1 MB)
-2. **Binary frames** — Each chunk is sent as a binary WebSocket frame with a header containing transfer ID, chunk index, and chunk size
-3. **Checksum** — SHA-256 is computed incrementally as chunks are read/written
-4. **Concurrency** — Multiple transfers can run in parallel (configurable)
+1. **Chunk-basiert** — Dateien werden in konfigurierbaren Chunks gelesen (Standard 1 MB)
+2. **HTTP-Upload** — Chunks werden als `PUT /api/files/{transferId}/upload` an den Server gesendet
+3. **HTTP-Download** — Dateien werden via `GET /api/files/{transferId}/download` empfangen
+4. **Progress-Reporting** — Fortschritt wird per WebSocket an den Server gemeldet
+5. **Concurrency** — Mehrere Transfers können parallel laufen (konfigurierbar)
+
+## Message Types
+
+Der Agent verarbeitet folgende WebSocket-Nachrichten:
+
+| Type | Richtung | Beschreibung |
+|------|----------|-------------|
+| `heartbeat` | Agent → Server | Regelmäßiger Lebenszeichen-Ping |
+| `agent_info` | Agent → Server | Systeminformationen senden |
+| `transfer_request` | Server → Agent | Transfer starten |
+| `transfer_progress` | Agent → Server | Fortschritt melden |
+| `transfer_complete` | Agent → Server | Transfer abgeschlossen |
+| `transfer_error` | Agent → Server | Fehler melden |
 
 ## Cross-Platform Support
 
-The agent compiles to a single static binary per platform:
+Der Agent kompiliert zu einem einzelnen statischen Binary pro Plattform:
 
 | Target | Binary |
 |--------|--------|
