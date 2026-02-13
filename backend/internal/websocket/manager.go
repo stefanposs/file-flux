@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/stefanposs/file-flux/backend/domain/common"
+	"github.com/stefanposs/file-flux/backend/internal/engine/protocol"
 )
 
 // AgentStatusUpdater defines the agent status operations the WS manager needs.
@@ -48,6 +49,12 @@ type TokenValidator interface {
 	Validate(ctx context.Context, tokenValue string) (agentID int, err error)
 }
 
+// BinaryChunkHandler processes incoming binary WebSocket frames.
+type BinaryChunkHandler interface {
+	HandleChunkReceived(ctx context.Context, agentID int, header protocol.BinaryHeader, data []byte) error
+	HandleAgentMessage(ctx context.Context, agentID int, msgType string, data json.RawMessage) bool
+}
+
 // Manager verwaltet WebSocket-Verbindungen zu Agenten
 type Manager struct {
 	clients        map[int]*Client
@@ -56,6 +63,7 @@ type Manager struct {
 	transfers      TransferUpdater
 	transferGetter TransferGetter
 	tokens         TokenValidator
+	engine         BinaryChunkHandler // Phase 2: chunked transfer engine
 	logger         *log.Logger
 	upgrader       websocket.Upgrader
 }
@@ -65,6 +73,7 @@ type Client struct {
 	conn    *websocket.Conn
 	agentID int
 	send    chan []byte
+	sendBin chan []byte // binary frame channel
 }
 
 // NewManager erstellt einen neuen WebSocket-Manager
@@ -79,8 +88,8 @@ func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValid
 		transferGetter: transferGetter,
 		logger:         logger,
 		upgrader: websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
+			ReadBufferSize:  64 * 1024, // 64 KB for binary chunk transfers
+			WriteBufferSize: 64 * 1024,
 			CheckOrigin: func(r *http.Request) bool {
 				// Agent-Verbindungen kommen mit Authorization-Header (kein Browser-Origin)
 				if r.Header.Get("Authorization") != "" {
@@ -161,6 +170,7 @@ func (m *Manager) handleConnection(w http.ResponseWriter, r *http.Request) {
 		conn:    conn,
 		agentID: agentID,
 		send:    make(chan []byte, 256),
+		sendBin: make(chan []byte, 64), // binary frame channel
 	}
 
 	// Agent als online markieren
@@ -217,6 +227,29 @@ func (m *Manager) SendToAgent(agentID int, message interface{}) error {
 	}
 }
 
+// SendBinaryToAgent sends a binary WebSocket frame to a specific agent.
+func (m *Manager) SendBinaryToAgent(agentID int, data []byte) error {
+	m.clientsLock.RLock()
+	client, ok := m.clients[agentID]
+	m.clientsLock.RUnlock()
+
+	if !ok {
+		return common.ErrAgentNotConnected
+	}
+
+	select {
+	case client.sendBin <- data:
+		return nil
+	default:
+		return common.ErrAgentChannelFull
+	}
+}
+
+// SetEngine sets the binary chunk handler (TransferEngine) for processing binary frames.
+func (m *Manager) SetEngine(engine BinaryChunkHandler) {
+	m.engine = engine
+}
+
 // readPump liest Nachrichten vom WebSocket
 func (c *Client) readPump(m *Manager) {
 	defer func() {
@@ -234,7 +267,7 @@ func (c *Client) readPump(m *Manager) {
 		c.conn.Close()
 	}()
 
-	c.conn.SetReadLimit(4096)
+	c.conn.SetReadLimit(67_109_000) // ~64 MB for binary chunk frames
 	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
@@ -242,7 +275,7 @@ func (c *Client) readPump(m *Manager) {
 	})
 
 	for {
-		_, message, err := c.conn.ReadMessage()
+		msgType, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				m.logger.Printf("Fehler beim Lesen vom WebSocket: %v", err)
@@ -250,11 +283,37 @@ func (c *Client) readPump(m *Manager) {
 			break
 		}
 
-		// Nachricht verarbeiten
+		// Phase 2: Handle binary frames (chunk data)
+		if msgType == websocket.BinaryMessage {
+			if m.engine != nil {
+				frame, err := protocol.DecodeFrame(message)
+				if err != nil {
+					m.logger.Printf("Fehler beim Dekodieren des Binary-Frames: %v", err)
+					continue
+				}
+				ctx := context.Background()
+				if err := m.engine.HandleChunkReceived(ctx, c.agentID, frame.Header, frame.Payload); err != nil {
+					m.logger.Printf("Fehler beim Verarbeiten des Chunks: %v", err)
+				}
+			} else {
+				m.logger.Printf("Binary-Frame empfangen, aber keine Engine konfiguriert")
+			}
+			continue
+		}
+
+		// Nachricht verarbeiten (JSON text frames)
 		var msg Message
 		if err := json.Unmarshal(message, &msg); err != nil {
 			m.logger.Printf("Fehler beim Parsen der Nachricht: %v", err)
 			continue
+		}
+
+		// Phase 2: Let engine handle engine-specific message types
+		if m.engine != nil {
+			ctx := context.Background()
+			if m.engine.HandleAgentMessage(ctx, c.agentID, string(msg.Type), msg.Data) {
+				continue
+			}
 		}
 
 		// Je nach Nachrichtentyp weiterverarbeiten
@@ -450,6 +509,15 @@ func (c *Client) writePump() {
 			// Jede Nachricht als eigenen WebSocket-Frame senden,
 			// damit jeder Frame gültiges JSON bleibt.
 			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				return
+			}
+		case binData, ok := <-c.sendBin:
+			c.conn.SetWriteDeadline(time.Now().Add(30 * time.Second)) // longer timeout for binary chunks
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			if err := c.conn.WriteMessage(websocket.BinaryMessage, binData); err != nil {
 				return
 			}
 		case <-ticker.C:

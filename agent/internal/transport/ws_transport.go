@@ -30,6 +30,7 @@ type WSTransport struct {
 	done            chan struct{}
 	sysInfo         *SystemInfo
 	transferHandler TransferHandler
+	binaryHandler   BinaryHandler
 	connected       bool
 }
 
@@ -158,6 +159,27 @@ func (t *WSTransport) SendMessage(msg Message) {
 	}
 }
 
+// SendBinaryMessage sendet eine binäre Nachricht über den WebSocket (Chunk-Transfer).
+func (t *WSTransport) SendBinaryMessage(data []byte) error {
+	t.connLock.Lock()
+	defer t.connLock.Unlock()
+
+	if t.conn == nil {
+		return fmt.Errorf("keine WebSocket-Verbindung")
+	}
+
+	t.conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
+	if err := t.conn.WriteMessage(websocket.BinaryMessage, data); err != nil {
+		return fmt.Errorf("binäre Nachricht senden: %w", err)
+	}
+	return nil
+}
+
+// SetBinaryHandler setzt den Handler für eingehende binäre Nachrichten.
+func (t *WSTransport) SetBinaryHandler(handler BinaryHandler) {
+	t.binaryHandler = handler
+}
+
 // IsConnected gibt zurück ob die WS-Verbindung aktiv ist.
 func (t *WSTransport) IsConnected() bool {
 	return t.connected
@@ -176,11 +198,16 @@ func (t *WSTransport) dial() error {
 
 	dialer := websocket.DefaultDialer
 	dialer.HandshakeTimeout = 10 * time.Second
+	dialer.ReadBufferSize = 65536
+	dialer.WriteBufferSize = 65536
 
 	conn, _, err := dialer.Dial(t.config.ServerURL, header)
 	if err != nil {
 		return fmt.Errorf("WebSocket-Dial fehlgeschlagen: %w", err)
 	}
+
+	// 64 MB read limit for binary chunk frames
+	conn.SetReadLimit(67_109_000)
 
 	t.connLock.Lock()
 	t.conn = conn
@@ -249,12 +276,22 @@ func (t *WSTransport) readLoop() {
 		}
 
 		conn.SetReadDeadline(time.Now().Add(90 * time.Second))
-		_, raw, err := conn.ReadMessage()
+		msgType, raw, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
 				t.logger.Printf("[WS] Lesefehler: %v", err)
 			}
 			return
+		}
+
+		// Handle binary frames (chunk downloads from server)
+		if msgType == websocket.BinaryMessage {
+			if t.binaryHandler != nil {
+				t.binaryHandler(raw)
+			} else {
+				t.logger.Printf("[WS] Binäre Nachricht empfangen, aber kein Handler registriert (%d Bytes)", len(raw))
+			}
+			continue
 		}
 
 		var msg Message

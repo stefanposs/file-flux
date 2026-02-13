@@ -136,3 +136,19 @@ func (r *TransferRepo) UpdateProgress(ctx context.Context, id int, progress floa
 	`, progress, id)
 	return err
 }
+
+func (r *TransferRepo) UpdateChunkProgress(ctx context.Context, id int, completedChunks int, bytesTransferred int64) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE transfers SET completed_chunks = $1, bytes_transferred = $2,
+		       progress = CASE WHEN total_chunks > 0 THEN $1::float / total_chunks ELSE 0 END
+		WHERE id = $3
+	`, completedChunks, bytesTransferred, id)
+	return err
+}
+
+func (r *TransferRepo) UpdateFileHash(ctx context.Context, id int, hash string) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE transfers SET file_hash = $1 WHERE id = $2
+	`, hash, id)
+	return err
+}

@@ -149,6 +149,17 @@ func (p *PollingTransport) SendMessage(msg Message) {
 	}
 }
 
+// SendBinaryMessage ist im Polling-Modus nicht unterstützt.
+// Binäre Chunk-Transfers erfordern WebSocket.
+func (p *PollingTransport) SendBinaryMessage(data []byte) error {
+	return fmt.Errorf("binäre Nachrichten werden im Polling-Modus nicht unterstützt")
+}
+
+// SetBinaryHandler ist im Polling-Modus ein No-Op.
+func (p *PollingTransport) SetBinaryHandler(handler BinaryHandler) {
+	// Polling unterstützt keine binären Nachrichten
+}
+
 // IsConnected gibt zurück ob der Polling-Transport aktiv ist.
 func (p *PollingTransport) IsConnected() bool {
 	p.mu.Lock()

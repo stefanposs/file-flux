@@ -15,11 +15,14 @@ const (
 	MessageTypeTransferProgress MessageType = "transfer_progress"
 	MessageTypeTransferComplete MessageType = "transfer_complete"
 	MessageTypeTransferError    MessageType = "transfer_error"
+	MessageTypeTransferResume   MessageType = "transfer_resume"
 
 	// Server zu Agent Nachrichten
 	MessageTypeTransferRequest MessageType = "transfer_request"
 	MessageTypeCancelTransfer  MessageType = "cancel_transfer"
 	MessageTypeConnectionTest  MessageType = "connection_test"
+	MessageTypeChunkAck        MessageType = "chunk_ack"
+	MessageTypeChunkNack       MessageType = "chunk_nack"
 )
 
 // Message repräsentiert eine Websocket-Nachricht
@@ -76,6 +79,10 @@ type TransferRequestMessage struct {
 		ChunkSize        int    `json:"chunk_size"`
 		TransferType     string `json:"transfer_type"` // "upload" oder "download"
 		DestinationAgent string `json:"destination_agent,omitempty"`
+		Protocol         string `json:"protocol,omitempty"` // "binary_ws" or "http" (default)
+		ResumeFromChunk  int    `json:"resume_from_chunk,omitempty"`
+		TotalChunks      int    `json:"total_chunks,omitempty"`
+		Compression      string `json:"compression,omitempty"` // "zstd", "lz4", "none"
 	} `json:"transfer"`
 }
 
@@ -93,4 +100,25 @@ type ConnectionTestMessage struct {
 type ConnectionTestResponseMessage struct {
 	RequestID string    `json:"request_id"`
 	Timestamp time.Time `json:"timestamp"`
+}
+
+// ChunkAckMessage acknowledges receipt of a chunk.
+type ChunkAckMessage struct {
+	TransferID string `json:"transfer_id"`
+	ChunkIndex uint32 `json:"chunk_index"`
+}
+
+// ChunkNackMessage rejects a chunk (e.g., hash mismatch) and requests resend.
+type ChunkNackMessage struct {
+	TransferID string `json:"transfer_id"`
+	ChunkIndex uint32 `json:"chunk_index"`
+	Reason     string `json:"reason"`
+}
+
+// TransferResumeMessage is sent by an agent to resume an interrupted transfer.
+type TransferResumeMessage struct {
+	TransferID     string   `json:"transfer_id"`
+	LastChunkIndex uint32   `json:"last_chunk_index"`
+	FileHash       string   `json:"file_hash"`
+	MissingChunks  []uint32 `json:"missing_chunks,omitempty"`
 }

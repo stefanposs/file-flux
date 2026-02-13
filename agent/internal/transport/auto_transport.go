@@ -30,6 +30,7 @@ type AutoTransport struct {
 	logger          *log.Logger
 	sysInfo         *SystemInfo
 	transferHandler TransferHandler
+	binaryHandler   BinaryHandler
 
 	// Aktiver Transport
 	active   Transport
@@ -94,6 +95,29 @@ func (a *AutoTransport) SendMessage(msg Message) {
 	if t != nil {
 		t.SendMessage(msg)
 	}
+}
+
+// SendBinaryMessage sendet eine binäre Nachricht über den aktiven Transport.
+func (a *AutoTransport) SendBinaryMessage(data []byte) error {
+	a.activeMu.RLock()
+	t := a.active
+	a.activeMu.RUnlock()
+	if t != nil {
+		return t.SendBinaryMessage(data)
+	}
+	return fmt.Errorf("kein aktiver Transport")
+}
+
+// SetBinaryHandler setzt den Handler für eingehende binäre Nachrichten.
+func (a *AutoTransport) SetBinaryHandler(handler BinaryHandler) {
+	a.activeMu.RLock()
+	t := a.active
+	a.activeMu.RUnlock()
+	if t != nil {
+		t.SetBinaryHandler(handler)
+	}
+	// Store for later use when transport reconnects
+	a.binaryHandler = handler
 }
 
 // IsConnected gibt zurück ob der aktive Transport verbunden ist.

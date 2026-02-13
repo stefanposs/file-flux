@@ -127,6 +127,52 @@ BEGIN
   END IF;
 END $$; 
 
+-- Phase 2: Chunked transfer columns (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='file_hash') THEN
+    ALTER TABLE transfers ADD COLUMN file_hash VARCHAR(64);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='compression') THEN
+    ALTER TABLE transfers ADD COLUMN compression VARCHAR(10) DEFAULT 'none';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='chunk_size') THEN
+    ALTER TABLE transfers ADD COLUMN chunk_size INTEGER DEFAULT 8388608;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='total_chunks') THEN
+    ALTER TABLE transfers ADD COLUMN total_chunks INTEGER DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='completed_chunks') THEN
+    ALTER TABLE transfers ADD COLUMN completed_chunks INTEGER DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='bytes_transferred') THEN
+    ALTER TABLE transfers ADD COLUMN bytes_transferred BIGINT DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='retry_count') THEN
+    ALTER TABLE transfers ADD COLUMN retry_count INTEGER DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='max_retries') THEN
+    ALTER TABLE transfers ADD COLUMN max_retries INTEGER DEFAULT 3;
+  END IF;
+END $$;
+
+-- Phase 2: Transfer chunks table
+CREATE TABLE IF NOT EXISTS transfer_chunks (
+  id SERIAL PRIMARY KEY,
+  transfer_id INTEGER NOT NULL REFERENCES transfers(id) ON DELETE CASCADE,
+  chunk_index INTEGER NOT NULL,
+  chunk_hash VARCHAR(64) NOT NULL DEFAULT '',
+  size_compressed INTEGER NOT NULL DEFAULT 0,
+  size_original INTEGER NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  received_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE (transfer_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_transfer_chunks_transfer ON transfer_chunks(transfer_id);
+CREATE INDEX IF NOT EXISTS idx_transfer_chunks_status ON transfer_chunks(transfer_id, status);
+
 -- Erstelle einen Demo-Agenten mit Token für Docker-Entwicklung
 DO $$
 DECLARE

@@ -23,6 +23,12 @@ const (
 	MessageTypeCancelTransfer         MessageType = "cancel_transfer"
 	MessageTypeConnectionTest         MessageType = "connection_test"
 	MessageTypeConnectionTestResponse MessageType = "connection_test_response"
+
+	// Binary protocol message types
+	MessageTypeChunkAck       MessageType = "chunk_ack"
+	MessageTypeChunkNack      MessageType = "chunk_nack"
+	MessageTypeChunkRequest   MessageType = "chunk_request"
+	MessageTypeTransferResume MessageType = "transfer_resume"
 )
 
 // Message ist das Envelope-Format für alle Nachrichten.
@@ -47,6 +53,8 @@ type TransferRequest struct {
 		ChunkSize        int    `json:"chunk_size"`
 		TransferType     string `json:"transfer_type"` // "upload" oder "download"
 		DestinationAgent string `json:"destination_agent,omitempty"`
+		Protocol         string `json:"protocol,omitempty"`    // "binary_ws" or "http" (default)
+		Compression      string `json:"compression,omitempty"` // "zstd", "lz4", "none"
 	} `json:"transfer"`
 }
 
@@ -64,6 +72,9 @@ const (
 	ModePolling   Mode = "polling"
 )
 
+// BinaryHandler verarbeitet eingehende binäre WebSocket-Nachrichten.
+type BinaryHandler func(data []byte)
+
 // Transport definiert die Schnittstelle für die Agent-Server-Kommunikation.
 // Beide Implementierungen (WebSocket und HTTP Long-Polling) erfüllen dieses Interface.
 type Transport interface {
@@ -71,10 +82,14 @@ type Transport interface {
 	Connect() error
 	// Disconnect trennt die Verbindung ordnungsgemäß.
 	Disconnect()
-	// SendMessage sendet eine Nachricht an den Server.
+	// SendMessage sendet eine JSON-Nachricht an den Server.
 	SendMessage(msg Message)
+	// SendBinaryMessage sendet eine binäre Nachricht an den Server (für Chunk-Transfer).
+	SendBinaryMessage(data []byte) error
 	// SetTransferHandler setzt den Handler für eingehende Transfer-Befehle.
 	SetTransferHandler(handler TransferHandler)
+	// SetBinaryHandler setzt den Handler für eingehende binäre Nachrichten (Chunk-Downloads).
+	SetBinaryHandler(handler BinaryHandler)
 	// IsConnected gibt zurück, ob eine aktive Verbindung besteht.
 	IsConnected() bool
 	// Mode gibt den aktiven Transport-Modus zurück.
