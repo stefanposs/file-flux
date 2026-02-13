@@ -22,7 +22,7 @@ var _ transfer.Repository = (*TransferRepo)(nil)
 
 func (r *TransferRepo) ListByUser(ctx context.Context, userID int) ([]transfer.Transfer, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT t.id, t.job_id, t.filename, t.size, t.status,
+		SELECT t.id, t.job_id, t.filename, t.size, t.status, t.progress,
 		       t.source_path, t.destination_path,
 		       t.source_agent_id, t.destination_agent_id,
 		       t.start_time, t.end_time, t.error, t.created_at
@@ -40,7 +40,7 @@ func (r *TransferRepo) ListByUser(ctx context.Context, userID int) ([]transfer.T
 	for rows.Next() {
 		var t transfer.Transfer
 		err := rows.Scan(
-			&t.ID, &t.JobID, &t.Filename, &t.Size, &t.Status,
+			&t.ID, &t.JobID, &t.Filename, &t.Size, &t.Status, &t.Progress,
 			&t.SourcePath, &t.DestinationPath,
 			&t.SourceAgentID, &t.DestinationAgentID,
 			&t.StartTime, &t.EndTime, &t.Error, &t.CreatedAt,
@@ -56,11 +56,11 @@ func (r *TransferRepo) ListByUser(ctx context.Context, userID int) ([]transfer.T
 func (r *TransferRepo) GetByID(ctx context.Context, id int) (*transfer.Transfer, error) {
 	var t transfer.Transfer
 	err := r.db.QueryRowContext(ctx, `
-		SELECT id, job_id, filename, size, status, source_path, destination_path,
+		SELECT id, job_id, filename, size, status, progress, source_path, destination_path,
 		       source_agent_id, destination_agent_id, start_time, end_time, error, created_at
 		FROM transfers WHERE id = $1
 	`, id).Scan(
-		&t.ID, &t.JobID, &t.Filename, &t.Size, &t.Status,
+		&t.ID, &t.JobID, &t.Filename, &t.Size, &t.Status, &t.Progress,
 		&t.SourcePath, &t.DestinationPath,
 		&t.SourceAgentID, &t.DestinationAgentID,
 		&t.StartTime, &t.EndTime, &t.Error, &t.CreatedAt,
@@ -93,8 +93,21 @@ func (r *TransferRepo) UpdateStatus(ctx context.Context, id int, status transfer
 		`, status, errorMsg, id)
 		return err
 	}
+	if status == transfer.StatusCompleted {
+		_, err := r.db.ExecContext(ctx, `
+			UPDATE transfers SET status = $1, progress = 1.0, end_time = NOW() WHERE id = $2
+		`, status, id)
+		return err
+	}
 	_, err := r.db.ExecContext(ctx, `
-		UPDATE transfers SET status = $1, end_time = NOW() WHERE id = $2
+		UPDATE transfers SET status = $1 WHERE id = $2
 	`, status, id)
+	return err
+}
+
+func (r *TransferRepo) UpdateProgress(ctx context.Context, id int, progress float64) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE transfers SET progress = $1, status = 'running' WHERE id = $2
+	`, progress, id)
 	return err
 }

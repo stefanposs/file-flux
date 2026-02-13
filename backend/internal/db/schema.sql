@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS transfers (
   filename VARCHAR(255) NOT NULL,
   size BIGINT NOT NULL DEFAULT 0,
   status VARCHAR(50) NOT NULL, -- 'pending', 'running', 'completed', 'failed'
+  progress DOUBLE PRECISION NOT NULL DEFAULT 0,
   source_path TEXT NOT NULL,
   destination_path TEXT NOT NULL,
   source_agent_id INTEGER REFERENCES agents(id),
@@ -69,6 +70,14 @@ CREATE TABLE IF NOT EXISTS transfers (
   error TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+-- Migration: progress-Spalte hinzufügen (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transfers' AND column_name='progress') THEN
+    ALTER TABLE transfers ADD COLUMN progress DOUBLE PRECISION NOT NULL DEFAULT 0;
+  END IF;
+END $$;
 
 -- Erstelle einen Admin-Benutzer, falls keiner existiert
 DO $$

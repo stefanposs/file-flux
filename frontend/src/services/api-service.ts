@@ -58,6 +58,7 @@ export interface ApiTransfer {
   filename: string;
   size: number;
   status: string;
+  progress: number;
   source_path: string;
   destination_path: string;
   source_agent_id: number | null;

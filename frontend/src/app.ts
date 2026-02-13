@@ -10,6 +10,7 @@ import './components/shared/toast';
 import './components/dashboard/dashboard';
 import './components/jobs/job-list';
 import './components/jobs/job-detail';
+import './components/jobs/job-edit';
 import './components/agents/agent-list';
 import './components/agents/agent-detail';
 import './components/tokens/token-list';
@@ -483,6 +484,9 @@ export class FileFluxApp extends LitElement {
           if (routeParts.length === 1) {
             this.currentRoute = '/jobs';
             this.routeParams = {};
+          } else if (routeParts.length === 3 && routeParts[1] === 'edit') {
+            this.currentRoute = '/jobs/edit';
+            this.routeParams = { id: routeParts[2] };
           } else {
             this.currentRoute = '/jobs/detail';
             this.routeParams = { id: routeParts[1] };
@@ -625,6 +629,9 @@ export class FileFluxApp extends LitElement {
         
       case '/jobs/detail':
         return html`<ff-job-detail jobId="${this.routeParams.id || ''}"></ff-job-detail>`;
+        
+      case '/jobs/edit':
+        return html`<ff-job-edit jobId="${this.routeParams.id || ''}"></ff-job-edit>`;
         
       case '/agents':
         return html`<ff-agent-list></ff-agent-list>`;

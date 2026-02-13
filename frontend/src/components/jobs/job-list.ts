@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoJobs } from '../../demo-mode';
 import { showToast } from '../shared/toast';
-import { api } from '../../services/api-service';
+import { api, ApiAgent } from '../../services/api-service';
 
 interface Job {
   id: string;
@@ -33,6 +33,8 @@ export class JobList extends LitElement {
   @state() private statusFilter = 'all';
   @state() private typeFilter = 'all';
   @state() private isCreateJobModalOpen = false;
+  @state() private agents: ApiAgent[] = [];
+  @state() private isSubmitting = false;
   @state() private sortField = '';
   @state() private sortDirection = 'asc';
 
@@ -273,6 +275,12 @@ export class JobList extends LitElement {
     .modal-body .form-group {
       margin-bottom: 16px;
     }
+    .modal-body .form-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .modal-body .form-row .form-group {
+      margin-bottom: 0;
+    }
     .modal-body label {
       display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;
     }
@@ -293,7 +301,11 @@ export class JobList extends LitElement {
       padding: 8px 16px; border: none; background: var(--primary-color, #4f46e5); color: #fff;
       border-radius: 4px; cursor: pointer; font-weight: 500;
     }
-    .btn-submit:hover { background: #0a1c33; }
+    .btn-submit:hover { background: var(--primary-hover, #4338ca); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .modal-body select.form-input {
+      appearance: auto;
+    }
   `;
 
   connectedCallback() {
@@ -551,8 +563,15 @@ export class JobList extends LitElement {
     this._applyFilters();
   }
 
-  _openCreateJobModal() {
+  async _openCreateJobModal() {
     this.isCreateJobModalOpen = true;
+    // Agents laden für die Dropdown-Auswahl
+    try {
+      this.agents = await api.getAgents();
+    } catch (err) {
+      console.warn('Agents konnten nicht geladen werden:', err);
+      this.agents = [];
+    }
   }
 
   _closeCreateJobModal() {
@@ -577,6 +596,35 @@ export class JobList extends LitElement {
                 <label for="job-description">Beschreibung</label>
                 <textarea id="job-description" class="form-input" rows="3" placeholder="Was macht dieser Job?"></textarea>
               </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="job-type">Typ *</label>
+                  <select id="job-type" class="form-input" required>
+                    <option value="push">Push</option>
+                    <option value="pull">Pull</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="job-schedule">Zeitplan (Cron)</label>
+                  <input type="text" id="job-schedule" class="form-input" placeholder="z.B. 0 0 * * * (optional)">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="job-source-agent">Quell-Agent *</label>
+                  <select id="job-source-agent" class="form-input" required>
+                    <option value="">Agent wählen…</option>
+                    ${this.agents.map(a => html`<option value="${a.id}">${a.name}</option>`)}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="job-dest-agent">Ziel-Agent *</label>
+                  <select id="job-dest-agent" class="form-input" required>
+                    <option value="">Agent wählen…</option>
+                    ${this.agents.map(a => html`<option value="${a.id}">${a.name}</option>`)}
+                  </select>
+                </div>
+              </div>
               <div class="form-group">
                 <label for="job-source">Quellpfad *</label>
                 <input type="text" id="job-source" class="form-input" required placeholder="/data/quelle">
@@ -585,14 +633,12 @@ export class JobList extends LitElement {
                 <label for="job-destination">Zielpfad *</label>
                 <input type="text" id="job-destination" class="form-input" required placeholder="/data/ziel">
               </div>
-              <div class="form-group">
-                <label for="job-schedule">Zeitplan (Cron) *</label>
-                <input type="text" id="job-schedule" class="form-input" required placeholder="0 0 * * *">
-              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn-cancel" @click=${this._closeCreateJobModal}>Abbrechen</button>
-              <button type="submit" class="btn-submit">Job erstellen</button>
+              <button type="submit" class="btn-submit" ?disabled=${this.isSubmitting}>
+                ${this.isSubmitting ? 'Wird erstellt…' : 'Job erstellen'}
+              </button>
             </div>
           </form>
         </div>
@@ -628,47 +674,45 @@ export class JobList extends LitElement {
     this._applyFilters();
   }
 
-  _submitJobForm(e: Event) {
+  async _submitJobForm(e: Event) {
     e.preventDefault();
     
     const form = e.target as HTMLFormElement;
     const nameInput = form.querySelector('#job-name') as HTMLInputElement;
     const descriptionInput = form.querySelector('#job-description') as HTMLTextAreaElement;
+    const typeInput = form.querySelector('#job-type') as HTMLSelectElement;
+    const sourceAgentInput = form.querySelector('#job-source-agent') as HTMLSelectElement;
+    const destAgentInput = form.querySelector('#job-dest-agent') as HTMLSelectElement;
     const sourceInput = form.querySelector('#job-source') as HTMLInputElement;
     const destinationInput = form.querySelector('#job-destination') as HTMLInputElement;
     const scheduleInput = form.querySelector('#job-schedule') as HTMLInputElement;
     
-    if (!nameInput.value || !sourceInput.value || !destinationInput.value || !scheduleInput.value) {
+    if (!nameInput.value || !sourceInput.value || !destinationInput.value || !sourceAgentInput.value || !destAgentInput.value) {
       showToast('Bitte fülle alle erforderlichen Felder aus.', 'warning');
       return;
     }
     
-    const newJob: Job = {
-      id: `job${this.jobs.length + 1}`,
-      name: nameInput.value,
-      description: descriptionInput.value,
-      source: sourceInput.value,
-      destination: destinationInput.value,
-      schedule: scheduleInput.value,
-      type: 'scheduled',
-      status: 'active',
-      enabled: true,
-      transferCount: 0,
-      failedCount: 0,
-      transferredBytes: 0,
-      lastRun: null,
-      nextRun: this._calculateNextRun(scheduleInput.value)
-    };
-    
-    // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    // await jobService.createJob(newJob);
-    
-    // Demo-Implementierung
-    this.jobs = [...this.jobs, newJob];
-    this._applyFilters();
-    this._closeCreateJobModal();
-    
-    showToast('Job erfolgreich erstellt!', 'success');
+    this.isSubmitting = true;
+    try {
+      await api.createJob({
+        name: nameInput.value,
+        type: typeInput.value,
+        source_path: sourceInput.value,
+        destination_path: destinationInput.value,
+        source_agent_id: Number(sourceAgentInput.value),
+        destination_agent_id: Number(destAgentInput.value),
+        schedule: scheduleInput.value || null,
+        description: descriptionInput.value || null,
+      });
+      
+      showToast('Job erfolgreich erstellt!', 'success');
+      this._closeCreateJobModal();
+      await this._loadJobs();
+    } catch (err: any) {
+      showToast('Fehler beim Erstellen: ' + (err?.message || 'Unbekannter Fehler'), 'error');
+    } finally {
+      this.isSubmitting = false;
+    }
   }
 
   _calculateNextRun(cronExpression: string): string {

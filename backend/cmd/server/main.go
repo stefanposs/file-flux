@@ -36,11 +36,38 @@ import (
 type transferUpdaterAdapter struct {
 	repo interface {
 		UpdateStatus(ctx context.Context, id int, status transferdomain.Status, errorMsg string) error
+		UpdateProgress(ctx context.Context, id int, progress float64) error
 	}
 }
 
 func (a *transferUpdaterAdapter) UpdateStatus(ctx context.Context, id int, status string, errorMsg string) error {
 	return a.repo.UpdateStatus(ctx, id, transferdomain.Status(status), errorMsg)
+}
+
+func (a *transferUpdaterAdapter) UpdateProgress(ctx context.Context, id int, progress float64) error {
+	return a.repo.UpdateProgress(ctx, id, progress)
+}
+
+// transferGetterAdapter adapts the transfer repo to the websocket.TransferGetter interface.
+type transferGetterAdapter struct {
+	repo interface {
+		GetByID(ctx context.Context, id int) (*transferdomain.Transfer, error)
+	}
+}
+
+func (a *transferGetterAdapter) GetByID(ctx context.Context, id int) (websocket.TransferInfo, error) {
+	t, err := a.repo.GetByID(ctx, id)
+	if err != nil {
+		return websocket.TransferInfo{}, err
+	}
+	return websocket.TransferInfo{
+		ID:                 t.ID,
+		SourceAgentID:      t.SourceAgentID,
+		DestinationAgentID: t.DestinationAgentID,
+		SourcePath:         t.SourcePath,
+		DestinationPath:    t.DestinationPath,
+		Filename:           t.Filename,
+	}, nil
 }
 
 func main() {
@@ -93,7 +120,7 @@ func main() {
 	tokenRepo := postgres.NewTokenRepo(pgDB)
 
 	// WebSocket-Manager (nutzt jetzt Domain-Repos)
-	wsManager := websocket.NewManager(logger, agentRepo, tokenRepo, &transferUpdaterAdapter{repo: transferRepo})
+	wsManager := websocket.NewManager(logger, agentRepo, tokenRepo, &transferUpdaterAdapter{repo: transferRepo}, &transferGetterAdapter{repo: transferRepo})
 
 	// ─── Application Layer (Services) ───────────────────────────────
 

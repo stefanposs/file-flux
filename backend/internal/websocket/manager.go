@@ -22,6 +22,22 @@ type AgentStatusUpdater interface {
 // TransferUpdater defines the transfer status operations the WS manager needs.
 type TransferUpdater interface {
 	UpdateStatus(ctx context.Context, id int, status string, errorMsg string) error
+	UpdateProgress(ctx context.Context, id int, progress float64) error
+}
+
+// TransferGetter reads transfer records (needed for two-phase dispatch).
+type TransferGetter interface {
+	GetByID(ctx context.Context, id int) (TransferInfo, error)
+}
+
+// TransferInfo carries the fields of a transfer the WS manager needs.
+type TransferInfo struct {
+	ID                 int
+	SourceAgentID      *int
+	DestinationAgentID *int
+	SourcePath         string
+	DestinationPath    string
+	Filename           string
 }
 
 // TokenValidator defines the token validation operation the WS manager needs.
@@ -31,13 +47,14 @@ type TokenValidator interface {
 
 // Manager verwaltet WebSocket-Verbindungen zu Agenten
 type Manager struct {
-	clients     map[int]*Client
-	clientsLock sync.RWMutex
-	agents      AgentStatusUpdater
-	transfers   TransferUpdater
-	tokens      TokenValidator
-	logger      *log.Logger
-	upgrader    websocket.Upgrader
+	clients        map[int]*Client
+	clientsLock    sync.RWMutex
+	agents         AgentStatusUpdater
+	transfers      TransferUpdater
+	transferGetter TransferGetter
+	tokens         TokenValidator
+	logger         *log.Logger
+	upgrader       websocket.Upgrader
 }
 
 // Client repräsentiert eine WebSocket-Verbindung zu einem Agenten
@@ -48,13 +65,14 @@ type Client struct {
 }
 
 // NewManager erstellt einen neuen WebSocket-Manager
-func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValidator, transfers TransferUpdater) *Manager {
+func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValidator, transfers TransferUpdater, transferGetter TransferGetter) *Manager {
 	return &Manager{
-		clients:   make(map[int]*Client),
-		agents:    agents,
-		tokens:    tokens,
-		transfers: transfers,
-		logger:    logger,
+		clients:        make(map[int]*Client),
+		agents:         agents,
+		tokens:         tokens,
+		transfers:      transfers,
+		transferGetter: transferGetter,
+		logger:         logger,
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -249,9 +267,9 @@ func (c *Client) readPump(m *Manager) {
 				continue
 			}
 
-			// Transfer als laufend markieren
+			// Transfer als laufend markieren und Fortschritt speichern
 			ctx := context.Background()
-			if err := m.transfers.UpdateStatus(ctx, transferID, "running", ""); err != nil {
+			if err := m.transfers.UpdateProgress(ctx, transferID, progress.Progress); err != nil {
 				m.logger.Printf("Fehler beim Aktualisieren des Transfer-Fortschritts: %v", err)
 			} else {
 				m.logger.Printf("Transfer %d Fortschritt: %.1f%%", transferID, progress.Progress*100)
@@ -273,8 +291,61 @@ func (c *Client) readPump(m *Manager) {
 				continue
 			}
 
-			// Transfer als abgeschlossen in der Datenbank markieren
 			ctx := context.Background()
+
+			// Pruefen ob dies die Upload-Phase war (Quell-Agent meldet fertig)
+			// → Phase 2: Download an Ziel-Agent dispatchen
+			if m.transferGetter != nil {
+				t, err := m.transferGetter.GetByID(ctx, transferID)
+				if err == nil && t.DestinationAgentID != nil && t.SourceAgentID != nil && c.agentID == *t.SourceAgentID {
+					// Upload-Phase fertig — sende Download-Request an Ziel-Agent
+					m.logger.Printf("Transfer %d Upload abgeschlossen, dispatche Download an Agent %d", transferID, *t.DestinationAgentID)
+
+					downloadMsg := struct {
+						Type string      `json:"type"`
+						Data interface{} `json:"data"`
+					}{
+						Type: "transfer_request",
+						Data: struct {
+							Transfer struct {
+								ID              string `json:"id"`
+								SourcePath      string `json:"source_path"`
+								DestinationPath string `json:"destination_path"`
+								Compressed      bool   `json:"compressed"`
+								ChunkSize       int    `json:"chunk_size"`
+								TransferType    string `json:"transfer_type"`
+							} `json:"transfer"`
+						}{
+							Transfer: struct {
+								ID              string `json:"id"`
+								SourcePath      string `json:"source_path"`
+								DestinationPath string `json:"destination_path"`
+								Compressed      bool   `json:"compressed"`
+								ChunkSize       int    `json:"chunk_size"`
+								TransferType    string `json:"transfer_type"`
+							}{
+								ID:              strconv.Itoa(transferID),
+								SourcePath:      t.SourcePath,
+								DestinationPath: t.DestinationPath,
+								Compressed:      false,
+								ChunkSize:       8,
+								TransferType:    "download",
+							},
+						},
+					}
+
+					// Transfer-Status auf running setzen (Phase 2)
+					m.transfers.UpdateStatus(ctx, transferID, "running", "")
+
+					if err := m.SendToAgent(*t.DestinationAgentID, downloadMsg); err != nil {
+						m.logger.Printf("Fehler beim Dispatchen des Downloads an Agent %d: %v", *t.DestinationAgentID, err)
+						m.transfers.UpdateStatus(ctx, transferID, "failed", "destination agent not connected")
+					}
+					continue
+				}
+			}
+
+			// Ziel-Agent (oder kein Ziel) — Transfer endgueltig abschliessen
 			if err := m.transfers.UpdateStatus(ctx, transferID, "completed", ""); err != nil {
 				m.logger.Printf("Fehler beim Abschließen des Transfers %d: %v", transferID, err)
 			} else {

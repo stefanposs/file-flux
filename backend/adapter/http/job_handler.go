@@ -117,6 +117,13 @@ func (h *JobHandler) UpdateJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Bestehenden Job laden, um UserID zu bewahren
+	existing, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "job not found")
+		return
+	}
+
 	var req jobRequest
 	if err := decodeJSON(r, &req); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
@@ -125,8 +132,10 @@ func (h *JobHandler) UpdateJob(w http.ResponseWriter, r *http.Request) {
 
 	j := &job.Job{
 		ID:                 id,
+		UserID:             existing.UserID,
 		Name:               req.Name,
 		Type:               job.Type(req.Type),
+		Status:             existing.Status,
 		Schedule:           req.Schedule,
 		SourcePath:         req.SourcePath,
 		DestinationPath:    req.DestinationPath,

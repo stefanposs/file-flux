@@ -311,9 +311,40 @@ export class TransferDetail extends LitElement {
     if (this._progressInterval) {
       clearInterval(this._progressInterval);
     }
+    if (this._pollTimer) {
+      clearInterval(this._pollTimer);
+    }
   }
 
   _progressInterval = null;
+  _pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  _startPolling() {
+    if (this._pollTimer) return;
+    this._pollTimer = setInterval(async () => {
+      if (!api.isAuthenticated()) return;
+      try {
+        const t = await api.getTransfer(Number(this.transferId));
+        this.progress = Math.round(t.progress * 100);
+        this.transfer = {
+          ...this.transfer,
+          status: t.status,
+          progress: t.progress,
+          error: t.error || undefined,
+          endTime: t.end_time || undefined,
+        };
+        // Stop polling when transfer is no longer active
+        if (t.status === 'completed' || t.status === 'failed') {
+          if (this._pollTimer) {
+            clearInterval(this._pollTimer);
+            this._pollTimer = null;
+          }
+        }
+      } catch (e) {
+        console.warn('Poll failed', e);
+      }
+    }, 2000);
+  }
 
   async _loadTransferData() {
     try {
@@ -322,8 +353,7 @@ export class TransferDetail extends LitElement {
       // Try real API first
       if (api.isAuthenticated()) {
         try {
-          const apiTransfers = await api.getTransfers();
-          const apiTransfer = apiTransfers.find(t => String(t.id) === this.transferId);
+          const apiTransfer = await api.getTransfer(Number(this.transferId));
           if (apiTransfer) {
             this.transfer = {
               id: String(apiTransfer.id),
@@ -333,15 +363,20 @@ export class TransferDetail extends LitElement {
               status: apiTransfer.status,
               startTime: apiTransfer.start_time,
               endTime: apiTransfer.end_time || undefined,
-              progress: 0,
+              progress: apiTransfer.progress,
               error: apiTransfer.error || undefined,
             };
-            this.progress = 0;
+            this.progress = Math.round(apiTransfer.progress * 100);
+
+            // Start polling if transfer is active
+            if (apiTransfer.status === 'pending' || apiTransfer.status === 'running') {
+              this._startPolling();
+            }
+
             // Load related job
             if (apiTransfer.job_id) {
               try {
-                const apiJobs = await api.getJobs();
-                const j = apiJobs.find(j => j.id === apiTransfer.job_id);
+                const j = await api.getJob(apiTransfer.job_id);
                 if (j) this.job = { id: String(j.id), name: j.name };
               } catch (e) {
                 console.warn('Failed to load job for transfer', e);
@@ -350,9 +385,13 @@ export class TransferDetail extends LitElement {
             // Load related agents
             try {
               const apiAgents = await api.getAgents();
-              // Agent mapping depends on transfer data available
-              if (apiAgents.length) {
-                this.sourceAgent = apiAgents[0] ? { id: String(apiAgents[0].id), name: apiAgents[0].name } : null;
+              if (apiTransfer.source_agent_id) {
+                const sa = apiAgents.find(a => a.id === apiTransfer.source_agent_id);
+                if (sa) this.sourceAgent = { id: String(sa.id), name: sa.name };
+              }
+              if (apiTransfer.destination_agent_id) {
+                const da = apiAgents.find(a => a.id === apiTransfer.destination_agent_id);
+                if (da) this.destinationAgent = { id: String(da.id), name: da.name };
               }
             } catch (e) {
               console.warn('Failed to load agents for transfer', e);

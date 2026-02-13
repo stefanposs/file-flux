@@ -23,6 +23,7 @@ type Transfer struct {
 	Filename           string     `json:"filename"`
 	Size               int64      `json:"size"`
 	Status             Status     `json:"status"`
+	Progress           float64    `json:"progress"`
 	SourcePath         string     `json:"source_path"`
 	DestinationPath    string     `json:"destination_path"`
 	SourceAgentID      *int       `json:"source_agent_id,omitempty"`
@@ -39,4 +40,5 @@ type Repository interface {
 	GetByID(ctx context.Context, id int) (*Transfer, error)
 	Create(ctx context.Context, transfer *Transfer) error
 	UpdateStatus(ctx context.Context, id int, status Status, errorMsg string) error
+	UpdateProgress(ctx context.Context, id int, progress float64) error
 }

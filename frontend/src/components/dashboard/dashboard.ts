@@ -394,7 +394,16 @@ export class Dashboard extends LitElement {
           const activeJobs = jobs.filter((j: any) => j.status === 'active').length;
           const completedTransfers = transfers.filter((t: any) => t.status === 'completed').length;
           const failedTransfers = transfers.filter((t: any) => t.status === 'failed').length;
-          const pendingTransfers = transfers.filter((t: any) => t.status === 'pending' || t.status === 'running');
+          const pendingTransfers = transfers
+            .filter((t: any) => t.status === 'pending' || t.status === 'running')
+            .map((t: any) => ({
+              id: t.id,
+              filename: t.filename,
+              size: t.size || 0,
+              status: t.status,
+              progress: t.progress || 0,
+              startTime: t.start_time || t.startTime,
+            }));
           const onlineAgents = agents.filter((a: any) => a.status === 'online').length;
 
           const transferVolume = transfers
@@ -404,7 +413,14 @@ export class Dashboard extends LitElement {
           const recentTransfers = [...transfers]
             .filter((t: any) => t.status === 'completed' || t.status === 'failed')
             .sort((a: any, b: any) => new Date(b.start_time || b.startTime).getTime() - new Date(a.start_time || a.startTime).getTime())
-            .slice(0, 5);
+            .slice(0, 5)
+            .map((t: any) => ({
+              id: t.id,
+              filename: t.filename,
+              size: t.size || 0,
+              status: t.status,
+              startTime: t.start_time || t.startTime,
+            }));
 
           this.stats = {
             activeJobs,
@@ -416,7 +432,14 @@ export class Dashboard extends LitElement {
             recentTransfers,
             pendingTransfers
           };
-          this._activeJobs = jobs.filter((j: any) => j.status === 'active');
+          this._activeJobs = jobs.filter((j: any) => j.status === 'active').map((j: any) => ({
+            id: j.id,
+            name: j.name,
+            type: j.type,
+            status: j.status,
+            lastRun: j.last_run || j.lastRun,
+            nextRun: j.next_run || j.nextRun,
+          }));
           return;
         } catch (apiErr) {
           console.warn('API load failed, falling back to demo', apiErr);
