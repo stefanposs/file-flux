@@ -8,16 +8,16 @@ import (
 
 // Agent ist die Domain-Entität für einen Agenten
 type Agent struct {
-	ID          int
-	Name        string
-	Type        string // "server", "client"
-	Status      string // "online", "offline", "error"
-	IPAddress   *string
-	System      *string
-	Version     *string
-	LastSeen    *time.Time
-	Description *string
-	CreatedAt   time.Time
+	ID          int        `json:"id"`
+	Name        string     `json:"name"`
+	Type        string     `json:"type"`   // "server", "client"
+	Status      string     `json:"status"` // "online", "offline", "error"
+	IPAddress   *string    `json:"ip_address,omitempty"`
+	System      *string    `json:"system,omitempty"`
+	Version     *string    `json:"version,omitempty"`
+	LastSeen    *time.Time `json:"last_seen,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
 // Repository definiert die Schnittstelle für Agent-Datenzugriff

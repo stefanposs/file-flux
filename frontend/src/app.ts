@@ -509,7 +509,16 @@ export class FileFluxApp extends LitElement {
         return html`<ff-transfer-detail transferId="${this.routeParams.id || ''}"></ff-transfer-detail>`;
         
       default:
-        return html`<div>Seite nicht gefunden</div>`;
+        return html`
+          <div style="text-align:center;padding:80px 20px;">
+            <h1 style="font-size:72px;margin:0;color:#122e53;">404</h1>
+            <p style="font-size:18px;color:#6c757d;margin:16px 0 24px;">Die Seite <code>${this.currentRoute}</code> wurde nicht gefunden.</p>
+            <button
+              style="background:#122e53;color:#fff;border:none;border-radius:4px;padding:10px 24px;font-size:16px;cursor:pointer;"
+              @click=${() => this._navigate('/')}
+            >Zurück zum Dashboard</button>
+          </div>
+        `;
     }
   }
 

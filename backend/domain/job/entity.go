@@ -26,20 +26,20 @@ const (
 
 // Job ist die Domain-Entität für einen Datentransfer-Job
 type Job struct {
-	ID                 int
-	UserID             int
-	Name               string
-	Type               Type
-	Status             Status
-	Schedule           *string
-	SourcePath         string
-	DestinationPath    string
-	SourceAgentID      int
-	DestinationAgentID int
-	LastRun            *time.Time
-	NextRun            *time.Time
-	Description        *string
-	CreatedAt          time.Time
+	ID                 int        `json:"id"`
+	UserID             int        `json:"user_id"`
+	Name               string     `json:"name"`
+	Type               Type       `json:"type"`
+	Status             Status     `json:"status"`
+	Schedule           *string    `json:"schedule,omitempty"`
+	SourcePath         string     `json:"source_path"`
+	DestinationPath    string     `json:"destination_path"`
+	SourceAgentID      int        `json:"source_agent_id"`
+	DestinationAgentID int        `json:"destination_agent_id"`
+	LastRun            *time.Time `json:"last_run,omitempty"`
+	NextRun            *time.Time `json:"next_run,omitempty"`
+	Description        *string    `json:"description,omitempty"`
+	CreatedAt          time.Time  `json:"created_at"`
 }
 
 // Repository definiert die Schnittstelle für Job-Datenzugriff

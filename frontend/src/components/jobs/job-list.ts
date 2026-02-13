@@ -234,6 +234,62 @@ export class JobList extends LitElement {
       color: #666;
       text-align: center;
     }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #122e53; }
+    .modal-close {
+      background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-body .form-group {
+      margin-bottom: 16px;
+    }
+    .modal-body label {
+      display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;
+    }
+    .modal-body .form-input {
+      width: 100%; padding: 8px 12px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 14px;
+      box-sizing: border-box;
+    }
+    .modal-body textarea.form-input { resize: vertical; }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 12px 20px; border-top: 1px solid #e9ecef;
+    }
+    .btn-cancel {
+      padding: 8px 16px; border: 1px solid #dee2e6; background: #fff;
+      border-radius: 4px; cursor: pointer;
+    }
+    .btn-submit {
+      padding: 8px 16px; border: none; background: #122e53; color: #fff;
+      border-radius: 4px; cursor: pointer; font-weight: 500;
+    }
+    .btn-submit:hover { background: #0a1c33; }
   `;
 
   connectedCallback() {
@@ -250,18 +306,18 @@ export class JobList extends LitElement {
         try {
           const apiJobs = await api.getJobs();
           this.jobs = apiJobs.map(j => ({
-            id: String(j.ID),
-            name: j.Name,
-            description: j.Description,
-            status: j.Status,
-            type: j.Type,
-            schedule: j.Schedule || undefined,
-            lastRun: j.LastRunAt || undefined,
-            nextRun: j.NextRunAt,
-            source: j.SourcePath,
-            destination: j.DestinationPath,
-            uploadAgent: j.UploadAgentID ? String(j.UploadAgentID) : undefined,
-            downloadAgent: j.DownloadAgentID ? String(j.DownloadAgentID) : undefined,
+            id: String(j.id),
+            name: j.name,
+            description: j.description || '',
+            status: j.status,
+            type: j.type,
+            schedule: j.schedule || undefined,
+            lastRun: j.last_run || undefined,
+            nextRun: j.next_run,
+            source: j.source_path,
+            destination: j.destination_path,
+            uploadAgent: j.source_agent_id ? String(j.source_agent_id) : undefined,
+            downloadAgent: j.destination_agent_id ? String(j.destination_agent_id) : undefined,
           }));
           this._applyFilters();
           return;
@@ -410,6 +466,8 @@ export class JobList extends LitElement {
         </div>
       </div>
       
+      ${this.isCreateJobModalOpen ? this._renderCreateJobModal() : ''}
+
       ${this.filteredJobs.length === 0 ? html`
         <div class="empty-container">
           <div class="empty-message">
@@ -495,6 +553,47 @@ export class JobList extends LitElement {
 
   _closeCreateJobModal() {
     this.isCreateJobModalOpen = false;
+  }
+
+  _renderCreateJobModal() {
+    return html`
+      <div class="modal-overlay" @click=${this._closeCreateJobModal}>
+        <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
+          <div class="modal-header">
+            <h2>Neuen Job erstellen</h2>
+            <button class="modal-close" @click=${this._closeCreateJobModal}>&times;</button>
+          </div>
+          <form @submit=${this._submitJobForm}>
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="job-name">Name *</label>
+                <input type="text" id="job-name" class="form-input" required placeholder="z.B. Daily Backup">
+              </div>
+              <div class="form-group">
+                <label for="job-description">Beschreibung</label>
+                <textarea id="job-description" class="form-input" rows="3" placeholder="Was macht dieser Job?"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="job-source">Quellpfad *</label>
+                <input type="text" id="job-source" class="form-input" required placeholder="/data/quelle">
+              </div>
+              <div class="form-group">
+                <label for="job-destination">Zielpfad *</label>
+                <input type="text" id="job-destination" class="form-input" required placeholder="/data/ziel">
+              </div>
+              <div class="form-group">
+                <label for="job-schedule">Zeitplan (Cron) *</label>
+                <input type="text" id="job-schedule" class="form-input" required placeholder="0 0 * * *">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-cancel" @click=${this._closeCreateJobModal}>Abbrechen</button>
+              <button type="submit" class="btn-submit">Job erstellen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
   }
 
   _renderSortIcon(field: string) {

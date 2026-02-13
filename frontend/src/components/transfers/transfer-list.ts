@@ -269,22 +269,22 @@ export class TransferList extends LitElement {
         try {
           const apiTransfers = await api.getTransfers();
           this.transfers = apiTransfers.map(t => ({
-            id: String(t.ID),
-            jobId: String(t.JobID),
-            filename: t.FileName,
-            size: t.FileSize,
-            status: t.Status,
-            startTime: t.StartedAt,
-            endTime: t.CompletedAt || undefined,
+            id: String(t.id),
+            jobId: String(t.job_id),
+            filename: t.filename,
+            size: t.size,
+            status: t.status,
+            startTime: t.start_time,
+            endTime: t.end_time || undefined,
             speed: 0,
-            error: t.Error || undefined,
-            source: '',
-            destination: '',
+            error: t.error || undefined,
+            source: t.source_path || '',
+            destination: t.destination_path || '',
           }));
           // Also load jobs for filters
           try {
             const apiJobs = await api.getJobs();
-            this.jobs = apiJobs.map(j => ({ id: String(j.ID), name: j.Name }));
+            this.jobs = apiJobs.map(j => ({ id: String(j.id), name: j.name }));
           } catch (e) {
             console.warn('Failed to load jobs for filters', e);
           }

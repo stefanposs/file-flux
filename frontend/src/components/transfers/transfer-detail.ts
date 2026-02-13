@@ -323,26 +323,26 @@ export class TransferDetail extends LitElement {
       if (api.isAuthenticated()) {
         try {
           const apiTransfers = await api.getTransfers();
-          const apiTransfer = apiTransfers.find(t => String(t.ID) === this.transferId);
+          const apiTransfer = apiTransfers.find(t => String(t.id) === this.transferId);
           if (apiTransfer) {
             this.transfer = {
-              id: String(apiTransfer.ID),
-              jobId: String(apiTransfer.JobID),
-              filename: apiTransfer.FileName,
-              size: apiTransfer.FileSize,
-              status: apiTransfer.Status,
-              startTime: apiTransfer.StartedAt,
-              endTime: apiTransfer.CompletedAt || undefined,
-              progress: apiTransfer.Progress,
-              error: apiTransfer.Error || undefined,
+              id: String(apiTransfer.id),
+              jobId: String(apiTransfer.job_id),
+              filename: apiTransfer.filename,
+              size: apiTransfer.size,
+              status: apiTransfer.status,
+              startTime: apiTransfer.start_time,
+              endTime: apiTransfer.end_time || undefined,
+              progress: 0,
+              error: apiTransfer.error || undefined,
             };
-            this.progress = apiTransfer.Progress || 0;
+            this.progress = 0;
             // Load related job
-            if (apiTransfer.JobID) {
+            if (apiTransfer.job_id) {
               try {
                 const apiJobs = await api.getJobs();
-                const j = apiJobs.find(j => j.ID === apiTransfer.JobID);
-                if (j) this.job = { id: String(j.ID), name: j.Name };
+                const j = apiJobs.find(j => j.id === apiTransfer.job_id);
+                if (j) this.job = { id: String(j.id), name: j.name };
               } catch (e) {
                 console.warn('Failed to load job for transfer', e);
               }
@@ -352,7 +352,7 @@ export class TransferDetail extends LitElement {
               const apiAgents = await api.getAgents();
               // Agent mapping depends on transfer data available
               if (apiAgents.length) {
-                this.sourceAgent = apiAgents[0] ? { id: String(apiAgents[0].ID), name: apiAgents[0].Name } : null;
+                this.sourceAgent = apiAgents[0] ? { id: String(apiAgents[0].id), name: apiAgents[0].name } : null;
               }
             } catch (e) {
               console.warn('Failed to load agents for transfer', e);

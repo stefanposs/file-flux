@@ -313,14 +313,14 @@ export class TokenList extends LitElement {
         try {
           const apiTokens = await api.getTokens();
           this.tokens = apiTokens.map(t => ({
-            id: String(t.ID),
-            name: t.Name,
-            token: t.Token,
-            agentId: t.AgentID ? String(t.AgentID) : null,
-            status: t.Revoked ? 'expired' : (new Date(t.ExpiresAt) < new Date() ? 'expired' : 'active'),
-            createdAt: t.CreatedAt,
-            expiresAt: t.ExpiresAt,
-            lastUsedAt: t.LastUsedAt,
+            id: String(t.id),
+            name: t.name,
+            token: t.value,
+            agentId: t.agent_id ? String(t.agent_id) : null,
+            status: (t.expires_at && new Date(t.expires_at) < new Date()) ? 'expired' : 'active',
+            createdAt: t.created_at,
+            expiresAt: t.expires_at,
+            lastUsedAt: t.last_used,
           }));
           this._applyFilters();
           return;
@@ -467,16 +467,16 @@ export class TokenList extends LitElement {
             name: this.newTokenName,
             agent_id: this.selectedAgentId ? Number(this.selectedAgentId) : 0,
           });
-          this.generatedToken = created.Token;
+          this.generatedToken = created.value;
           this.tokens = [{
-            id: String(created.ID),
-            name: created.Name,
-            token: created.Token,
-            agentId: created.AgentID ? String(created.AgentID) : null,
+            id: String(created.id),
+            name: created.name,
+            token: created.value,
+            agentId: created.agent_id ? String(created.agent_id) : null,
             status: 'active',
-            createdAt: created.CreatedAt,
-            expiresAt: created.ExpiresAt,
-            lastUsedAt: created.LastUsedAt,
+            createdAt: created.created_at,
+            expiresAt: created.expires_at,
+            lastUsedAt: created.last_used,
           }, ...this.tokens];
           this._applyFilters();
           return;

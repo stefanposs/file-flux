@@ -339,35 +339,35 @@ export class JobDetail extends LitElement {
       if (api.isAuthenticated()) {
         try {
           const apiJobs = await api.getJobs();
-          const apiJob = apiJobs.find(j => String(j.ID) === this.jobId);
+          const apiJob = apiJobs.find(j => String(j.id) === this.jobId);
           if (apiJob) {
             this.job = {
-              id: String(apiJob.ID),
-              name: apiJob.Name,
-              description: apiJob.Description,
-              status: apiJob.Status,
-              type: apiJob.Type,
-              schedule: apiJob.Schedule || undefined,
-              lastRun: apiJob.LastRunAt || undefined,
-              nextRun: apiJob.NextRunAt,
-              source: apiJob.SourcePath,
-              destination: apiJob.DestinationPath,
+              id: String(apiJob.id),
+              name: apiJob.name,
+              description: apiJob.description || '',
+              status: apiJob.status,
+              type: apiJob.type,
+              schedule: apiJob.schedule || undefined,
+              lastRun: apiJob.last_run || undefined,
+              nextRun: apiJob.next_run,
+              source: apiJob.source_path,
+              destination: apiJob.destination_path,
             };
             // Load related transfers
             try {
               const apiTransfers = await api.getTransfers();
               this.recentTransfers = apiTransfers
-                .filter(t => String(t.JobID) === this.jobId)
+                .filter(t => String(t.job_id) === this.jobId)
                 .map(t => ({
-                  id: String(t.ID),
-                  jobId: String(t.JobID),
-                  filename: t.FileName,
-                  size: t.FileSize,
-                  status: t.Status,
-                  startTime: t.StartedAt,
-                  endTime: t.CompletedAt || undefined,
-                  progress: t.Progress,
-                  error: t.Error || undefined,
+                  id: String(t.id),
+                  jobId: String(t.job_id),
+                  filename: t.filename,
+                  size: t.size,
+                  status: t.status,
+                  startTime: t.start_time,
+                  endTime: t.end_time || undefined,
+                  progress: 0,
+                  error: t.error || undefined,
                 }))
                 .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
                 .slice(0, 10);

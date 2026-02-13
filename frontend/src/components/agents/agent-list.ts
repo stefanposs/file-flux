@@ -15,6 +15,7 @@ export class AgentList extends LitElement {
   @state() private typeFilter = 'all';
   @state() private sortField = 'lastSeen';
   @state() private sortDirection = 'desc';
+  @state() private isInstallModalOpen = false;
 
   static styles = css`
     :host {
@@ -214,6 +215,98 @@ export class AgentList extends LitElement {
       overflow-x: auto;
       margin-top: 16px;
     }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #122e53; }
+    .modal-close {
+      background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-body p {
+      margin: 0 0 12px 0; color: #495057; font-size: 14px; line-height: 1.5;
+    }
+    .modal-body h3 {
+      margin: 20px 0 8px 0; font-size: 15px; color: #122e53;
+    }
+    .modal-body h3:first-child { margin-top: 0; }
+    .code-block {
+      background-color: #272822;
+      color: #f8f8f2;
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+      position: relative;
+      line-height: 1.5;
+      white-space: pre;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #f8f8f2;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.25);
+    }
+    .config-block {
+      background-color: #f8f9fa;
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+      line-height: 1.5;
+      white-space: pre;
+      border: 1px solid #e9ecef;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 20px;
+      border-top: 1px solid #e9ecef;
+    }
+    .btn-close-modal {
+      padding: 8px 20px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
   `;
 
   connectedCallback() {
@@ -231,15 +324,15 @@ export class AgentList extends LitElement {
         try {
           const apiAgents = await api.getAgents();
           this.agents = apiAgents.map(a => ({
-            id: String(a.ID),
-            name: a.Name,
-            type: a.Type,
-            status: a.Status,
-            ipAddress: a.IPAddress || '',
-            system: a.System || '',
-            version: a.Version || '',
-            lastSeen: a.LastSeen,
-            description: a.Description,
+            id: String(a.id),
+            name: a.name,
+            type: a.type,
+            status: a.status,
+            ipAddress: a.ip_address || '',
+            system: a.system || '',
+            version: a.version || '',
+            lastSeen: a.last_seen,
+            description: a.description,
           }));
           this._applyFilters();
           return;
@@ -404,7 +497,78 @@ export class AgentList extends LitElement {
   }
 
   _showAgentInstallModal() {
-    showToast('Installationsanweisungen werden vorbereitet...', 'info');
+    this.isInstallModalOpen = true;
+  }
+
+  _closeInstallModal() {
+    this.isInstallModalOpen = false;
+  }
+
+  _closeInstallModalOnOverlay(e: Event) {
+    if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+      this._closeInstallModal();
+    }
+  }
+
+  async _copyToClipboard(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('In die Zwischenablage kopiert', 'success');
+    } catch {
+      showToast('Kopieren fehlgeschlagen', 'error');
+    }
+  }
+
+  _renderInstallModal() {
+    if (!this.isInstallModalOpen) return '';
+
+    const installScript = 'curl -sSL https://get.fileflux.io | bash';
+    const configYaml = `server:
+  url: "https://your-server.fileflux.io"
+  port: 3001
+
+agent:
+  name: "mein-agent"
+  type: "client"
+  token: "<IHR_AGENT_TOKEN>"
+
+paths:
+  upload: "/data/uploads"
+  download: "/data/downloads"`;
+
+    return html`
+      <div class="modal-overlay" @click=${this._closeInstallModalOnOverlay}>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Agent installieren</h2>
+            <button class="modal-close" @click=${this._closeInstallModal}>&times;</button>
+          </div>
+          <div class="modal-body">
+            <h3>1. Installation (Linux/macOS)</h3>
+            <p>Führen Sie folgenden Befehl auf dem Zielsystem aus:</p>
+            <div class="code-block">
+              ${installScript}
+              <button class="copy-btn" @click=${() => this._copyToClipboard(installScript)}>Kopieren</button>
+            </div>
+
+            <h3>2. Konfiguration</h3>
+            <p>Passen Sie die Datei <code>/etc/fileflux/config.yaml</code> an:</p>
+            <div class="config-block">${configYaml}</div>
+
+            <h3>3. Agent starten</h3>
+            <div class="code-block">
+              sudo systemctl enable --now fileflux-agent
+              <button class="copy-btn" @click=${() => this._copyToClipboard('sudo systemctl enable --now fileflux-agent')}>Kopieren</button>
+            </div>
+
+            <p>Erstellen Sie vorher ein Agent-Token unter <strong>Tokens</strong>, um den Agent zu authentifizieren.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-close-modal" @click=${this._closeInstallModal}>Schließen</button>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   render() {
@@ -524,6 +688,7 @@ export class AgentList extends LitElement {
           </div>
         `}
       </div>
+      ${this._renderInstallModal()}
     `;
   }
 } 

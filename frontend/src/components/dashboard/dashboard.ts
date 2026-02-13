@@ -36,6 +36,7 @@ export class Dashboard extends LitElement {
     pendingTransfers: []
   };
   @state() private detailedStats = null;
+  @state() private _activeJobs: any[] = [];
 
   static styles = css`
     :host {
@@ -357,7 +358,7 @@ export class Dashboard extends LitElement {
 
           const recentTransfers = [...transfers]
             .filter((t: any) => t.status === 'completed' || t.status === 'failed')
-            .sort((a: any, b: any) => new Date(b.startTime || b.started_at).getTime() - new Date(a.startTime || a.started_at).getTime())
+            .sort((a: any, b: any) => new Date(b.start_time || b.startTime).getTime() - new Date(a.start_time || a.startTime).getTime())
             .slice(0, 5);
 
           this.stats = {
@@ -370,6 +371,7 @@ export class Dashboard extends LitElement {
             recentTransfers,
             pendingTransfers
           };
+          this._activeJobs = jobs.filter((j: any) => j.status === 'active');
           return;
         } catch (apiErr) {
           console.warn('API load failed, falling back to demo', apiErr);
@@ -379,8 +381,9 @@ export class Dashboard extends LitElement {
       // Fall back to demo mode
       if (isDemoMode()) {
         await new Promise(resolve => setTimeout(resolve, 800));
-        
+
         const jobs = getDemoJobs();
+        this._activeJobs = jobs.filter(job => job.status === 'active');
         const transfers = getDemoTransfers();
         const agents = getDemoAgents();
         
@@ -520,10 +523,10 @@ export class Dashboard extends LitElement {
         
         <h2 class="section-title">Aktive Jobs</h2>
         <div class="job-status-section">
-          ${getDemoJobs().filter(job => job.status === 'active').length === 0 ? html`
+          ${this._activeJobs.length === 0 ? html`
             <div class="empty-message">Keine aktiven Jobs vorhanden.</div>
           ` : html`
-            ${getDemoJobs().filter(job => job.status === 'active').map(job => html`
+            ${this._activeJobs.map(job => html`
               <div class="job-card" @click=${() => this._navigateToJob(job.id)}>
                 <div>
                   <div class="job-name">${job.name}</div>

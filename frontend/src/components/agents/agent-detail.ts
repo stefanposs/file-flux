@@ -389,34 +389,34 @@ export class AgentDetail extends LitElement {
       if (api.isAuthenticated()) {
         try {
           const apiAgents = await api.getAgents();
-          const apiAgent = apiAgents.find(a => String(a.ID) === this.agentId);
+          const apiAgent = apiAgents.find(a => String(a.id) === this.agentId);
           if (apiAgent) {
             this.agent = {
-              id: String(apiAgent.ID),
-              name: apiAgent.Name,
-              type: apiAgent.Type,
-              status: apiAgent.Status,
-              ipAddress: apiAgent.IPAddress || '',
-              system: apiAgent.System || '',
-              version: apiAgent.Version || '',
-              lastSeen: apiAgent.LastSeen,
-              description: apiAgent.Description,
+              id: String(apiAgent.id),
+              name: apiAgent.name,
+              type: apiAgent.type,
+              status: apiAgent.status,
+              ipAddress: apiAgent.ip_address || '',
+              system: apiAgent.system || '',
+              version: apiAgent.version || '',
+              lastSeen: apiAgent.last_seen,
+              description: apiAgent.description,
             };
             // Load related transfers
             try {
               const apiTransfers = await api.getTransfers();
               this.transfers = apiTransfers
-                .filter(t => String(t.JobID) === this.agentId)
+                .filter(t => String(t.job_id) === this.agentId)
                 .map(t => ({
-                  id: String(t.ID),
-                  jobId: String(t.JobID),
-                  filename: t.FileName,
-                  size: t.FileSize,
-                  status: t.Status,
-                  startTime: t.StartedAt,
-                  endTime: t.CompletedAt || undefined,
-                  progress: t.Progress,
-                  error: t.Error || undefined,
+                  id: String(t.id),
+                  jobId: String(t.job_id),
+                  filename: t.filename,
+                  size: t.size,
+                  status: t.status,
+                  startTime: t.start_time,
+                  endTime: t.end_time || undefined,
+                  progress: 0,
+                  error: t.error || undefined,
                 }));
             } catch (e) {
               console.warn('Failed to load transfers for agent', e);
@@ -425,16 +425,16 @@ export class AgentDetail extends LitElement {
             try {
               const apiTokens = await api.getTokens();
               this.tokens = apiTokens
-                .filter(t => t.AgentID === apiAgent.ID)
+                .filter(t => t.agent_id === apiAgent.id)
                 .map(t => ({
-                  id: String(t.ID),
-                  name: t.Name,
-                  token: t.Token,
-                  agentId: t.AgentID ? String(t.AgentID) : null,
-                  status: t.Revoked ? 'expired' : (new Date(t.ExpiresAt) < new Date() ? 'expired' : 'active'),
-                  createdAt: t.CreatedAt,
-                  expiresAt: t.ExpiresAt,
-                  lastUsedAt: t.LastUsedAt,
+                  id: String(t.id),
+                  name: t.name,
+                  token: t.value,
+                  agentId: t.agent_id ? String(t.agent_id) : null,
+                  status: (t.expires_at && new Date(t.expires_at) < new Date()) ? 'expired' : 'active',
+                  createdAt: t.created_at,
+                  expiresAt: t.expires_at,
+                  lastUsedAt: t.last_used,
                 }));
             } catch (e) {
               console.warn('Failed to load tokens for agent', e);

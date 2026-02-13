@@ -301,7 +301,6 @@ export class Header extends LitElement {
         <div class="header-right">
           <div class="notifications">
             <span class="notification-icon">🔔</span>
-            <span class="notification-badge">3</span>
           </div>
           
           <div class="user-menu-wrapper">

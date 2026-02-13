@@ -23,57 +23,60 @@ export interface ApiUser {
 }
 
 export interface ApiAgent {
-  ID: number;
-  Name: string;
-  Type: string;
-  Status: string;
-  IPAddress: string | null;
-  System: string | null;
-  Version: string | null;
-  LastSeen: string;
-  Description: string;
-  CreatedAt: string;
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  ip_address: string | null;
+  system: string | null;
+  version: string | null;
+  last_seen: string | null;
+  description: string | null;
+  created_at: string;
 }
 
 export interface ApiJob {
-  ID: number;
-  Name: string;
-  Description: string;
-  Type: string;
-  Status: string;
-  SourcePath: string;
-  DestinationPath: string;
-  Schedule: string;
-  UploadAgentID: number;
-  DownloadAgentID: number;
-  CreatedBy: number;
-  CreatedAt: string;
-  UpdatedAt: string;
-  LastRunAt: string | null;
-  NextRunAt: string | null;
+  id: number;
+  user_id: number;
+  name: string;
+  type: string;
+  status: string;
+  schedule: string | null;
+  source_path: string;
+  destination_path: string;
+  source_agent_id: number;
+  destination_agent_id: number;
+  last_run: string | null;
+  next_run: string | null;
+  description: string | null;
+  created_at: string;
 }
 
 export interface ApiTransfer {
-  ID: number;
-  JobID: number;
-  FileName: string;
-  FileSize: number;
-  Status: string;
-  Progress: number;
-  StartedAt: string;
-  CompletedAt: string | null;
-  Error: string | null;
+  id: number;
+  job_id: number | null;
+  filename: string;
+  size: number;
+  status: string;
+  source_path: string;
+  destination_path: string;
+  source_agent_id: number | null;
+  destination_agent_id: number | null;
+  start_time: string;
+  end_time: string | null;
+  error: string | null;
+  created_at: string;
 }
 
 export interface ApiToken {
-  ID: number;
-  Name: string;
-  Token: string;
-  AgentID: number;
-  CreatedAt: string;
-  ExpiresAt: string;
-  LastUsedAt: string | null;
-  Revoked: boolean;
+  id: number;
+  agent_id: number;
+  name: string;
+  value: string;
+  created_at: string;
+  expires_at: string | null;
+  last_used: string | null;
+  description: string | null;
 }
 
 export interface HealthResponse {
@@ -132,8 +135,7 @@ class ApiService {
   }
 
   async getCurrentUser(): Promise<ApiUser> {
-    const res = await this.request<{ user: ApiUser }>('/auth/user');
-    return res.user;
+    return this.request<ApiUser>('/auth/user');
   }
 
   logout() {
