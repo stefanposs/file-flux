@@ -2,13 +2,12 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoUser } from '../../demo-mode';
 
-if (!customElements.get('ff-login')) {
-  @customElement('ff-login')
-  export class Login extends LitElement {
+@customElement('ff-login')
+export class Login extends LitElement {
     @state() private username = '';
     @state() private password = '';
     @state() private isLoading = false;
-    @state() private error = null;
+    @state() private error: string | null = null;
 
     static styles = css`
       :host {
@@ -94,7 +93,7 @@ if (!customElements.get('ff-login')) {
                 type="text"
                 id="username"
                 .value=${this.username}
-                @input=${(e) => this.username = e.target.value}
+                @input=${(e: Event) => this.username = (e.target as HTMLInputElement).value}
                 ?disabled=${this.isLoading}
                 required
               />
@@ -106,7 +105,7 @@ if (!customElements.get('ff-login')) {
                 type="password"
                 id="password"
                 .value=${this.password}
-                @input=${(e) => this.password = e.target.value}
+                @input=${(e: Event) => this.password = (e.target as HTMLInputElement).value}
                 ?disabled=${this.isLoading}
                 required
               />
@@ -128,13 +127,12 @@ if (!customElements.get('ff-login')) {
       `;
     }
 
-    _handleSubmit(e) {
+    _handleSubmit(e: Event) {
       e.preventDefault();
       
       this.isLoading = true;
       this.error = null;
       
-      // Im Demo-Modus einfache Anmeldung
       if (isDemoMode()) {
         setTimeout(() => {
           if (this.username === 'demo' && this.password === 'password') {
@@ -153,5 +151,4 @@ if (!customElements.get('ff-login')) {
         this.isLoading = false;
       }
     }
-  }
-} 
+}

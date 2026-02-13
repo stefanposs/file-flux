@@ -1,0 +1,25 @@
+agent:
+  name: "FileFlux-Agent"
+  type: "client"
+  description: "Standardagent für FileFlux"
+
+connection:
+  server_url: "ws://backend:3002/ws/agent"
+  token: "demo-token"
+  heartbeat_interval: 60
+  reconnect_attempts: 5
+  reconnect_delay: 10
+
+transfers:
+  chunk_size: 8  # MB
+  concurrent_transfers: 3
+  compression: true
+  temp_dir: "/tmp/fileflux"
+  base_dir: "/data"
+
+logging:
+  level: "info"
+  file: "fileflux-agent.log"
+  max_size: 10  # MB
+  max_backups: 3
+  max_age: 7  # Tage 

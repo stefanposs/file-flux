@@ -45,6 +45,36 @@ export class Dashboard extends LitElement {
       padding: 20px;
     }
     
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .dashboard-title {
+      font-size: 24px;
+      color: #122e53;
+      margin: 0;
+    }
+    
+    .dashboard-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .refresh-button {
+      padding: 8px 16px;
+      background-color: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
     .loading-container {
       display: flex;
       justify-content: center;
@@ -65,22 +95,9 @@ export class Dashboard extends LitElement {
       to { transform: rotate(360deg); }
     }
     
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    
-    .dashboard-title {
-      font-size: 24px;
-      color: #122e53;
-      margin: 0;
-    }
-    
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -93,6 +110,7 @@ export class Dashboard extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
+      text-align: center;
     }
     
     .stat-value {
@@ -105,7 +123,6 @@ export class Dashboard extends LitElement {
     .stat-label {
       font-size: 14px;
       color: #6c757d;
-      text-align: center;
     }
     
     .stat-icon {
@@ -119,12 +136,11 @@ export class Dashboard extends LitElement {
       margin: 30px 0 15px 0;
     }
     
-    .transfers-container, .active-transfers-container {
+    .transfers-container {
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-bottom: 30px;
+      overflow: hidden;
     }
     
     .transfers-table {
@@ -147,6 +163,11 @@ export class Dashboard extends LitElement {
     
     .transfers-table tr:last-child td {
       border-bottom: none;
+    }
+    
+    .transfers-table tr:hover {
+      background-color: #f8f9fa;
+      cursor: pointer;
     }
     
     .status-badge {
@@ -188,81 +209,71 @@ export class Dashboard extends LitElement {
     .view-all-link {
       display: block;
       text-align: right;
-      margin-top: 10px;
+      padding: 10px 16px;
       color: #122e53;
       text-decoration: underline;
       cursor: pointer;
+      border-top: 1px solid #f0f0f0;
     }
     
-    .progress-container {
-      margin-top: 8px;
-    }
-    
-    .progress-bar {
-      height: 6px;
-      background-color: #e9ecef;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background-color: #122e53;
-      transition: width 0.3s ease;
-    }
-    
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
+    .empty-message {
+      padding: 24px;
+      text-align: center;
       color: #6c757d;
-      margin-top: 4px;
     }
     
-    .detailed-stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .detailed-stats-card {
+    .job-status-section {
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       padding: 20px;
-      flex: 1;
-      min-width: 300px;
+      margin-bottom: 30px;
     }
     
-    .detailed-stats-title {
-      font-size: 16px;
-      color: #122e53;
-      margin-top: 0;
-      margin-bottom: 15px;
-      font-weight: 500;
-    }
-    
-    .detailed-stats-item {
+    .job-card {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
+      align-items: center;
+      padding: 16px;
       border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
     }
     
-    .detailed-stats-item:last-child {
+    .job-card:last-child {
       border-bottom: none;
     }
     
-    .detailed-stats-label {
+    .job-card:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .job-name {
+      font-weight: 500;
+      color: #212529;
+    }
+    
+    .job-status {
+      font-size: 14px;
       color: #6c757d;
     }
     
-    .detailed-stats-value {
-      font-weight: 500;
+    .job-next-run {
+      font-size: 14px;
+      color: #6c757d;
     }
     
     @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .transfers-table th:nth-child(3),
+      .transfers-table td:nth-child(3) {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 576px) {
       .stats-grid {
         grid-template-columns: 1fr;
       }
@@ -351,7 +362,9 @@ export class Dashboard extends LitElement {
         <div class="dashboard-header">
           <h1 class="dashboard-title">Dashboard</h1>
           <div class="dashboard-actions">
-            <button @click=${this._refreshData}>Aktualisieren</button>
+            <button class="refresh-button" @click=${this._refreshData}>
+              🔄 Aktualisieren
+            </button>
           </div>
         </div>
         
@@ -387,52 +400,10 @@ export class Dashboard extends LitElement {
           </div>
         </div>
         
-        ${this.stats.pendingTransfers.length > 0 ? html`
-          <h2 class="section-title">Aktive Transfers</h2>
-          <div class="active-transfers-container">
-            <table class="transfers-table">
-              <thead>
-                <tr>
-                  <th>Datei</th>
-                  <th>Größe</th>
-                  <th>Startzeit</th>
-                  <th>Status</th>
-                  <th>Fortschritt</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${this.stats.pendingTransfers.map(transfer => html`
-                  <tr @click=${() => this._navigateToTransfer(transfer.id)}>
-                    <td>${transfer.filename}</td>
-                    <td>${this._formatFileSize(transfer.size)}</td>
-                    <td>${this._formatDateTime(transfer.startTime)}</td>
-                    <td>
-                      <span class="status-badge status-${transfer.status}">
-                        ${this._formatStatus(transfer.status)}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="progress-container">
-                        <div class="progress-bar">
-                          <div class="progress-fill" style="width: ${transfer.progress}%"></div>
-                        </div>
-                        <div class="progress-label">
-                          <span>${transfer.progress}%</span>
-                          <span>${this._formatFileSize(transfer.size * transfer.progress / 100)} / ${this._formatFileSize(transfer.size)}</span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                `)}
-              </tbody>
-            </table>
-          </div>
-        ` : ''}
-        
         <h2 class="section-title">Letzte Transfers</h2>
         <div class="transfers-container">
           ${this.stats.recentTransfers.length === 0 ? html`
-            <p>Keine Transfers vorhanden.</p>
+            <div class="empty-message">Keine Transfers vorhanden.</div>
           ` : html`
             <table class="transfers-table">
               <thead>
@@ -440,7 +411,6 @@ export class Dashboard extends LitElement {
                   <th>Datei</th>
                   <th>Größe</th>
                   <th>Startzeit</th>
-                  <th>Endzeit</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -450,7 +420,6 @@ export class Dashboard extends LitElement {
                     <td>${transfer.filename}</td>
                     <td>${this._formatFileSize(transfer.size)}</td>
                     <td>${this._formatDateTime(transfer.startTime)}</td>
-                    <td>${transfer.endTime ? this._formatDateTime(transfer.endTime) : '-'}</td>
                     <td>
                       <span class="status-badge status-${transfer.status}">
                         ${this._formatStatus(transfer.status)}
@@ -460,8 +429,34 @@ export class Dashboard extends LitElement {
                 `)}
               </tbody>
             </table>
-            
-            <a class="view-all-link" @click=${this._navigateToTransfers}>Alle Transfers anzeigen</a>
+            <div class="view-all-link" @click=${this._navigateToTransfers}>
+              Alle Transfers anzeigen →
+            </div>
+          `}
+        </div>
+        
+        <h2 class="section-title">Aktive Jobs</h2>
+        <div class="job-status-section">
+          ${getDemoJobs().filter(job => job.status === 'active').length === 0 ? html`
+            <div class="empty-message">Keine aktiven Jobs vorhanden.</div>
+          ` : html`
+            ${getDemoJobs().filter(job => job.status === 'active').map(job => html`
+              <div class="job-card" @click=${() => this._navigateToJob(job.id)}>
+                <div>
+                  <div class="job-name">${job.name}</div>
+                  <div class="job-status">
+                    ${job.type === 'push' ? 'Upload' : 'Download'} • 
+                    ${job.lastRun ? `Zuletzt ausgeführt: ${this._formatDateTime(job.lastRun)}` : 'Noch nie ausgeführt'}
+                  </div>
+                </div>
+                <div class="job-next-run">
+                  ${job.nextRun ? `Nächste Ausführung: ${this._formatDateTime(job.nextRun)}` : 'Keine geplante Ausführung'}
+                </div>
+              </div>
+            `)}
+            <div class="view-all-link" @click=${this._navigateToJobs}>
+              Alle Jobs anzeigen →
+            </div>
           `}
         </div>
         
@@ -517,7 +512,7 @@ export class Dashboard extends LitElement {
     switch (status) {
       case 'completed': return 'Abgeschlossen';
       case 'failed': return 'Fehlgeschlagen';
-      case 'running': return 'Läuft';
+      case 'running': return 'Wird ausgeführt';
       case 'pending': return 'Ausstehend';
       default: return status;
     }
@@ -552,6 +547,14 @@ export class Dashboard extends LitElement {
 
   _navigateToTransfer(id) {
     window.location.href = `/transfers/${id}`;
+  }
+
+  _navigateToJobs() {
+    window.location.href = '/jobs';
+  }
+
+  _navigateToJob(id) {
+    window.location.href = `/jobs/${id}`;
   }
 
   _refreshData() {

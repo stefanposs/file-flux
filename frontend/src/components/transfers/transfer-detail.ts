@@ -1,13 +1,18 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { isDemoMode, getDemoTransfers } from '../../demo-mode';
+import { isDemoMode, getDemoTransfers, getDemoJobs, getDemoAgents } from '../../demo-mode';
 
 @customElement('ff-transfer-detail')
 export class TransferDetail extends LitElement {
   @property({ type: String }) transferId = '';
   @state() private isLoading = true;
-  @state() private transfer = null;
   @state() private error = null;
+  @state() private transfer = null;
+  @state() private job = null;
+  @state() private sourceAgent = null;
+  @state() private destinationAgent = null;
+  @state() private progress = 0;
+  @state() private transferLogs = [];
 
   static styles = css`
     :host {
@@ -47,6 +52,8 @@ export class TransferDetail extends LitElement {
       align-items: center;
       justify-content: space-between;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
     
     .back-button {
@@ -65,14 +72,47 @@ export class TransferDetail extends LitElement {
       font-size: 24px;
       margin: 0;
       color: #122e53;
-      word-break: break-word;
     }
     
-    .detail-container {
+    .transfer-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-button {
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .primary-button {
+      background-color: #122e53;
+      color: white;
+      border: none;
+    }
+    
+    .secondary-button {
+      background-color: white;
+      color: #212529;
+      border: 1px solid #dee2e6;
+    }
+    
+    .danger-button {
+      background-color: white;
+      color: #dc3545;
+      border: 1px solid #dee2e6;
+    }
+    
+    .content-container {
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       padding: 24px;
+      margin-bottom: 24px;
     }
     
     .section-title {
@@ -82,26 +122,26 @@ export class TransferDetail extends LitElement {
       margin-bottom: 16px;
     }
     
-    .details-grid {
+    .info-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
       margin-bottom: 24px;
     }
     
-    .detail-item {
-      border: 1px solid #e9ecef;
+    .info-item {
+      border: 1px solid #f0f0f0;
       border-radius: 8px;
-      padding: 12px;
+      padding: 16px;
     }
     
-    .detail-label {
+    .info-label {
       font-size: 14px;
       color: #6c757d;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
     
-    .detail-value {
+    .info-value {
       font-size: 16px;
       font-weight: 500;
     }
@@ -124,8 +164,8 @@ export class TransferDetail extends LitElement {
     }
     
     .status-running {
-      background-color: rgba(0, 123, 255, 0.1);
-      color: #007bff;
+      background-color: rgba(13, 110, 253, 0.1);
+      color: #0d6efd;
     }
     
     .status-pending {
@@ -133,42 +173,36 @@ export class TransferDetail extends LitElement {
       color: #ffc107;
     }
     
-    .error-details {
-      background-color: rgba(220, 53, 69, 0.05);
-      border-left: 3px solid #dc3545;
-      padding: 12px;
-      margin-top: 16px;
+    .transfer-link {
+      color: #122e53;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    
+    .progress-section {
       margin-bottom: 24px;
     }
     
-    .error-title {
-      color: #dc3545;
-      font-weight: 500;
-      margin-top: 0;
+    .progress-container {
+      width: 100%;
+      height: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      overflow: hidden;
       margin-bottom: 8px;
     }
     
-    .error-message {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    
-    .progress-container {
-      margin: 24px 0;
-    }
-    
     .progress-bar {
-      height: 8px;
-      background-color: #e9ecef;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
       height: 100%;
       background-color: #122e53;
-      transition: width 0.3s ease;
+      transition: width 0.5s ease;
+    }
+    
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #6c757d;
     }
     
     .progress-stats {
@@ -176,32 +210,35 @@ export class TransferDetail extends LitElement {
       justify-content: space-between;
       margin-top: 8px;
       font-size: 14px;
-      color: #6c757d;
     }
     
     .log-container {
       background-color: #f8f9fa;
-      border-radius: 4px;
+      border-radius: 8px;
       padding: 16px;
-      max-height: 300px;
-      overflow-y: auto;
       font-family: monospace;
-      font-size: 14px;
-      white-space: pre-wrap;
-      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
     }
     
     .log-entry {
+      display: flex;
       margin-bottom: 8px;
+      line-height: 1.5;
     }
     
     .log-timestamp {
+      flex-shrink: 0;
       color: #6c757d;
-      margin-right: 8px;
+      margin-right: 12px;
+    }
+    
+    .log-message {
+      word-break: break-word;
     }
     
     .log-level-info {
-      color: #17a2b8;
+      color: #0d6efd;
     }
     
     .log-level-warning {
@@ -212,84 +249,128 @@ export class TransferDetail extends LitElement {
       color: #dc3545;
     }
     
-    .action-button {
-      padding: 8px 16px;
-      border-radius: 4px;
+    .files-section {
+      margin-top: 24px;
+    }
+    
+    .file-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .file-item:last-child {
+      border-bottom: none;
+    }
+    
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .file-icon {
+      font-size: 20px;
+    }
+    
+    .file-size {
+      color: #6c757d;
       font-size: 14px;
-      cursor: pointer;
-      margin-right: 8px;
-      border: none;
     }
     
-    .retry-button {
-      background-color: #122e53;
-      color: white;
+    .empty-message {
+      padding: 16px;
+      text-align: center;
+      color: #6c757d;
     }
-    
-    .cancel-button {
-      background-color: #dc3545;
-      color: white;
+
+    @media (max-width: 768px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
     }
   `;
 
   connectedCallback() {
     super.connectedCallback();
-    this._loadTransfer();
+    this._loadTransferData();
   }
 
-  async _loadTransfer() {
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._progressInterval) {
+      clearInterval(this._progressInterval);
+    }
+  }
+
+  _progressInterval = null;
+
+  async _loadTransferData() {
     try {
       this.isLoading = true;
       
       if (isDemoMode()) {
-        // Simuliere eine Netzwerklatenz
+        // Simuliere Netzwerklatenz
         await new Promise(resolve => setTimeout(resolve, 800));
         
         const transfers = getDemoTransfers();
         const transfer = transfers.find(t => t.id === this.transferId);
         
         if (transfer) {
-          // Generiere zufällige Log-Einträge für die Demo
-          const logs = [];
-          const startTime = new Date(transfer.startTime);
+          this.transfer = transfer;
           
-          // Log-Einträge nur für abgeschlossene, fehlgeschlagene oder laufende Transfers
-          if (['completed', 'failed', 'running'].includes(transfer.status)) {
-            logs.push(this._createLogEntry(startTime, 'info', 'Transfer gestartet'));
-            logs.push(this._createLogEntry(new Date(startTime.getTime() + 2000), 'info', `Verbindung mit Agent hergestellt`));
-            
-            if (transfer.status === 'running') {
-              logs.push(this._createLogEntry(new Date(startTime.getTime() + 5000), 'info', `Dateiübertragung gestartet: ${transfer.filename}`));
-              logs.push(this._createLogEntry(new Date(startTime.getTime() + 10000), 'info', `Übertragen: 32% (${this._formatFileSize(transfer.size * 0.32)})`));
-            }
-            
-            if (transfer.status === 'completed') {
-              logs.push(this._createLogEntry(new Date(startTime.getTime() + 5000), 'info', `Dateiübertragung gestartet: ${transfer.filename}`));
-              logs.push(this._createLogEntry(new Date(startTime.getTime() + 15000), 'info', `Übertragen: 100% (${this._formatFileSize(transfer.size)})`));
-              logs.push(this._createLogEntry(new Date(transfer.endTime), 'info', 'Transfer erfolgreich abgeschlossen'));
-            }
-            
-            if (transfer.status === 'failed') {
-              logs.push(this._createLogEntry(new Date(startTime.getTime() + 5000), 'info', `Dateiübertragung gestartet: ${transfer.filename}`));
-              logs.push(this._createLogEntry(new Date(startTime.getTime() + 8000), 'warning', `Langsame Übertragungsgeschwindigkeit: ${this._formatFileSize(transfer.speed || 1024 * 50)}/s`));
-              logs.push(this._createLogEntry(new Date(transfer.endTime), 'error', transfer.error || 'Verbindung unterbrochen'));
-            }
+          // Progress-Simulation für laufende Transfers
+          if (transfer.status === 'running') {
+            this.progress = Math.floor(Math.random() * 90); // Zufälliger Fortschritt zwischen 0-90%
+            this._progressInterval = setInterval(() => {
+              if (this.progress < 100) {
+                this.progress += Math.floor(Math.random() * 5) + 1;
+                if (this.progress >= 100) {
+                  this.progress = 100;
+                  clearInterval(this._progressInterval);
+                  // Aktualisiere den Transfer-Status
+                  this.transfer = { ...this.transfer, status: 'completed' };
+                }
+                this.requestUpdate();
+              }
+            }, 1500);
+          } else if (transfer.status === 'completed' || transfer.status === 'failed') {
+            this.progress = 100;
+          } else {
+            this.progress = 0;
           }
           
-          // Erweiterter Transfer mit Logs
-          this.transfer = {
-            ...transfer,
-            logs,
-            progress: transfer.status === 'completed' ? 100 : (
-              transfer.status === 'running' ? Math.floor(Math.random() * 80) + 20 : 0
-            )
-          };
+          // Lade zugehörigen Job
+          if (transfer.jobId) {
+            const jobs = getDemoJobs();
+            this.job = jobs.find(j => j.id === transfer.jobId);
+          }
+          
+          // Lade zugehörige Agents
+          const agents = getDemoAgents();
+          if (transfer.sourceAgentId) {
+            this.sourceAgent = agents.find(a => a.id === transfer.sourceAgentId);
+          }
+          if (transfer.destinationAgentId) {
+            this.destinationAgent = agents.find(a => a.id === transfer.destinationAgentId);
+          }
+          
+          // Generiere Demo-Logs
+          this._generateDemoLogs();
         } else {
           this.error = 'Transfer nicht gefunden';
         }
       } else {
         // Hier würde später der API-Aufruf kommen
-        this.error = 'API noch nicht implementiert';
+        this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
       }
     } catch (err) {
       this.error = 'Fehler beim Laden des Transfers: ' + (err instanceof Error ? err.message : String(err));
@@ -299,164 +380,81 @@ export class TransferDetail extends LitElement {
     }
   }
 
-  _createLogEntry(timestamp, level, message) {
-    return {
-      timestamp,
-      level,
-      message
-    };
-  }
-
-  render() {
-    if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+  _generateDemoLogs() {
+    const transfer = this.transfer;
+    if (!transfer) return;
+    
+    const logs = [];
+    const startTime = new Date(transfer.startTime).getTime();
+    const endTime = transfer.endTime ? new Date(transfer.endTime).getTime() : new Date().getTime();
+    const duration = endTime - startTime;
+    
+    // Startnachricht
+    logs.push({
+      timestamp: new Date(startTime).toISOString(),
+      level: 'info',
+      message: `Transfer gestartet: "${transfer.filename}" (${this._formatFileSize(transfer.size)})`
+    });
+    
+    // Initialisierung
+    logs.push({
+      timestamp: new Date(startTime + 500).toISOString(),
+      level: 'info',
+      message: `Verbindung zum Ziel-Agent hergestellt`
+    });
+    
+    if (transfer.status === 'completed' || transfer.status === 'running') {
+      // Fortschritt
+      const progressTime = startTime + (duration * 0.3);
+      logs.push({
+        timestamp: new Date(progressTime).toISOString(),
+        level: 'info',
+        message: `Übertragung läuft - 30% abgeschlossen (${this._formatFileSize(transfer.size * 0.3)} übertragen)`
+      });
+      
+      const progressTime2 = startTime + (duration * 0.6);
+      logs.push({
+        timestamp: new Date(progressTime2).toISOString(),
+        level: 'info',
+        message: `Übertragung läuft - 60% abgeschlossen (${this._formatFileSize(transfer.size * 0.6)} übertragen)`
+      });
     }
-
-    if (this.error) {
-      return html`
-        <div class="error-container">
-          <div class="error-message">
-            <div>🚫 ${this.error}</div>
-            <button @click=${this._loadTransfer}>Erneut versuchen</button>
-          </div>
-        </div>
-      `;
+    
+    // Fehlgeschlagene Transfers
+    if (transfer.status === 'failed') {
+      const errorTime = startTime + (duration * 0.7);
+      logs.push({
+        timestamp: new Date(errorTime).toISOString(),
+        level: 'warning',
+        message: `Netzwerkinstabilität erkannt - Versuche erneute Verbindung...`
+      });
+      
+      logs.push({
+        timestamp: new Date(errorTime + 5000).toISOString(),
+        level: 'error',
+        message: `Verbindung zum Ziel-Agent verloren. Transfer fehlgeschlagen.`
+      });
     }
-
-    if (!this.transfer) {
-      return html`
-        <div class="error-container">
-          <div class="error-message">
-            <div>Transfer nicht gefunden</div>
-            <button @click=${this._navigateBack}>Zurück zur Transfer-Liste</button>
-          </div>
-        </div>
-      `;
+    
+    // Abschluss
+    if (transfer.status === 'completed') {
+      logs.push({
+        timestamp: new Date(endTime - 1000).toISOString(),
+        level: 'info',
+        message: `Dateiintegrität wird geprüft...`
+      });
+      
+      logs.push({
+        timestamp: new Date(endTime).toISOString(),
+        level: 'info',
+        message: `Transfer erfolgreich abgeschlossen. Übertragene Datenmenge: ${this._formatFileSize(transfer.size)}`
+      });
     }
-
-    return html`
-      <div>
-        <div class="header">
-          <button class="back-button" @click=${this._navigateBack}>
-            ← Zurück zur Transfer-Liste
-          </button>
-          
-          <h1 class="transfer-title">${this.transfer.filename}</h1>
-          
-          <div class="transfer-actions">
-            ${this.transfer.status === 'failed' ? html`
-              <button class="action-button retry-button" @click=${this._retryTransfer}>
-                Transfer wiederholen
-              </button>
-            ` : ''}
-            
-            ${this.transfer.status === 'running' || this.transfer.status === 'pending' ? html`
-              <button class="action-button cancel-button" @click=${this._cancelTransfer}>
-                Transfer abbrechen
-              </button>
-            ` : ''}
-          </div>
-        </div>
-        
-        <div class="detail-container">
-          <h2 class="section-title">Transfer-Details</h2>
-          
-          <div class="details-grid">
-            <div class="detail-item">
-              <div class="detail-label">Status</div>
-              <div class="detail-value">
-                <span class="status-badge status-${this.transfer.status}">
-                  ${this._formatStatus(this.transfer.status)}
-                </span>
-              </div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Größe</div>
-              <div class="detail-value">${this._formatFileSize(this.transfer.size)}</div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Start</div>
-              <div class="detail-value">${this._formatDateTime(this.transfer.startTime)}</div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Ende</div>
-              <div class="detail-value">
-                ${this.transfer.endTime ? this._formatDateTime(this.transfer.endTime) : '-'}
-              </div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Durchschnittliche Geschwindigkeit</div>
-              <div class="detail-value">
-                ${this.transfer.speed ? this._formatSpeed(this.transfer.speed) : '-'}
-              </div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Quelle</div>
-              <div class="detail-value" title="${this.transfer.source}">
-                ${this._formatAgentName(this.transfer.source)}
-              </div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Ziel</div>
-              <div class="detail-value" title="${this.transfer.destination}">
-                ${this._formatAgentName(this.transfer.destination)}
-              </div>
-            </div>
-            
-            <div class="detail-item">
-              <div class="detail-label">Job</div>
-              <div class="detail-value">
-                ${this.transfer.jobId ? html`
-                  <a href="/jobs/${this.transfer.jobId}">${this.transfer.jobName || this.transfer.jobId}</a>
-                ` : '-'}
-              </div>
-            </div>
-          </div>
-          
-          ${this.transfer.status === 'running' ? html`
-            <div class="progress-container">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${this.transfer.progress}%"></div>
-              </div>
-              <div class="progress-stats">
-                <span>${this.transfer.progress}%</span>
-                <span>${this._formatFileSize(this.transfer.size * this.transfer.progress / 100)} / ${this._formatFileSize(this.transfer.size)}</span>
-              </div>
-            </div>
-          ` : ''}
-          
-          ${this.transfer.error ? html`
-            <div class="error-details">
-              <h3 class="error-title">Fehlermeldung</h3>
-              <p class="error-message">${this.transfer.error}</p>
-            </div>
-          ` : ''}
-          
-          ${this.transfer.logs && this.transfer.logs.length > 0 ? html`
-            <h2 class="section-title">Transfer-Log</h2>
-            <div class="log-container">
-              ${this.transfer.logs.map(log => html`
-                <div class="log-entry">
-                  <span class="log-timestamp">[${this._formatLogTime(log.timestamp)}]</span>
-                  <span class="log-level log-level-${log.level}">[${log.level.toUpperCase()}]</span>
-                  <span class="log-message">${log.message}</span>
-                </div>
-              `)}
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
+    
+    // Sortiere Logs nach Zeitstempel
+    this.transferLogs = logs.sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }
 
   _formatStatus(status) {
@@ -508,27 +506,248 @@ export class TransferDetail extends LitElement {
     return this._formatFileSize(bytesPerSecond) + '/s';
   }
 
-  _formatAgentName(agentId) {
-    // Im Demo-Modus zeigen wir einfach den ID-String
-    // In einer echten Implementierung würden wir hier den Agenten-Namen nachschlagen
-    return agentId || '-';
-  }
-
   _navigateBack() {
     window.location.href = '/transfers';
   }
 
-  _retryTransfer() {
-    if (confirm('Möchten Sie diesen Transfer wirklich wiederholen?')) {
-      alert('Transfer würde jetzt wiederholt werden (Demo-Modus)');
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    }
+  _navigateToJob(jobId) {
+    window.location.href = `/jobs/${jobId}`;
+  }
+
+  _navigateToAgent(agentId) {
+    window.location.href = `/agents/${agentId}`;
   }
 
   _cancelTransfer() {
     if (confirm('Möchten Sie diesen Transfer wirklich abbrechen?')) {
-      alert('Transfer würde jetzt abgebrochen werden (Demo-Modus)');
+      alert('Transfer wurde abgebrochen.');
       // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
+      clearInterval(this._progressInterval);
+      this.transfer = { ...this.transfer, status: 'failed' };
+      this.progress = this.progress; // Den Fortschritt einfrieren
+      this._generateDemoLogs(); // Logs aktualisieren
+    }
+  }
+
+  _retryTransfer() {
+    if (confirm('Möchten Sie diesen Transfer wiederholen?')) {
+      alert('Transfer wird wiederholt.');
+      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
+      // Aktualisiere den Status und setze den Fortschritt zurück
+      this.transfer = { 
+        ...this.transfer, 
+        status: 'running',
+        startTime: new Date().toISOString(),
+        endTime: null
+      };
+      this.progress = 0;
+      
+      // Starte die Fortschritts-Simulation
+      this._progressInterval = setInterval(() => {
+        if (this.progress < 100) {
+          this.progress += Math.floor(Math.random() * 5) + 1;
+          if (this.progress >= 100) {
+            this.progress = 100;
+            clearInterval(this._progressInterval);
+            // Aktualisiere den Transfer-Status
+            this.transfer = { 
+              ...this.transfer, 
+              status: 'completed',
+              endTime: new Date().toISOString()
+            };
+          }
+          this.requestUpdate();
+        }
+      }, 1500);
+      
+      this._generateDemoLogs(); // Logs aktualisieren
+    }
+  }
+
+  render() {
+    if (this.isLoading) {
+      return html`
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+        </div>
+      `;
+    }
+
+    if (this.error) {
+      return html`
+        <div class="error-container">
+          <div class="error-message">
+            <div>🚫 ${this.error}</div>
+            <button @click=${this._loadTransferData}>Erneut versuchen</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!this.transfer) {
+      return html`
+        <div class="error-container">
+          <div class="error-message">
+            <div>Transfer nicht gefunden</div>
+            <button @click=${this._navigateBack}>Zurück zur Transfer-Liste</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const isActive = this.transfer.status === 'running' || this.transfer.status === 'pending';
+    const canRetry = this.transfer.status === 'failed';
+    const transferDuration = this.transfer.endTime && this.transfer.startTime
+      ? (new Date(this.transfer.endTime).getTime() - new Date(this.transfer.startTime).getTime()) / 1000
+      : null;
+
+    return html`
+      <div>
+        <div class="header">
+          <button class="back-button" @click=${this._navigateBack}>
+            ← Zurück zur Transfer-Liste
+          </button>
+          
+          <h1 class="transfer-title">${this.transfer.filename}</h1>
+          
+          <div class="transfer-actions">
+            ${isActive ? html`
+              <button class="action-button danger-button" @click=${this._cancelTransfer}>
+                ⏹️ Transfer abbrechen
+              </button>
+            ` : ''}
+            
+            ${canRetry ? html`
+              <button class="action-button primary-button" @click=${this._retryTransfer}>
+                🔄 Transfer wiederholen
+              </button>
+            ` : ''}
+          </div>
+        </div>
+        
+        <div class="content-container">
+          <h2 class="section-title">Transfer-Informationen</h2>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Status</div>
+              <div class="info-value">
+                <span class="status-badge status-${this.transfer.status}">
+                  ${this._formatStatus(this.transfer.status)}
+                </span>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Größe</div>
+              <div class="info-value">${this._formatFileSize(this.transfer.size)}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Startzeit</div>
+              <div class="info-value">${this._formatDateTime(this.transfer.startTime)}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Endzeit</div>
+              <div class="info-value">
+                ${this.transfer.endTime ? this._formatDateTime(this.transfer.endTime) : '-'}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Dauer</div>
+              <div class="info-value">
+                ${transferDuration !== null ? this._formatDuration(transferDuration) : '-'}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Durchschnittsgeschwindigkeit</div>
+              <div class="info-value">
+                ${this.transfer.status === 'completed' && transferDuration ? 
+                  this._formatSpeed(this.transfer.size / transferDuration) : 
+                  '-'
+                }
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Zugehöriger Job</div>
+              <div class="info-value">
+                ${this.job ? html`
+                  <a class="transfer-link" @click=${() => this._navigateToJob(this.job.id)}>
+                    ${this.job.name}
+                  </a>
+                ` : 'Manueller Transfer'}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Quelle</div>
+              <div class="info-value">
+                ${this.sourceAgent ? html`
+                  <a class="transfer-link" @click=${() => this._navigateToAgent(this.sourceAgent.id)}>
+                    ${this.sourceAgent.name}
+                  </a>
+                ` : this.transfer.source || '-'}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label">Ziel</div>
+              <div class="info-value">
+                ${this.destinationAgent ? html`
+                  <a class="transfer-link" @click=${() => this._navigateToAgent(this.destinationAgent.id)}>
+                    ${this.destinationAgent.name}
+                  </a>
+                ` : this.transfer.destination || '-'}
+              </div>
+            </div>
+          </div>
+          
+          <div class="progress-section">
+            <h3 class="section-title">Fortschritt</h3>
+            <div class="progress-container">
+              <div class="progress-bar" style="width: ${this.progress}%"></div>
+            </div>
+            <div class="progress-info">
+              <span>${this.progress}% abgeschlossen</span>
+              <span>${this._formatFileSize(Math.floor(this.transfer.size * this.progress / 100))} / ${this._formatFileSize(this.transfer.size)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="content-container">
+          <h2 class="section-title">Transfer-Logs</h2>
+          ${this.transferLogs.length > 0 ? html`
+            <div class="log-container">
+              ${this.transferLogs.map(log => html`
+                <div class="log-entry">
+                  <span class="log-timestamp">${this._formatLogTime(log.timestamp)}</span>
+                  <span class="log-message log-level-${log.level}">${log.message}</span>
+                </div>
+              `)}
+            </div>
+          ` : html`
+            <div class="empty-message">Keine Logs verfügbar.</div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  _formatDuration(seconds) {
+    if (seconds < 60) {
+      return `${Math.floor(seconds)} Sekunden`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes} Minuten ${remainingSeconds} Sekunden`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return `${hours} Stunden ${minutes} Minuten`;
     }
   }
 } 

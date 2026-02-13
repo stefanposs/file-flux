@@ -1,0 +1,233 @@
+# ==============================================================================
+# File Flux — Release Pipeline
+# ==============================================================================
+# Triggers on version tags (v*). Builds agent binaries for all targets,
+# Docker images, and creates a GitHub Release.
+# ==============================================================================
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write   # create release
+  packages: write   # push GHCR images
+
+env:
+  GO_VERSION: "1.22"
+  NODE_VERSION: "20"
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # Validate (fast gate before release)
+  # ────────────────────────────────────────────────────────────────────────────
+  validate:
+    name: "Validate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Backend tests
+        working-directory: backend
+        run: go test -race ./...
+
+      - name: Agent tests
+        working-directory: agent
+        run: go test -race ./...
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Agent cross-compilation (5 targets)
+  # ────────────────────────────────────────────────────────────────────────────
+  agent-binaries:
+    name: "Agent / Build ${{ matrix.goos }}/${{ matrix.goarch }}"
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64
+            ext: .exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build agent
+        working-directory: agent
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          GIT_COMMIT="${{ github.sha }}"
+          BUILD_TIME="$(date -u +%FT%T%z)"
+
+          go build \
+            -ldflags="-s -w \
+              -X main.Version=${VERSION} \
+              -X main.GitCommit=${GIT_COMMIT} \
+              -X main.BuildTime=${BUILD_TIME}" \
+            -o "../fileflux-agent-${{ matrix.suffix }}${{ matrix.ext }}" \
+            ./cmd/agent
+
+      - name: Generate checksum
+        run: |
+          sha256sum fileflux-agent-${{ matrix.suffix }}${{ matrix.ext }} \
+            > fileflux-agent-${{ matrix.suffix }}${{ matrix.ext }}.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-${{ matrix.suffix }}
+          path: |
+            fileflux-agent-${{ matrix.suffix }}${{ matrix.ext }}
+            fileflux-agent-${{ matrix.suffix }}${{ matrix.ext }}.sha256
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Docker images (tagged release)
+  # ────────────────────────────────────────────────────────────────────────────
+  docker-release:
+    name: "Docker / ${{ matrix.image }}"
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      matrix:
+        include:
+          - context: backend
+            image: backend
+          - context: frontend
+            image: frontend
+          - context: agent
+            image: agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # GitHub Release
+  # ────────────────────────────────────────────────────────────────────────────
+  github-release:
+    name: "Create Release"
+    runs-on: ubuntu-latest
+    needs: [agent-binaries, docker-release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all agent artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          pattern: agent-*
+          merge-multiple: true
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${{ github.ref_name }}"
+          cat <<EOF > release-notes.md
+          ## File Flux ${VERSION}
+
+          ### Docker Images
+          \`\`\`bash
+          docker pull ${{ env.IMAGE_PREFIX }}/backend:${VERSION#v}
+          docker pull ${{ env.IMAGE_PREFIX }}/frontend:${VERSION#v}
+          docker pull ${{ env.IMAGE_PREFIX }}/agent:${VERSION#v}
+          \`\`\`
+
+          ### Agent Binaries
+          | Platform | Architecture | File |
+          |----------|-------------|------|
+          | Linux    | amd64       | \`fileflux-agent-linux-amd64\` |
+          | Linux    | arm64       | \`fileflux-agent-linux-arm64\` |
+          | macOS    | amd64       | \`fileflux-agent-darwin-amd64\` |
+          | macOS    | arm64       | \`fileflux-agent-darwin-arm64\` |
+          | Windows  | amd64       | \`fileflux-agent-windows-amd64.exe\` |
+
+          ### Quick Install (Agent)
+          **Linux / macOS:**
+          \`\`\`bash
+          curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/agent/install.sh | sudo bash -s -- \\
+            --token YOUR_TOKEN \\
+            --server wss://your-server.com/ws/agent
+          \`\`\`
+
+          **Windows (PowerShell as Admin):**
+          \`\`\`powershell
+          iwr -useb https://raw.githubusercontent.com/${{ github.repository }}/main/agent/install.ps1 | iex
+          \`\`\`
+
+          ### Docker Compose (Quick Start)
+          \`\`\`bash
+          curl -sSLO https://raw.githubusercontent.com/${{ github.repository }}/${VERSION}/docker-compose.yml
+          curl -sSLO https://raw.githubusercontent.com/${{ github.repository }}/${VERSION}/.env.example
+          cp .env.example .env  # edit secrets
+          docker compose up -d
+          \`\`\`
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: release-artifacts/*
+          generate_release_notes: true
+          make_latest: true

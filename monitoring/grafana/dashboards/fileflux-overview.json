@@ -1,0 +1,160 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Service Health",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "up{job=\"fileflux-backend\"}",
+          "legendFormat": "Backend"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "rate(fileflux_http_requests_total[5m])",
+          "legendFormat": "{{method}} {{path}} ({{status}})"
+        }
+      ]
+    },
+    {
+      "title": "HTTP Request Duration (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(fileflux_http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "p95 {{method}} {{path}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "title": "Active WebSocket Connections",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "fileflux_websocket_connections_active",
+          "legendFormat": "Connections"
+        }
+      ]
+    },
+    {
+      "title": "Connected Agents",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "fileflux_agents_connected",
+          "legendFormat": "Agents"
+        }
+      ]
+    },
+    {
+      "title": "Active Transfers",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "fileflux_transfers_active",
+          "legendFormat": "Active"
+        }
+      ]
+    },
+    {
+      "title": "Transfer Throughput",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "rate(fileflux_transfer_bytes_total[5m])",
+          "legendFormat": "{{direction}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "Bps" }
+      }
+    },
+    {
+      "title": "Transfer Status Distribution",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "fileflux_transfers_total",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Database Connection Pool",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "expr": "fileflux_db_connections_open",
+          "legendFormat": "Open"
+        },
+        {
+          "expr": "fileflux_db_connections_in_use",
+          "legendFormat": "In Use"
+        },
+        {
+          "expr": "fileflux_db_connections_idle",
+          "legendFormat": "Idle"
+        }
+      ]
+    },
+    {
+      "title": "Go Runtime — Memory",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "expr": "go_memstats_alloc_bytes{job=\"fileflux-backend\"}",
+          "legendFormat": "Alloc"
+        },
+        {
+          "expr": "go_memstats_sys_bytes{job=\"fileflux-backend\"}",
+          "legendFormat": "Sys"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["fileflux"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "File Flux — Overview",
+  "uid": "fileflux-overview"
+}

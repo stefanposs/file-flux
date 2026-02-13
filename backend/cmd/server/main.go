@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,55 +10,137 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stefanposs/file-flux/backend/pkg/api"
-	"github.com/stefanposs/file-flux/backend/pkg/config"
-	"github.com/stefanposs/file-flux/backend/pkg/infrastructure/db"
-	"github.com/stefanposs/file-flux/backend/pkg/infrastructure/logger"
-	"go.uber.org/zap"
+	// Application Layer
+	agentsvc "github.com/stefanposs/file-flux/backend/application/agent"
+	authsvc "github.com/stefanposs/file-flux/backend/application/auth"
+	jobsvc "github.com/stefanposs/file-flux/backend/application/job"
+	tokensvc "github.com/stefanposs/file-flux/backend/application/token"
+	transfersvc "github.com/stefanposs/file-flux/backend/application/transfer"
+
+	// Adapter Layer
+	httpadapter "github.com/stefanposs/file-flux/backend/adapter/http"
+	jwtadapter "github.com/stefanposs/file-flux/backend/adapter/jwt"
+	"github.com/stefanposs/file-flux/backend/adapter/postgres"
+
+	// Internal (wird schrittweise ersetzt)
+	"github.com/stefanposs/file-flux/backend/internal/config"
+	"github.com/stefanposs/file-flux/backend/internal/middleware"
+	"github.com/stefanposs/file-flux/backend/internal/websocket"
 )
 
 func main() {
-	// Logger initialisieren
-	l, err := logger.NewLogger(config.GetEnv("ENV", "development"))
-	if err != nil {
-		log.Fatalf("Fehler beim Initialisieren des Loggers: %v", err)
-	}
-	defer l.Sync()
+	// Logger erstellen
+	logger := log.New(os.Stdout, "[fileflux] ", log.LstdFlags|log.Lshortfile)
 
 	// Konfiguration laden
-	cfg := config.LoadConfig()
-	l.Info("Konfiguration geladen", zap.String("port", cfg.ServerPort))
-
-	// Datenbankverbindung herstellen
-	database, err := db.NewPostgresDB(cfg.DatabaseURL)
+	cfg, err := config.LoadConfig("config.yaml")
 	if err != nil {
-		l.Fatal("Fehler beim Verbinden mit der Datenbank", zap.Error(err))
+		logger.Fatalf("Fehler beim Laden der Konfiguration: %v", err)
 	}
-	l.Info("Datenbankverbindung hergestellt")
 
-	// API-Server initialisieren
-	server := api.NewServer(cfg, l, database)
+	// JWT-Secret setzen
+	middleware.SetJWTSecret(cfg.Auth.JWTSecret)
 
-	// Server starten
+	// ─── Infrastructure Layer ───────────────────────────────────────
+
+	// PostgreSQL-Verbindung (Clean Architecture Adapter)
+	pgDB, err := postgres.New(postgres.Config{
+		Host:     cfg.Database.Host,
+		Port:     cfg.Database.Port,
+		User:     cfg.Database.User,
+		Password: cfg.Database.Password,
+		Database: cfg.Database.Database,
+		SSLMode:  cfg.Database.SSLMode,
+	})
+	if err != nil {
+		logger.Fatalf("Fehler beim Verbinden mit der Datenbank: %v", err)
+	}
+	defer pgDB.Close()
+
+	// Schema migrieren
+	if err := pgDB.Migrate(); err != nil {
+		logger.Printf("Warnung: Schema-Migration: %v", err)
+	}
+
+	// ─── Repository Layer (Postgres Adapter) ────────────────────────
+
+	userRepo := postgres.NewUserRepo(pgDB)
+	agentRepo := postgres.NewAgentRepo(pgDB)
+	jobRepo := postgres.NewJobRepo(pgDB)
+	transferRepo := postgres.NewTransferRepo(pgDB)
+	tokenRepo := postgres.NewTokenRepo(pgDB)
+
+	// WebSocket-Manager (nutzt jetzt Domain-Repos)
+	wsManager := websocket.NewManager(logger, agentRepo, tokenRepo)
+
+	// ─── Application Layer (Services) ───────────────────────────────
+
+	tokenGen := jwtadapter.New()
+	authService := authsvc.NewService(userRepo, tokenGen, cfg.Auth.TokenExpiresIn)
+	agentService := agentsvc.NewService(agentRepo, wsManager) // wsManager implementiert ConnectionChecker
+	jobService := jobsvc.NewService(jobRepo)
+	transferService := transfersvc.NewService(transferRepo)
+	tokenService := tokensvc.NewService(tokenRepo)
+
+	// ─── Adapter Layer (HTTP Router) ────────────────────────────────
+
+	router := httpadapter.NewRouter(httpadapter.RouterDeps{
+		AuthService:     authService,
+		AgentService:    agentService,
+		JobService:      jobService,
+		TransferService: transferService,
+		TokenService:    tokenService,
+		Logger:          logger,
+	})
+
+	// ─── Server starten ─────────────────────────────────────────────
+
+	httpAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	httpServer := &http.Server{
+		Addr:         httpAddr,
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	wsAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.WebSocketPort)
+	wsServer := &http.Server{
+		Addr:    wsAddr,
+		Handler: wsManager.Handler(),
+	}
+
 	go func() {
-		if err := server.Start(); err != nil && err != http.ErrServerClosed {
-			l.Fatal("Fehler beim Starten des Servers", zap.Error(err))
+		logger.Printf("HTTP-Server gestartet auf %s", httpAddr)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatalf("HTTP-Server Fehler: %v", err)
 		}
 	}()
-	l.Info("Server gestartet", zap.String("address", "http://localhost:"+cfg.ServerPort))
 
-	// Graceful Shutdown
+	go func() {
+		logger.Printf("WebSocket-Server gestartet auf %s", wsAddr)
+		if err := wsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatalf("WebSocket-Server Fehler: %v", err)
+		}
+	}()
+
+	// ─── Graceful Shutdown ──────────────────────────────────────────
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	l.Info("Server wird heruntergefahren...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	logger.Println("Server wird heruntergefahren...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
-		l.Fatal("Server konnte nicht ordnungsgemäß heruntergefahren werden", zap.Error(err))
+	if err := httpServer.Shutdown(ctx); err != nil {
+		logger.Printf("HTTP-Server Shutdown Fehler: %v", err)
+	}
+	if err := wsServer.Shutdown(ctx); err != nil {
+		logger.Printf("WebSocket-Server Shutdown Fehler: %v", err)
 	}
 
-	l.Info("Server wurde ordnungsgemäß heruntergefahren")
+	logger.Println("Server gestoppt")
 }

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: fileflux
+description: File Flux — Self-hosted Managed File Transfer platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - file-transfer
+  - mft
+  - managed-file-transfer
+home: https://github.com/stefanposs/file-flux
+maintainers:
+  - name: Stefan Poss

@@ -506,13 +506,6 @@ export function updateDemoToken(tokenId, updates) {
   return null;
 }
 
-// Löscht ein Demo-Token
-export function deleteDemoToken(tokenId) {
-  const tokens = getDemoTokens();
-  const filteredTokens = tokens.filter(token => token.id !== tokenId);
-  saveDemoTokens(filteredTokens);
-}
-
 // Initialisiert den Demo-Modus für die erste Nutzung
 export function initDemoMode() {
   if (!localStorage.getItem('demoMode')) {
@@ -524,4 +517,51 @@ export function initDemoMode() {
   getDemoTransfers();
   getDemoAgents();
   getDemoTokens();
+}
+
+// Beispiel für die korrigierte Version:
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+export function createDemoToken(tokenData: Omit<any, 'id' | 'token' | 'createdAt'>): any {
+  const now = new Date();
+  const token = {
+    id: generateUUID(),
+    name: tokenData.name || 'Neuer Token',
+    token: generateTokenString(),
+    createdAt: now,
+    expiresAt: tokenData.expiresAt || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 Tage
+    lastUsed: now,
+    description: tokenData.description || '',
+    agentId: tokenData.agentId || null,
+    status: 'active'
+  };
+  
+  const tokens = getDemoTokens();
+  tokens.push(token);
+  saveDemoTokens(tokens);
+  return token;
+}
+
+export function deleteDemoToken(tokenId: string): boolean {
+  const tokens = getDemoTokens();
+  const initialLength = tokens.length;
+  const filtered = tokens.filter(token => token.id !== tokenId);
+  saveDemoTokens(filtered);
+  return filtered.length < initialLength;
+}
+
+// Hilfsfunktion für Token-String-Generierung hinzufügen
+function generateTokenString(): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 40; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
 } 

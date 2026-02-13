@@ -1,0 +1,127 @@
+# ==============================================================================
+# FileFlux — MkDocs Configuration (Material Theme)
+# ==============================================================================
+# Based on WebMACS documentation setup.
+# Source:  assets/mkdocs/
+# Output:  docs-site/
+#
+# Serve:   mkdocs serve -a localhost:8001
+# Build:   mkdocs build
+# ==============================================================================
+
+site_name: FileFlux Documentation
+site_description: >-
+  Enterprise-grade managed file transfer platform.
+  Secure uploads, downloads, scheduling, real-time monitoring,
+  and agent-based transfers.
+
+repo_name: stefanposs/file-flux
+repo_url: https://github.com/stefanposs/file-flux
+
+docs_dir: assets/mkdocs
+site_dir: docs-site
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.instant
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Why FileFlux: why-fileflux.md
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Configuration: getting-started/configuration.md
+  - User Guide:
+    - Overview: guide/index.md
+    - Dashboard: guide/dashboard.md
+    - Transfers: guide/transfers.md
+    - Jobs: guide/jobs.md
+    - Agents: guide/agents.md
+    - Scheduling: guide/scheduling.md
+    - Tokens: guide/tokens.md
+    - Monitoring: guide/monitoring.md
+  - Architecture:
+    - architecture/index.md
+    - System Overview: architecture/overview.md
+    - Backend: architecture/backend.md
+    - Frontend: architecture/frontend.md
+    - Agent: architecture/agent.md
+    - WebSocket Protocol: architecture/websocket-protocol.md
+    - Database: architecture/database.md
+  - API Reference:
+    - api/index.md
+    - REST Endpoints: api/rest.md
+    - WebSocket API: api/websocket.md
+    - Schemas: api/schemas.md
+  - Development:
+    - development/index.md
+    - Contributing: development/contributing.md
+    - Testing: development/testing.md
+    - Code Style: development/code-style.md
+    - ADRs: development/adrs.md
+  - Deployment:
+    - deployment/index.md
+    - Installation Guide: deployment/installation-guide.md
+    - Docker: deployment/docker.md
+    - Production: deployment/production.md
+    - Environment Variables: deployment/env-vars.md

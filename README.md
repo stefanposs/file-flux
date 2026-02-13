@@ -1,154 +1,104 @@
-# file flux
+# FileFlux
 
-Eine skalierbare SaaS-Plattform zum Streamen von Daten aus Legacy-Systemen an andere Rechner oder Cloud-Speicher.
+Scalable managed file transfer platform for streaming data between legacy systems, on-prem servers, and cloud storage.
 
-## Komponenten
+## Architecture
 
-- **Backend**: Go-basierte RESTful API mit Job-Management, Event-Logging und Agent-Kommunikation
-- **Frontend**: Responsives Dashboard mit lit.js und TypeScript
-- **Agent**: Go-basierter Client mit YAML-Konfiguration für Dateiüberwachung und -übertragung
+| Component   | Tech                      | Port  |
+|-------------|---------------------------|-------|
+| **Backend** | Go 1.22 · Clean Arch      | 3001 (HTTP) / 3002 (WS) |
+| **Frontend**| Lit 2.6 · TypeScript · Vite | 3000 |
+| **Agent**   | Go 1.22 · WebSocket client | 8080 |
+| **Database**| PostgreSQL 16             | 5432  |
+| **Docs**    | MkDocs Material           | 8001  |
 
-## Entwicklung
+## Quick Start
 
 ```bash
-# Backend starten
-cd backend && go run cmd/server/main.go
+# 1. Clone & enter
+git clone https://github.com/stefanposs/file-flux.git
+cd file-flux
 
-# Frontend entwickeln
-cd frontend && npm run dev
+# 2. Copy environment file
+cp .env.example .env
 
-# Agent bauen
-cd agent && go build -o fileflux-agent cmd/agent/main.go
+# 3. Start everything with Docker Compose
+docker compose up -d --build
+
+# 4. Open the dashboard
+open http://localhost:3000
 ```
 
-## Dokumentation
+### Default Credentials
 
-Detaillierte Dokumentation finden Sie im `docs/`-Verzeichnis.
+| Service   | Email / User        | Password   |
+|-----------|---------------------|------------|
+| Dashboard | admin@fileflux.de   | admin123   |
 
-## Overview
+## Development (with just)
 
-File Flux is a highly flexible, scalable, and secure File Transfer Service that automates the exchange of large data volumes between legacy systems, local data centers, and modern cloud environments. The solution is based on an event-driven architecture, enabling various applications to communicate in real-time – both in push and pull modes.
+Requires [just](https://github.com/casey/just), Go 1.22+, Node.js 20+, Docker, and Python 3.10+.
 
-## Features
-
-- **Bidirectional Data Transfer (Push & Pull)**
-- **Event-Driven Architecture**
-- **Efficient Data Compression and Optimization**
-- **Flexible Protocol Support**
-- **Central API Service & Monitoring**
-- **Security & Compliance**
-
-## Getting Started
-
-### Prerequisites
-
-- Go 1.23 or higher
-- ngrok (optional, for public exposure)  
-- Necessary environment variables/configuration set up
-
-### Installation
-
-1. Clone the repository:
-    ```bash
-    git clone <repository-url>
-    cd file-flux
-    ```
-
-2. Install the necessary dependencies:
-    ```bash
-    go mod tidy
-    ```
-
-### Configuration
-
-Configuration settings are managed through environment variables or a configuration file.  
-The `Config` struct in `pkg/config/config.go` handles loading these settings.
-
-### ngrok Integration (Optional)
-
-To expose your backend server to the public internet using ngrok, follow these steps:
-
-1. **Installation:**  
-   Download and install ngrok from [ngrok.com](https://ngrok.com/).
-
-2. **Authentication:**  
-   Set up your ngrok auth token either as an environment variable:
-   ```bash
-   export NGROK_AUTHTOKEN=your_auth_token
-   ```
-   or (optional) create an `ngrok.yml` file in your workspace root:
-   ```yaml
-   authtoken: your_auth_token
-   ```
-   *Note: A separate config file for ngrok is not required if you set the environment variable.*
-
-3. **Usage:**  
-   When you start the backend (see below), ngrok will automatically be started via a subprocess. The public URL is then retrieved from ngrok's local API (http://localhost:4040/api/tunnels) and logged. Use this URL in your client's `server_url` setting (see client configuration below).
-
-### Running the Server
-
-To run the backend server, execute the following command from the `backend` directory:
 ```bash
-go run cmd/main.go
+just setup          # install all dependencies
+just dev            # start Docker Compose dev environment
+just build          # build all binaries
+just test           # run all tests
+just lint           # lint all components
+just docs           # serve MkDocs locally at localhost:8001
+just docs-build     # build static docs site
+just clean          # remove build artifacts
 ```
-The server will start listening on the configured port. If ngrok is enabled, its public URL will be output to your logs (e.g., `ngrok tunnel started: https://1234abcd.ngrok.io`).
 
-### Running the Client
+## Project Structure
 
-To run the client, execute the following command from the `client` directory:
+```
+file-flux/
+├── backend/          # Go REST API + WebSocket server
+│   ├── cmd/server/   # Entrypoint
+│   ├── internal/     # Handlers, models, DB, auth, WebSocket
+│   └── Dockerfile
+├── frontend/         # Lit web components + Vite
+│   ├── src/          # TypeScript components
+│   └── Dockerfile
+├── agent/            # Go agent (connects via WebSocket)
+│   ├── cmd/agent/    # Entrypoint
+│   ├── internal/     # Config, transfer, WebSocket client
+│   └── Dockerfile
+├── docs/             # MkDocs documentation source
+├── .github/workflows/ # CI/CD (GitHub Actions)
+├── docker-compose.yml
+├── justfile          # Task runner
+└── mkdocs.yml        # Documentation config
+```
+
+## Documentation
+
+Full documentation is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+
 ```bash
-go run cmd/main.go
-```
-The client monitors the local `uploads` folder for new files. When a file is detected:
-- It is automatically uploaded to the server using long polling.
-- The client then downloads the file from the server into the local `downloads` folder.
-- Finally, the original file from `uploads` is deleted.
+# Serve locally
+just docs
 
-Ensure your client configuration (in `client/pkg/config/config.yml`) uses the correct server URL – for example, the ngrok URL if you want external access:
-```yaml
-server_url: "https://1234abcd.ngrok.io"
-upload_dir: "./uploads"
-download_dir: "./downloads"
+# Or manually
+pip install -r requirements-docs.txt
+mkdocs serve -a localhost:8001
 ```
 
-### Example Usage
+## Environment Variables
 
-#### Long Polling Upload
+See [.env.example](.env.example) for all available configuration options.
 
-The client application demonstrates how to upload a file in chunks using long polling:
-```go
-err = client.LongPollingUploadFile(cfg.UploadDir + "/file.txt")
-if err != nil {
-    log.Fatalf("Error uploading file: %v", err)
-}
-fmt.Println("File uploaded successfully.")
-```
+Key variables:
 
-#### Long Polling Download
-
-The client application demonstrates how to download a file in chunks using long polling:
-```go
-err = client.LongPollingDownloadFile("file.txt", cfg.DownloadDir)
-if err != nil {
-    log.Fatalf("Error downloading file: %v", err)
-}
-fmt.Println("File downloaded successfully.")
-```
+| Variable       | Description                          | Default              |
+|----------------|--------------------------------------|----------------------|
+| DB_USER        | PostgreSQL user                      | fileflux             |
+| DB_PASSWORD    | PostgreSQL password                  | (required)           |
+| JWT_SECRET     | Secret for JWT token signing         | (required)           |
+| AGENT_TOKEN    | Token for agent WebSocket auth       | demo-agent-secret-token (dev) |
+| LOG_LEVEL      | Log verbosity                        | info                 |
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
-
-## TODOs
-
-- [ ] Remove internal und pkg in client und backend
-- [ ] Add unit tests for the client and server
-- [ ] Improve error handling and logging
-- [ ] Add support for additional file transfer protocols
-- [ ] Create detailed documentation for API endpoints
-- [ ] Implement a web-based dashboard for monitoring transfers
-- [ ] Optimize data compression algorithms
-- [ ] Enhance security features (e.g., encryption, authentication)
-- [ ] Set up continuous integration and deployment (CI/CD) pipeline
-- [ ] Write integration tests for ngrok functionality
-- [ ] Add examples for different use cases in the documentation
+MIT

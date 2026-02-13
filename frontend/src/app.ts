@@ -18,25 +18,48 @@ import './components/tokens/token-list';
 import './components/transfers/transfer-list';
 import './components/transfers/transfer-detail';
 
+// Typendefinitionen für bessere Typsicherheit
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string | null;
+  lastLogin?: string;
+}
+
+interface RouteParams {
+  id?: string;
+  [key: string]: string | undefined;
+}
+
+interface AppStats {
+  totalTransfers: number;
+  completedTransfers: number;
+  failedTransfers: number;
+  activeAgents: number;
+  totalJobs: number;
+}
+
 @customElement('file-flux-app')
 export class FileFluxApp extends LitElement {
   @state() private isAuthenticated = false;
-  @state() private user = null;
+  @state() private user: User | null = null;
   @state() private currentRoute = '/';
-  @state() private routeParams = {};
+  @state() private routeParams: RouteParams = {};
   @state() private isDemoMode = false;
   @state() private isLoading = true;
   @state() private sidebarOpen = false;
-  @state() private activeTransfers = [];
-  @state() private recentTransfers = [];
-  @state() private stats = {
+  @state() private activeTransfers: any[] = [];
+  @state() private recentTransfers: any[] = [];
+  @state() private stats: AppStats = {
     totalTransfers: 0,
     completedTransfers: 0,
     failedTransfers: 0,
     activeAgents: 0,
     totalJobs: 0
   };
-  @state() private loginError = null;
+  @state() private loginError: string | null = null;
 
   static styles = css`
     :host {
@@ -325,7 +348,7 @@ export class FileFluxApp extends LitElement {
     }
   }
 
-  _navigate(path) {
+  _navigate(path: string) {
     window.history.pushState(null, '', path);
     this._handleRoute();
   }
@@ -334,11 +357,11 @@ export class FileFluxApp extends LitElement {
     this.sidebarOpen = !this.sidebarOpen;
   }
 
-  _handleLogin(e) {
+  _handleLogin(e: Event) {
     e.preventDefault();
-    const form = e.target;
-    const email = form.email.value;
-    const password = form.password.value;
+    const form = e.target as HTMLFormElement;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     
     if (this.isDemoMode) {
       // Im Demo-Modus Anmeldung simulieren
@@ -360,21 +383,21 @@ export class FileFluxApp extends LitElement {
     const transfers = getDemoTransfers();
     
     // Aktive Transfers filtern
-    this.activeTransfers = transfers.filter(t => 
+    this.activeTransfers = transfers.filter((t: any) => 
       t.status === 'running' || t.status === 'pending'
     );
     
     // Kürzlich abgeschlossene Transfers
     this.recentTransfers = transfers
-      .filter(t => t.status === 'completed' || t.status === 'failed')
+      .filter((t: any) => t.status === 'completed' || t.status === 'failed')
       .slice(0, 5);
     
     // Statistiken berechnen
     this.stats = {
       totalTransfers: transfers.length,
-      completedTransfers: transfers.filter(t => t.status === 'completed').length,
-      failedTransfers: transfers.filter(t => t.status === 'failed').length,
-      activeAgents: getDemoAgents().filter(a => a.status === 'online').length,
+      completedTransfers: transfers.filter((t: any) => t.status === 'completed').length,
+      failedTransfers: transfers.filter((t: any) => t.status === 'failed').length,
+      activeAgents: getDemoAgents().filter((a: any) => a.status === 'online').length,
       totalJobs: getDemoJobs().length
     };
   }
@@ -388,13 +411,13 @@ export class FileFluxApp extends LitElement {
         return html`<ff-job-list></ff-job-list>`;
         
       case '/jobs/detail':
-        return html`<ff-job-detail jobId="${this.routeParams.id}"></ff-job-detail>`;
+        return html`<ff-job-detail jobId="${this.routeParams.id || ''}"></ff-job-detail>`;
         
       case '/agents':
         return html`<ff-agent-list></ff-agent-list>`;
         
       case '/agents/detail':
-        return html`<ff-agent-detail agentId="${this.routeParams.id}"></ff-agent-detail>`;
+        return html`<ff-agent-detail agentId="${this.routeParams.id || ''}"></ff-agent-detail>`;
         
       case '/tokens':
         return html`<ff-token-list></ff-token-list>`;
@@ -403,7 +426,7 @@ export class FileFluxApp extends LitElement {
         return html`<ff-transfer-list></ff-transfer-list>`;
         
       case '/transfers/detail':
-        return html`<ff-transfer-detail transferId="${this.routeParams.id}"></ff-transfer-detail>`;
+        return html`<ff-transfer-detail transferId="${this.routeParams.id || ''}"></ff-transfer-detail>`;
         
       default:
         return html`<div>Seite nicht gefunden</div>`;

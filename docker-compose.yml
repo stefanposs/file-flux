@@ -1,0 +1,131 @@
+# ==============================================================================
+# File Flux — Development / Quick-Start Docker Compose
+# ==============================================================================
+# Usage:
+#   cp .env.example .env          # configure secrets
+#   docker compose up -d          # start all services
+#   docker compose logs -f        # follow logs
+# ==============================================================================
+
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  # ── Database ──────────────────────────────────────────────────────────────
+  db:
+    <<: *common
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-fileflux}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fileflux}
+      POSTGRES_DB: ${DB_NAME:-fileflux}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-fileflux} -d ${DB_NAME:-fileflux}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - backend-net
+
+  # ── Backend API ───────────────────────────────────────────────────────────
+  backend:
+    <<: *common
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-fileflux}
+      - DB_PASSWORD=${DB_PASSWORD:-fileflux}
+      - DB_NAME=${DB_NAME:-fileflux}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVER_PORT=3001
+      - WEBSOCKET_PORT=3002
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - ENV=${ENV:-production}
+    ports:
+      - "${API_PORT:-3001}:3001"
+      - "${WS_PORT:-3002}:3002"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - backend-net
+      - frontend-net
+
+  # ── Frontend ──────────────────────────────────────────────────────────────
+  frontend:
+    <<: *common
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_URL: ${API_URL:-/api}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - frontend-net
+
+  # ── Central Agent (optional, for server-side transfers) ───────────────────
+  agent-central:
+    <<: *common
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    environment:
+      - CONNECTION_SERVER_URL=ws://backend:3002/ws/agent
+      - CONNECTION_TOKEN=${AGENT_TOKEN:-demo-agent-secret-token}
+      - AGENT_NAME=${AGENT_NAME:-Central-Agent}
+      - AGENT_TYPE=server
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - agent-data:/data
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - backend-net
+
+volumes:
+  postgres-data:
+    driver: local
+  agent-data:
+    driver: local
+
+networks:
+  backend-net:
+    driver: bridge
+  frontend-net:
+    driver: bridge

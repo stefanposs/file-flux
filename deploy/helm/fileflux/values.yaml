@@ -1,0 +1,107 @@
+# ==============================================================================
+# File Flux Helm Chart — Default Values
+# ==============================================================================
+
+global:
+  domain: fileflux.example.com
+
+# ── Container Images ─────────────────────────────────────────────────────────
+backend:
+  image:
+    repository: ghcr.io/stefanposs/file-flux/backend
+    tag: ""  # defaults to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    serverPort: "3001"
+    websocketPort: "3002"
+    logLevel: "info"
+    logFormat: "json"
+    dbSslMode: "disable"
+
+frontend:
+  image:
+    repository: ghcr.io/stefanposs/file-flux/frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+agent:
+  image:
+    repository: ghcr.io/stefanposs/file-flux/agent
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+
+# ── PostgreSQL ───────────────────────────────────────────────────────────────
+postgres:
+  enabled: true  # set false to use external database
+  image: postgres:16-alpine
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: ""
+  # External database settings (when postgres.enabled=false)
+  external:
+    host: ""
+    port: 5432
+
+# ── Secrets (override at install time) ───────────────────────────────────────
+secrets:
+  dbUser: fileflux
+  dbPassword: ""    # REQUIRED
+  dbName: fileflux
+  jwtSecret: ""     # REQUIRED
+  agentToken: ""    # REQUIRED
+
+# ── Ingress ──────────────────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: nginx
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "500m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+
+# ── Monitoring ───────────────────────────────────────────────────────────────
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    labels: {}
+  grafanaDashboard:
+    enabled: true

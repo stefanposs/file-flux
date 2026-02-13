@@ -15,6 +15,10 @@ interface Job {
   destination: string;
   uploadAgent?: string;
   downloadAgent?: string;
+  enabled?: boolean;
+  transferCount?: number;
+  failedCount?: number;
+  transferredBytes?: number;
 }
 
 @customElement('ff-job-list')
@@ -509,13 +513,14 @@ export class JobList extends LitElement {
       return;
     }
     
-    const newJob = {
+    const newJob: Job = {
       id: `job${this.jobs.length + 1}`,
       name: nameInput.value,
       description: descriptionInput.value,
       source: sourceInput.value,
       destination: destinationInput.value,
       schedule: scheduleInput.value,
+      type: 'scheduled',
       status: 'active',
       enabled: true,
       transferCount: 0,

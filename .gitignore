@@ -83,3 +83,31 @@ Temporary Items
 
 # ngrok
 ngrok.yml
+
+# Environment secrets
+.env
+.env.local
+.env.production
+
+# Build artifacts
+dist/
+bin/
+
+# MkDocs build output
+docs-site/
+
+# Backups
+backups/
+
+# Coverage
+coverage.out
+coverage.html
+
+# Dependencies
+node_modules/
+
+# Python virtual environment
+.venv/
+
+# Hugo (legacy)
+.hugo_build.lock

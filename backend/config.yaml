@@ -1,0 +1,20 @@
+server:
+  port: 3001
+  websocket_port: 3002
+  host: "0.0.0.0"
+
+database:
+  host: "db"
+  port: 5432
+  user: "fileflux"
+  password: "fileflux"
+  database: "fileflux"
+  sslmode: "disable"
+
+auth:
+  jwt_secret: "fileflux-secret-key"
+  token_expires_in: 24  # Stunden
+
+logging:
+  level: "info"
+  file: "fileflux.log" 
