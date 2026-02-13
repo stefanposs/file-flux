@@ -19,6 +19,7 @@ export class TokenList extends LitElement {
   @state() private newTokenExpiryDays = 365;
   @state() private selectedAgentId = '';
   @state() private newTokenDescription = '';
+  @state() private agents: any[] = [];
 
   static styles = css`
     :host {
@@ -301,6 +302,18 @@ export class TokenList extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._loadTokens();
+    this._loadAgents();
+  }
+
+  async _loadAgents() {
+    if (api.isAuthenticated()) {
+      try {
+        const apiAgents = await api.getAgents();
+        this.agents = apiAgents.map(a => ({ id: String(a.id), name: a.name }));
+      } catch (e) {
+        console.warn('Failed to load agents for token list', e);
+      }
+    }
   }
 
   async _loadTokens() {
@@ -414,7 +427,7 @@ export class TokenList extends LitElement {
   }
 
   _getAgents() {
-    return isDemoMode() ? getDemoAgents() : [];
+    return isDemoMode() ? getDemoAgents() : this.agents;
   }
 
   _handleSearchInput(e) {
@@ -689,9 +702,9 @@ export class TokenList extends LitElement {
                   <tr>
                     <td>${token.name}</td>
                     <td>${this._getAgentName(token.agentId)}</td>
-                    <td>${this._formatDateTime(token.created)}</td>
+                    <td>${this._formatDateTime(token.createdAt)}</td>
                     <td>${token.expiresAt ? this._formatDateTime(token.expiresAt) : 'Nie'}</td>
-                    <td>${token.lastUsed ? this._formatDateTime(token.lastUsed) : 'Nie'}</td>
+                    <td>${token.lastUsedAt ? this._formatDateTime(token.lastUsedAt) : 'Nie'}</td>
                     <td>
                       <span class="status-badge ${this._getStatusClass(token.status)}">
                         ${this._formatStatus(token.status)}

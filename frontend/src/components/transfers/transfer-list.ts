@@ -12,6 +12,7 @@ interface Transfer {
   startTime: string;
   endTime?: string;
   speed: number;
+  progress: number;
   error?: string;
   source: string;
   destination: string;
@@ -217,6 +218,28 @@ export class TransferList extends LitElement {
       background-color: var(--warning-light, #fffbeb);
       color: var(--warning-color, #f59e0b);
     }
+
+    .progress-bar-container {
+      width: 100%;
+      min-width: 80px;
+      height: 6px;
+      background-color: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary-color, #4f46e5);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 2px;
+    }
     
     .pagination {
       display: flex;
@@ -285,6 +308,7 @@ export class TransferList extends LitElement {
             startTime: t.start_time,
             endTime: t.end_time || undefined,
             speed: 0,
+            progress: t.progress || 0,
             error: t.error || undefined,
             source: t.source_path || '',
             destination: t.destination_path || '',
@@ -621,6 +645,9 @@ export class TransferList extends LitElement {
                     <th>
                       Job
                     </th>
+                    <th>
+                      Fortschritt
+                    </th>
                     <th @click=${() => this._handleSort('status')}>
                       Status
                       <span class="sort-icon ${this.sortField === 'status' ? this.sortDirection : ''}"></span>
@@ -635,6 +662,16 @@ export class TransferList extends LitElement {
                       <td>${this._formatDateTime(transfer.startTime)}</td>
                       <td>${transfer.endTime ? this._formatDateTime(transfer.endTime) : '-'}</td>
                       <td>${transfer.jobId ? this._getJobName(transfer.jobId) : '-'}</td>
+                      <td>
+                        ${transfer.status === 'running' || transfer.progress > 0 ? html`
+                          <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: ${transfer.progress}%"></div>
+                          </div>
+                          <div class="progress-text">${transfer.progress}%</div>
+                        ` : html`
+                          ${transfer.status === 'completed' ? '100%' : '-'}
+                        `}
+                      </td>
                       <td>
                         <span class="status-badge status-${transfer.status}">
                           ${this._formatStatus(transfer.status)}

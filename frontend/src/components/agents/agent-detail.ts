@@ -934,10 +934,16 @@ transfers:
   _testConnection() {
     showToast('Verbindungstest wird durchgeführt...', 'info');
     
-    // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    setTimeout(() => {
-      showToast('Verbindungstest erfolgreich!', 'success');
-    }, 1500);
+    // Check if the agent is online by refreshing its data
+    api.getAgent(Number(this.agentId)).then(agent => {
+      if (agent.status === 'online') {
+        showToast('Agent ist erreichbar!', 'success');
+      } else {
+        showToast(`Agent-Status: ${agent.status}`, 'warning');
+      }
+    }).catch(err => {
+      showToast('Agent nicht erreichbar: ' + (err instanceof Error ? err.message : String(err)), 'error');
+    });
   }
 
   _createToken() {
@@ -964,48 +970,36 @@ transfers:
     this.showConfirmDelete = false;
   }
 
-  _confirmDelete() {
-    // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    showToast(`Agent "${this.agent?.name}" gelöscht.`, 'success');
-    this.showConfirmDelete = false;
-    this._navigateBack();
+  async _confirmDelete() {
+    try {
+      await api.deleteAgent(Number(this.agentId));
+      showToast(`Agent "${this.agent?.name}" gelöscht.`, 'success');
+      this.showConfirmDelete = false;
+      this._navigateBack();
+    } catch (err) {
+      showToast('Fehler beim Löschen: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      this.showConfirmDelete = false;
+    }
   }
 
   async _renewToken(tokenId) {
-    if (!confirm('Möchten Sie dieses Token wirklich erneuern? Das bestehende Token bleibt gültig, wird aber durch ein neues Token mit verlängerter Gültigkeit ergänzt.')) {
+    if (!confirm('Möchten Sie dieses Token wirklich erneuern?')) {
       return;
     }
     
     try {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      // const response = await tokenService.renewToken(tokenId);
-      
-      // Demo-Implementierung
-      // Simulierte Verzögerung
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Finde das Token, das erneuert werden soll
-      const tokenIndex = this.tokens.findIndex(t => t.id === tokenId);
-      if (tokenIndex === -1) {
-        throw new Error('Token nicht gefunden');
-      }
-      
-      const token = this.tokens[tokenIndex];
-      
-      // Berechne neues Ablaufdatum (ein Jahr ab heute)
-      const expiryDate = new Date();
-      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-      
-      // Aktualisiere das Token
-      this.tokens = [
-        ...this.tokens.slice(0, tokenIndex),
-        {
-          ...token,
-          expiresAt: expiryDate.toISOString(),
-          status: 'active'
-        },
-        ...this.tokens.slice(tokenIndex + 1)
-      ];
+      // Create a new token for this agent and remove the old one
+      const agentId = Number(this.agentId);
+      const token = this.tokens.find(t => t.id === tokenId);
+      const description = token?.description || 'Erneuertes Token';
+
+      const newToken = await api.createToken({ name: description, agent_id: agentId });
+      await api.revokeToken(Number(tokenId));
+
+      // Replace old token with new one in the list
+      this.tokens = this.tokens.map(t =>
+        t.id === tokenId ? { ...newToken, id: newToken.id } : t
+      );
       
       showToast('Token erfolgreich erneuert!', 'success');
     } catch (err) {
@@ -1020,16 +1014,8 @@ transfers:
     }
     
     try {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      // await tokenService.revokeToken(tokenId);
-      
-      // Demo-Implementierung
-      // Simulierte Verzögerung
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Entferne das Token aus der Liste
+      await api.revokeToken(Number(tokenId));
       this.tokens = this.tokens.filter(token => token.id !== tokenId);
-      
       showToast('Token erfolgreich widerrufen!', 'success');
     } catch (err) {
       showToast('Fehler beim Widerrufen des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');

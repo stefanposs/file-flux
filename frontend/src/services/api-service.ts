@@ -186,6 +186,13 @@ class ApiService {
     await this.request(`/agents/${id}`, { method: 'DELETE' });
   }
 
+  async updateAgent(id: number, data: Partial<ApiAgent>): Promise<ApiAgent> {
+    return this.request<ApiAgent>(`/agents/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // ── Jobs ──────────────────────────────────────────────────────────
 
   async getJobs(): Promise<ApiJob[]> {

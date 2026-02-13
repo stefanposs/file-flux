@@ -13,9 +13,11 @@ import './components/jobs/job-detail';
 import './components/jobs/job-edit';
 import './components/agents/agent-list';
 import './components/agents/agent-detail';
+import './components/agents/agent-edit';
 import './components/tokens/token-list';
 import './components/transfers/transfer-list';
 import './components/transfers/transfer-detail';
+import './components/settings/settings-page';
 
 // Typendefinitionen für bessere Typsicherheit
 interface User {
@@ -497,6 +499,9 @@ export class FileFluxApp extends LitElement {
           if (routeParts.length === 1) {
             this.currentRoute = '/agents';
             this.routeParams = {};
+          } else if (routeParts.length === 3 && routeParts[1] === 'edit') {
+            this.currentRoute = '/agents/edit';
+            this.routeParams = { id: routeParts[2] };
           } else {
             this.currentRoute = '/agents/detail';
             this.routeParams = { id: routeParts[1] };
@@ -516,6 +521,11 @@ export class FileFluxApp extends LitElement {
             this.currentRoute = '/transfers/detail';
             this.routeParams = { id: routeParts[1] };
           }
+          break;
+
+        case 'settings':
+          this.currentRoute = '/settings';
+          this.routeParams = {};
           break;
           
         default:
@@ -639,6 +649,9 @@ export class FileFluxApp extends LitElement {
       case '/agents/detail':
         return html`<ff-agent-detail agentId="${this.routeParams.id || ''}"></ff-agent-detail>`;
         
+      case '/agents/edit':
+        return html`<ff-agent-edit agentId="${this.routeParams.id || ''}"></ff-agent-edit>`;
+        
       case '/tokens':
         return html`<ff-token-list></ff-token-list>`;
         
@@ -647,6 +660,9 @@ export class FileFluxApp extends LitElement {
         
       case '/transfers/detail':
         return html`<ff-transfer-detail transferId="${this.routeParams.id || ''}"></ff-transfer-detail>`;
+        
+      case '/settings':
+        return html`<ff-settings></ff-settings>`;
         
       default:
         return html`
