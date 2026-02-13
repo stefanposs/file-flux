@@ -15,6 +15,13 @@ export class SettingsPage extends LitElement {
   @state() private confirmPassword = '';
   @state() private isSavingPassword = false;
 
+  // Preferences (persisted in localStorage)
+  @state() private emailNotifications = true;
+  @state() private agentWarnings = true;
+  @state() private weeklyReport = false;
+  @state() private compactView = false;
+  @state() private collapseSidebar = false;
+
   static styles = css`
     :host { display: block; }
 
@@ -153,7 +160,28 @@ export class SettingsPage extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this._loadPreferences();
     this._loadUser();
+  }
+
+  _loadPreferences() {
+    try {
+      const prefs = JSON.parse(localStorage.getItem('ff_preferences') || '{}');
+      this.emailNotifications = prefs.emailNotifications ?? true;
+      this.agentWarnings = prefs.agentWarnings ?? true;
+      this.weeklyReport = prefs.weeklyReport ?? false;
+      this.compactView = prefs.compactView ?? false;
+      this.collapseSidebar = prefs.collapseSidebar ?? false;
+    } catch { /* ignore */ }
+  }
+
+  _savePreference(key: string, value: boolean) {
+    (this as any)[key] = value;
+    try {
+      const prefs = JSON.parse(localStorage.getItem('ff_preferences') || '{}');
+      prefs[key] = value;
+      localStorage.setItem('ff_preferences', JSON.stringify(prefs));
+    } catch { /* ignore */ }
   }
 
   async _loadUser() {
@@ -186,8 +214,8 @@ export class SettingsPage extends LitElement {
 
     this.isSavingPassword = true;
     try {
-      // Backend doesn't have a password-change endpoint yet — show info
-      showToast('Passwort-Änderung ist derzeit nicht verfügbar.', 'info');
+      await api.changePassword(this.currentPassword, this.newPassword);
+      showToast('Passwort erfolgreich geändert!', 'success');
     } catch (err: any) {
       showToast('Fehler: ' + (err?.message || 'Unbekannt'), 'error');
     } finally {
@@ -264,7 +292,8 @@ export class SettingsPage extends LitElement {
               <div class="preference-desc">Benachrichtigungen bei Fehlern und abgeschlossenen Transfers</div>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" checked>
+              <input type="checkbox" .checked=${this.emailNotifications}
+                @change=${(e: any) => this._savePreference('emailNotifications', e.target.checked)}>
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -274,7 +303,8 @@ export class SettingsPage extends LitElement {
               <div class="preference-desc">Benachrichtigungen wenn Agents offline gehen</div>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox" checked>
+              <input type="checkbox" .checked=${this.agentWarnings}
+                @change=${(e: any) => this._savePreference('agentWarnings', e.target.checked)}>
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -284,7 +314,8 @@ export class SettingsPage extends LitElement {
               <div class="preference-desc">Zusammenfassung aller Transfers per E-Mail</div>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox">
+              <input type="checkbox" .checked=${this.weeklyReport}
+                @change=${(e: any) => this._savePreference('weeklyReport', e.target.checked)}>
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -299,7 +330,8 @@ export class SettingsPage extends LitElement {
               <div class="preference-desc">Weniger Abstand zwischen Elementen</div>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox">
+              <input type="checkbox" .checked=${this.compactView}
+                @change=${(e: any) => this._savePreference('compactView', e.target.checked)}>
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -309,7 +341,8 @@ export class SettingsPage extends LitElement {
               <div class="preference-desc">Sidebar standardmäßig eingeklappt</div>
             </div>
             <label class="toggle-switch">
-              <input type="checkbox">
+              <input type="checkbox" .checked=${this.collapseSidebar}
+                @change=${(e: any) => this._savePreference('collapseSidebar', e.target.checked)}>
               <span class="toggle-slider"></span>
             </label>
           </div>

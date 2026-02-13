@@ -256,6 +256,15 @@ class ApiService {
     await this.request(`/tokens/${id}`, { method: 'DELETE' });
   }
 
+  // ── Auth ───────────────────────────────────────────────────────────
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await this.request('/auth/password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    });
+  }
+
   // ── Health ────────────────────────────────────────────────────────
 
   async health(): Promise<HealthResponse> {

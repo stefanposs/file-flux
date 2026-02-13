@@ -61,6 +61,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 	authRoutes.Handle("/login", loginLimiter.Limit(http.HandlerFunc(auth.Login))).Methods("POST")
 	authRoutes.Handle("/refresh", middleware.Auth(http.HandlerFunc(auth.RefreshToken))).Methods("POST")
 	authRoutes.Handle("/user", middleware.Auth(http.HandlerFunc(auth.GetCurrentUser))).Methods("GET")
+	authRoutes.Handle("/password", middleware.Auth(http.HandlerFunc(auth.ChangePassword))).Methods("POST")
 
 	// ── Agent Routes (Admin-only fuer CUD, lesend fuer alle auth Users) ──
 	agentRoutes := api.PathPrefix("/agents").Subrouter()

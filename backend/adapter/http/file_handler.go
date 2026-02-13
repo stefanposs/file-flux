@@ -16,6 +16,7 @@ import (
 type FileHandler struct {
 	storageDir     string
 	tokenValidator TokenValidatorFunc
+	maxUploadSize  int64 // Maximale Upload-Groesse in Bytes
 }
 
 // TokenValidatorFunc validiert ein Agent-Token und gibt die agentID zurueck.
@@ -24,7 +25,11 @@ type TokenValidatorFunc func(token string) (int, error)
 // NewFileHandler erstellt einen neuen FileHandler.
 func NewFileHandler(storageDir string, tokenValidator TokenValidatorFunc) *FileHandler {
 	os.MkdirAll(storageDir, 0o755)
-	return &FileHandler{storageDir: storageDir, tokenValidator: tokenValidator}
+	return &FileHandler{
+		storageDir:     storageDir,
+		tokenValidator: tokenValidator,
+		maxUploadSize:  5 << 30, // 5 GB Standard-Limit
+	}
 }
 
 // Upload empfaengt eine Datei vom Agenten und speichert sie auf dem Server.
@@ -62,19 +67,25 @@ func (h *FileHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer dst.Close()
 
+	// Upload-Groesse begrenzen
+	r.Body = http.MaxBytesReader(w, r.Body, h.maxUploadSize)
+
 	written, err := io.Copy(dst, r.Body)
 	if err != nil {
 		os.Remove(dstPath)
+		if err.Error() == "http: request body too large" {
+			respondError(w, http.StatusRequestEntityTooLarge, "file exceeds maximum upload size")
+			return
+		}
 		respondError(w, http.StatusInternalServerError, "failed to write file")
 		return
 	}
-
-	_ = agentID // Zukuenftig fuer Audit-Log
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"transfer_id": transferID,
 		"filename":    filename,
 		"size":        written,
+		"agent_id":    agentID,
 	})
 }
 

@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { isDemoMode, getDemoUser, getDemoTransfers, getDemoJobs, getDemoAgents, getDemoTokens, initDemoMode } from './demo-mode';
+import { isDemoMode, getDemoUser, getDemoTransfers, getDemoJobs, getDemoAgents, initDemoMode } from './demo-mode';
 import { api, ApiRequestError } from './services/api-service';
 import { showToast } from './components/shared/toast';
 

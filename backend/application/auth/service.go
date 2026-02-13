@@ -99,6 +99,34 @@ func (s *Service) GetCurrentUser(ctx context.Context, userID int) (*user.User, e
 	return u, nil
 }
 
+// ChangePassword aendert das Passwort eines authentifizierten Benutzers.
+func (s *Service) ChangePassword(ctx context.Context, userID int, currentPassword, newPassword string) error {
+	if currentPassword == "" || newPassword == "" {
+		return errors.Join(common.ErrValidation, errors.New("current and new password required"))
+	}
+	if len(newPassword) < 8 {
+		return errors.Join(common.ErrValidation, errors.New("new password must be at least 8 characters"))
+	}
+
+	u, err := s.users.GetByID(ctx, userID)
+	if err != nil {
+		return common.ErrNotFound
+	}
+
+	// Aktuelles Passwort verifizieren
+	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(currentPassword)); err != nil {
+		return errors.Join(common.ErrUnauthorized, errors.New("current password is incorrect"))
+	}
+
+	// Neues Passwort hashen
+	hash, err := HashPassword(newPassword)
+	if err != nil {
+		return errors.Join(common.ErrInternal, err)
+	}
+
+	return s.users.UpdatePassword(ctx, userID, hash)
+}
+
 // HashPassword erstellt einen bcrypt-Hash eines Passworts.
 func HashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

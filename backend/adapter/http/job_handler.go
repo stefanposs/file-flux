@@ -167,7 +167,7 @@ func (h *JobHandler) DeleteJob(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "failed to delete job")
 		return
 	}
-	respondJSON(w, http.StatusNoContent, nil)
+	respondNoContent(w)
 }
 
 // RunJob startet die Ausfuehrung eines Jobs.

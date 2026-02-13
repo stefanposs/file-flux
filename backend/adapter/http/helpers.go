@@ -21,6 +21,11 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	}
 }
 
+// respondNoContent sendet eine 204-Antwort ohne Body (HTTP-konform).
+func respondNoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // ErrorResponse ist das standardisierte Fehler-Format fuer die API.
 type ErrorResponse struct {
 	Error   string `json:"error"`

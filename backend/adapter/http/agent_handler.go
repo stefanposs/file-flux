@@ -124,7 +124,7 @@ func (h *AgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "failed to delete agent")
 		return
 	}
-	respondJSON(w, http.StatusNoContent, nil)
+	respondNoContent(w)
 }
 
 // TestConnection prueft die WebSocket-Verbindung eines Agenten.

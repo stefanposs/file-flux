@@ -76,5 +76,5 @@ func (h *TokenHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "failed to revoke token")
 		return
 	}
-	respondJSON(w, http.StatusNoContent, nil)
+	respondNoContent(w)
 }

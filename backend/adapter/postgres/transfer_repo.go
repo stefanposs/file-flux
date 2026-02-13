@@ -28,7 +28,7 @@ func (r *TransferRepo) ListByUser(ctx context.Context, userID int) ([]transfer.T
 		       t.start_time, t.end_time, t.error, t.created_at
 		FROM transfers t
 		LEFT JOIN jobs j ON t.job_id = j.id
-		WHERE j.user_id = $1 OR t.job_id IS NULL
+		WHERE j.user_id = $1
 		ORDER BY t.created_at DESC
 	`, userID)
 	if err != nil {

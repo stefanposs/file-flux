@@ -5,7 +5,6 @@ import {
   getDemoJobs,
   getDemoTransfers,
   getDemoAgents,
-  getDemoTokens,
   getTransferStats
 } from '../../demo-mode';
 import { api } from '../../services/api-service';
@@ -440,6 +439,39 @@ export class Dashboard extends LitElement {
             lastRun: j.last_run || j.lastRun,
             nextRun: j.next_run || j.nextRun,
           }));
+
+          // Detaillierte Stats aus realen Daten berechnen
+          const now = new Date();
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const weekStart = new Date(todayStart);
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+          const totalToday = transfers.filter((t: any) => new Date(t.start_time || t.created_at) >= todayStart).length;
+          const totalThisWeek = transfers.filter((t: any) => new Date(t.start_time || t.created_at) >= weekStart).length;
+          const totalThisMonth = transfers.filter((t: any) => new Date(t.start_time || t.created_at) >= monthStart).length;
+          const totalTransfers = transfers.length;
+          const successRate = totalTransfers > 0 ? Math.round((completedTransfers / totalTransfers) * 100) : 0;
+          const totalBytes = transfers.filter((t: any) => t.status === 'completed').reduce((s: number, t: any) => s + (t.size || 0), 0);
+
+          const formatBytes = (b: number) => {
+            if (b < 1024) return b + ' B';
+            if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+            if (b < 1024 * 1024 * 1024) return (b / (1024 * 1024)).toFixed(1) + ' MB';
+            return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+          };
+
+          this.detailedStats = {
+            totalToday,
+            totalThisWeek,
+            totalThisMonth,
+            successRate,
+            totalDataTransferred: formatBytes(totalBytes),
+            averageTransferSpeed: '–',
+            peakTransferSpeed: '–',
+            pendingTransfers: pendingTransfers.length,
+          };
+
           return;
         } catch (apiErr) {
           console.warn('API load failed, falling back to demo', apiErr);

@@ -118,3 +118,39 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		Role:  string(u.Role),
 	})
 }
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+// ChangePassword aendert das Passwort des aktuell angemeldeten Benutzers.
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	var req changePasswordRequest
+	if err := decodeJSON(r, &req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	err := h.service.ChangePassword(r.Context(), userID, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		if errors.Is(err, common.ErrUnauthorized) {
+			respondError(w, http.StatusUnauthorized, "current password is incorrect")
+			return
+		}
+		if errors.Is(err, common.ErrValidation) {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "password changed successfully"})
+}
