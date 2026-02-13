@@ -21,7 +21,7 @@ graph TB
         BE[Backend<br/>Go + gorilla/mux]
         DB[(PostgreSQL)]
         BE -->|SQL| DB
-        FE -->|REST + SSE| BE
+        FE -->|REST| BE
     end
 
     A1 -->|WebSocket| BE
@@ -37,17 +37,18 @@ graph TB
 |-----------|-----------|----------------|
 | **Backend** | Go, gorilla/mux | API server, WebSocket hub, job scheduling, transfer coordination |
 | **Frontend** | Lit, TypeScript, Vite | Web UI for management and monitoring |
-| **Agent** | Go, Cobra CLI | Endpoint process for file operations |
-| **Database** | PostgreSQL 14+ | Persistent storage for all state |
+| **Agent** | Go, flag (stdlib) | Endpoint process for file operations |
+| **Database** | PostgreSQL 16 | Persistent storage for all state |
 
 ## Communication Patterns
 
 | Path | Protocol | Purpose |
 |------|----------|---------|
 | Frontend → Backend | REST (HTTP/1.1) | CRUD operations, authentication |
-| Backend → Frontend | SSE | Real-time transfer updates, agent status |
+| Backend → Frontend | REST (Polling) | Transfer updates, agent status |
 | Agent → Backend | WebSocket | Command & control, heartbeat |
-| Agent ↔ Backend | WebSocket (binary) | File chunk transfer |
+| Agent ↔ Backend | WebSocket (binary) | File chunk transfer (zstd/LZ4 compressed) |
+| Agent → Backend | HTTP Long-Polling | Fallback transport for restricted networks |
 
 ## Data Flow: File Transfer
 
@@ -60,17 +61,17 @@ sequenceDiagram
     participant DestAgent
 
     User->>Frontend: Click "Run Job"
-    Frontend->>Backend: POST /api/v1/jobs/:id/run
+    Frontend->>Backend: POST /api/jobs/:id/run
     Backend->>Backend: Create transfer records
-    Backend->>SourceAgent: WS: TRANSFER_START
+    Backend->>SourceAgent: WS: transfer_request
     SourceAgent->>SourceAgent: Read file, split chunks
     loop For each chunk
-        SourceAgent->>Backend: WS: CHUNK_DATA (binary)
-        Backend->>DestAgent: WS: CHUNK_DATA (binary)
-        DestAgent->>Backend: WS: CHUNK_ACK
+        SourceAgent->>Backend: WS: binary frame (57-byte header + compressed data)
+        Backend->>DestAgent: WS: binary frame
+        DestAgent->>Backend: WS: chunk_ack
     end
-    DestAgent->>Backend: WS: TRANSFER_COMPLETE + checksum
-    Backend->>Frontend: SSE: transfer.completed
+    DestAgent->>Backend: WS: transfer_complete + SHA-256
+    Backend->>Frontend: Transfer status available via REST
     Frontend->>User: Show success ✅
 ```
 

@@ -32,10 +32,12 @@ Move files between N-to-M endpoints with real-time monitoring, scheduling, and f
 | **Chunked Transfers** | Files are split into chunks for reliable, resumable transfers — even over unstable connections. |
 | **Push & Pull** | Initiate transfers in either direction between any agents. N-to-M topology. |
 | **Cron Scheduling** | Schedule transfers with cron expressions. Flexible recurrence, retry logic, and timeout handling. |
-| **Real-Time Monitoring** | Live dashboard with transfer progress via Server-Sent Events. |
+| **Real-Time Monitoring** | Live dashboard with transfer progress via WebSocket events and polling. |
 | **Multi-Platform Agent** | Lightweight Go agent for Linux, macOS, and Windows. Single binary, zero dependencies. |
 | **Audit Trail** | Complete transfer history with timestamps, checksums, and user attribution. |
 | **WebSocket Control** | Real-time agent communication via persistent WebSocket connections. |
+| **Compression** | Built-in zstd and LZ4 compression for efficient data transfer. |
+| **Polling Fallback** | HTTP Long-Polling transport for restricted network environments. |
 | **REST API** | Full REST API for automation and integration. Every resource is programmable. |
 
 ## Architecture at a Glance
@@ -45,15 +47,15 @@ graph LR
     A[Agent A] -->|WebSocket| B[FileFlux Backend]
     C[Agent B] -->|WebSocket| B
     D[Agent C] -->|WebSocket| B
-    B -->|REST / SSE| E[Frontend Dashboard]
+    B -->|REST| E[Frontend Dashboard]
     B -->|SQL| F[(PostgreSQL)]
 ```
 
 | Component | Technology |
 |-----------|-----------|
-| **Backend** | Go 1.22 · Clean Architecture · gorilla/mux · gorilla/websocket |
+| **Backend** | Go 1.23 · Clean Architecture · gorilla/mux · gorilla/websocket |
 | **Frontend** | Lit 2.6 · TypeScript · Vite 6 |
-| **Agent** | Go 1.21 · Single Binary · Multi-Platform |
+| **Agent** | Go 1.23 · Single Binary · Multi-Platform |
 | **Database** | PostgreSQL 16 |
 | **Deployment** | Docker Compose · Traefik · Let's Encrypt |
 

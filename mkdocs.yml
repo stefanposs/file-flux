@@ -19,7 +19,7 @@ repo_name: stefanposs/file-flux
 repo_url: https://github.com/stefanposs/file-flux
 edit_uri: edit/main/assets/mkdocs/
 
-copyright: '&copy; 2024–2025 FileFlux'
+copyright: '&copy; 2024–2026 FileFlux'
 
 docs_dir: assets/mkdocs
 site_dir: docs

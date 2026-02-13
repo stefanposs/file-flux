@@ -12,7 +12,7 @@ git clone https://github.com/YOUR_USERNAME/file-flux.git
 cd file-flux
 
 # 2. Install prerequisites
-# Go 1.22+, Node.js 20+, just, Docker
+# Go 1.23+, Node.js 20+, just, Docker
 brew install go node just docker
 
 # 3. Setup

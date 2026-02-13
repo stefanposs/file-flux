@@ -8,15 +8,16 @@ The WebSocket protocol defines communication between agents and the backend.
 
 ## Connection
 
-Agents connect to `ws(s)://host:3002/ws` with a token in the query string:
+Agents connect to the WebSocket server on port 3002. Authentication is via HTTP `Authorization` header during the WebSocket upgrade:
 
 ```
-wss://fileflux.example.com:3002/ws?token=YOUR_AGENT_TOKEN
+GET ws(s)://host:3002/ws/agent
+Authorization: Bearer YOUR_AGENT_TOKEN
 ```
 
 ## Message Format
 
-All control messages use JSON:
+All control messages use JSON text frames:
 
 ```json
 {
@@ -26,16 +27,19 @@ All control messages use JSON:
 }
 ```
 
-File chunks use binary WebSocket frames with a 24-byte header:
+File chunks use binary WebSocket frames with a **57-byte header**:
 
 | Offset | Size | Field |
 |--------|------|-------|
-| 0 | 8 bytes | Transfer ID (uint64, big-endian) |
+| 0 | 4 bytes | Magic (`0x46465846` = "FFXF") |
+| 4 | 4 bytes | Transfer ID (uint32, big-endian) |
 | 8 | 4 bytes | Chunk index (uint32, big-endian) |
-| 12 | 4 bytes | Chunk size (uint32, big-endian) |
-| 16 | 4 bytes | Total chunks (uint32, big-endian) |
-| 20 | 4 bytes | Reserved |
-| 24+ | variable | Chunk data |
+| 12 | 4 bytes | Total chunks (uint32, big-endian) |
+| 16 | 32 bytes | Chunk SHA-256 hash (raw bytes) |
+| 48 | 4 bytes | Uncompressed size (uint32, big-endian) |
+| 52 | 4 bytes | Compressed size (uint32, big-endian) |
+| 56 | 1 byte | Compression type (0=none, 1=zstd, 2=LZ4) |
+| 57+ | variable | Compressed chunk data |
 
 ## Message Types
 
@@ -43,35 +47,38 @@ File chunks use binary WebSocket frames with a 24-byte header:
 
 | Type | Description | Payload |
 |------|-------------|---------|
-| `AUTH` | Authentication | `{ token: string }` |
-| `HEARTBEAT` | Keep-alive ping | `{ uptime: number }` |
-| `SYSTEM_INFO` | System metrics | `{ hostname, os, arch, cpu, memory, disk }` |
-| `CHUNK_ACK` | Chunk received | `{ transfer_id, chunk_index }` |
-| `TRANSFER_COMPLETE` | Transfer finished | `{ transfer_id, checksum }` |
-| `TRANSFER_ERROR` | Transfer failed | `{ transfer_id, error }` |
+| `heartbeat` | Keep-alive ping | `{ uptime: number }` |
+| `agent_info` | System metrics | `{ hostname, os, arch, ip, version }` |
+| `transfer_progress` | Progress update | `{ transfer_id, progress, bytes_sent, total_bytes }` |
+| `transfer_complete` | Transfer finished | `{ transfer_id, file_hash }` |
+| `transfer_error` | Transfer failed | `{ transfer_id, error }` |
+| `chunk_ack` | Chunk received OK | `{ transfer_id, chunk_index }` |
+| `chunk_nack` | Chunk failed | `{ transfer_id, chunk_index, error }` |
 
 ### Backend → Agent
 
 | Type | Description | Payload |
 |------|-------------|---------|
-| `AUTH_OK` | Auth successful | `{ agent_id }` |
-| `AUTH_FAIL` | Auth failed | `{ reason }` |
-| `TRANSFER_START` | Begin transfer | `{ transfer_id, job_id, filename, size, dest_path }` |
-| `TRANSFER_CANCEL` | Abort transfer | `{ transfer_id }` |
-| `HEARTBEAT_ACK` | Pong | `{}` |
+| `transfer_request` | Begin transfer | `{ id, job_id, filename, size, source_path, destination_path, protocol, compression }` |
+| `cancel_transfer` | Abort transfer | `{ transfer_id }` |
+| `transfer_resume` | Resume transfer | `{ transfer_id, from_chunk }` |
+| `chunk_request` | Request chunk | `{ transfer_id, chunk_index }` |
+| `connection_test` | Connectivity test | `{}` |
+
+!!! note "Keine AUTH-Nachrichten"
+    Die Authentifizierung erfolgt beim WebSocket-Upgrade über den HTTP `Authorization: Bearer` Header — nicht als separate WebSocket-Nachricht.
 
 ## Heartbeat
 
-Agents send `HEARTBEAT` every 30 seconds. If the backend receives no heartbeat for 90 seconds, the agent is marked as offline.
+Agents senden `heartbeat` alle **60 Sekunden** (konfigurierbar über `connection.heartbeat_interval`). Wenn der Backend für ~60 Sekunden keinen Heartbeat oder Pong empfängt, wird der Agent als offline markiert.
 
 ## Reconnection
 
-On connection loss, agents use exponential backoff:
+Bei Verbindungsverlust nutzt der Agent exponentielles Backoff mit Jitter:
 
-| Attempt | Delay |
-|---------|-------|
-| 1 | 1s |
-| 2 | 2s |
-| 3 | 4s |
-| 4 | 8s |
-| 5+ | 30s (max) |
+| Parameter | Wert |
+|-----------|------|
+| Basis-Delay | 10 Sekunden (konfigurierbar) |
+| Maximales Backoff | 5 Minuten |
+| Strategie | Exponentiell mit Jitter |
+| Max. Versuche | 5 (konfigurierbar, 0 = unbegrenzt) |

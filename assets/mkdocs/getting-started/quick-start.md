@@ -38,9 +38,11 @@ Navigate to **Tokens** and create a new agent registration token:
 In a new terminal:
 
 ```bash
-# Start a local agent
+# Edit agent config with your token
 cd agent
-go run ./cmd/agent --token YOUR_TOKEN_HERE
+# Set connection.token in config.yaml to YOUR_TOKEN_HERE
+# Start the agent
+go run ./cmd/agent -config config.yaml
 ```
 
 The agent appears in the **Agents** dashboard within seconds.

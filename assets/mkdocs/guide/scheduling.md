@@ -39,7 +39,7 @@ When creating or editing a job:
 
 ## Timezone
 
-All schedules run in the backend server's timezone (default: UTC). Configure via `SERVER_TIMEZONE` environment variable.
+All schedules run in the backend server's timezone (default: UTC).
 
 ## Manual Override
 

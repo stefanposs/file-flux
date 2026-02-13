@@ -22,7 +22,7 @@ sequenceDiagram
     B->>DB: User laden + bcrypt verify
     DB-->>B: User-Objekt
     B-->>U: {token: "eyJ...", user: {...}}
-    U->>B: GET /api/v1/jobs (Authorization: Bearer eyJ...)
+    U->>B: GET /api/jobs (Authorization: Bearer eyJ...)
     B->>B: JWT validieren + UserID extrahieren
     B-->>U: Jobs des Benutzers
 ```

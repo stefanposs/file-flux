@@ -18,7 +18,6 @@ weight: 2
 services:
   db:
     image: postgres:16-alpine
-    ports: ["5432:5432"]
     volumes: [postgres-data:/var/lib/postgresql/data]
 
   backend:
@@ -58,7 +57,7 @@ docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
 | Volume | Purpose |
 |--------|---------|
 | `postgres-data` | Database persistence |
-| `agent-data` | Agent working directory |
+| `file-storage` | File transfer storage |
 
 ## Networking
 
@@ -67,4 +66,6 @@ All services communicate on internal Docker network. Only exposed ports:
 - `3000` — Frontend (HTTP)
 - `3001` — Backend REST API
 - `3002` — Backend WebSocket
-- `5432` — PostgreSQL (disable in production)
+
+!!! warning "Datenbank nicht exponieren"
+    PostgreSQL sollte in Produktion **nicht** nach außen erreichbar sein. Port 5432 wird nur im Docker-Netzwerk bereitgestellt.

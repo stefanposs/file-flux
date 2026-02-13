@@ -36,7 +36,7 @@ just test-backend-cov
 ### Unit Tests
 
 ```bash
-cd backend && go test ./internal/... -race -cover
+cd backend && go test ./... -race -cover
 ```
 
 Mock external dependencies using interfaces:
@@ -57,7 +57,7 @@ func (m *mockAgentRepo) FindByID(ctx context.Context, id int64) (*domain.Agent, 
 
 ### Integration Tests
 
-Use `testcontainers-go` for PostgreSQL:
+Integration-Tests mit `testcontainers-go` sind geplant:
 
 ```go
 func TestJobRepository(t *testing.T) {
@@ -79,7 +79,7 @@ cd frontend && npx vitest run
 
 ```typescript
 import { fixture, html, expect } from '@open-wc/testing';
-import '../src/features/jobs/job-list';
+import '../src/components/jobs/job-list';
 
 it('renders job list', async () => {
   const el = await fixture(html`<ff-job-list></ff-job-list>`);

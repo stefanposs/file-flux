@@ -25,7 +25,8 @@ stateDiagram-v2
 3. Install and start the agent with the token
 
 ```bash
-fileflux-agent --token YOUR_TOKEN --server wss://your-server:3002/ws
+# Edit config.yaml and set connection.token, then start:
+fileflux-agent -config /path/to/config.yaml
 ```
 
 ## Agent Details

@@ -46,16 +46,6 @@ server {
         proxy_set_header Connection "upgrade";
         proxy_read_timeout 86400;
     }
-
-    # SSE
-    location /api/v1/events {
-        proxy_pass http://localhost:3001;
-        proxy_set_header Connection '';
-        proxy_http_version 1.1;
-        chunked_transfer_encoding off;
-        proxy_buffering off;
-        proxy_cache off;
-    }
 }
 ```
 

@@ -10,13 +10,15 @@ FileFlux provides built-in monitoring and observability through metrics, logs, a
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /health` | Backend readiness check |
-| `GET /health/live` | Liveness probe (for Kubernetes) |
-| `GET /health/ready` | Readiness probe (DB + WebSocket) |
+| `GET /health` | Backend readiness check (DB connectivity) |
+
+!!! note "Kubernetes Probes"
+    Dedizierte Liveness- (`/health/live`) und Readiness-Probes (`/health/ready`) sind für eine zukünftige Version geplant.
 
 ## Prometheus Metrics
 
-FileFlux exposes metrics at `/metrics` in Prometheus format:
+!!! info "Geplant"
+    Prometheus-Metriken unter `/metrics` sind für eine zukünftige Version geplant. Die folgenden Metriken sind vorgesehen:
 
 | Metric | Type | Description |
 |--------|------|-------------|
@@ -39,20 +41,10 @@ A pre-built Grafana dashboard is available at `monitoring/grafana/dashboards/`. 
 
 ## Structured Logging
 
-FileFlux uses `log/slog` for structured JSON logging:
+FileFlux uses the Go standard `log` package for logging. Migration to `log/slog` for structured JSON logging is planned (see ADR-009).
 
-```json
-{
-  "time": "2024-01-15T10:30:00Z",
-  "level": "INFO",
-  "msg": "transfer completed",
-  "transfer_id": "abc-123",
-  "job_id": 42,
-  "file": "report.csv",
-  "size": 1048576,
-  "duration_ms": 2340,
-  "checksum": "sha256:a1b2c3..."
-}
+```
+2024/01/15 10:30:00 [Transfer] Transfer abc-123 completed: report.csv (1048576 bytes, 2340ms)
 ```
 
 Configure log level via `LOG_LEVEL` environment variable (`debug`, `info`, `warn`, `error`).

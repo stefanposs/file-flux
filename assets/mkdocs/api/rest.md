@@ -4,7 +4,7 @@ weight: 1
 ---
 # REST API Endpoints
 
-Base URL: `http://localhost:3001/api/v1`
+Base URL: `http://localhost:3001/api`
 
 Alle Endpoints (außer `/auth/login`, `/health` und `/api/info`) erfordern `Authorization: Bearer <jwt-token>`.
 
@@ -198,20 +198,39 @@ Health-Check (keine Authentifizierung). Prüft Datenbank-Konnektivität.
 
 **Response (healthy):**
 ```json
-{ "status": "healthy", "database": "connected" }
+{ "status": "ok", "version": "1.0.0", "components": { "database": "ok", "api": "ok" } }
 ```
 
 **Response (unhealthy, HTTP 503):**
 ```json
-{ "status": "unhealthy", "database": "disconnected", "error": "..." }
+{ "status": "degraded", "version": "1.0.0", "components": { "database": "error", "api": "ok" } }
 ```
 
 ### GET /api/info
 API-Informationen.
 
 ```json
-{ "name": "FileFlux API", "version": "1.0.0" }
+{ "name": "FileFlux API", "version": "1.0.0", "docs": "/api/docs" }
 ```
+
+---
+
+## Agent Long-Polling (Fallback)
+
+Diese Endpoints werden vom Agent als Fallback-Transport genutzt, wenn keine WebSocket-Verbindung möglich ist.
+Authentifizierung erfolgt per `Authorization: Bearer <agent-token>`.
+
+### POST /api/agent/connect
+:material-key: Agent-Registrierung über Polling-Transport.
+
+### GET /api/agent/poll
+:material-key: Long-Polling — wartet auf neue Nachrichten vom Server.
+
+### POST /api/agent/messages
+:material-key: Agent sendet Nachrichten (Heartbeat, Transfer-Status) an den Server.
+
+### POST /api/agent/ack
+:material-key: Agent bestätigt den Empfang einer Nachricht.
 
 ---
 

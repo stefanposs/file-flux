@@ -29,9 +29,17 @@ backend/
 │   ├── http/                   # REST handlers (router, handlers, helpers)
 │   ├── jwt/                    # JWT token generation adapter
 │   └── postgres/               # PostgreSQL repository implementations
-├── internal/                   # Infrastructure (being migrated)
+├── internal/                   # Infrastructure
 │   ├── config/                 # YAML + env configuration
 │   ├── db/                     # Schema migration, SQL
+│   ├── dispatch/               # Hybrid WS + polling agent dispatcher
+│   ├── engine/                 # Chunked transfer engine
+│   │   ├── chunker/            # File splitting / reassembly
+│   │   ├── compress/           # Compression (zstd, LZ4, none)
+│   │   ├── hasher/             # SHA-256 integrity hashing
+│   │   ├── protocol/           # Binary WebSocket frame codec
+│   │   ├── relay/              # Disk-based chunk relay storage
+│   │   └── state/              # In-memory transfer state tracker
 │   ├── middleware/             # Auth, rate limiting, CORS, logging
 │   └── websocket/              # WebSocket manager (agent connections)
 └── go.mod
@@ -59,13 +67,15 @@ Dependencies point **inward** — outer layers depend on inner layers, never the
 ```go
 // domain/agent/entity.go
 type Repository interface {
-    ListByUser(ctx context.Context, userID int) ([]Agent, error)
+    List(ctx context.Context) ([]Agent, error)
     GetByID(ctx context.Context, id int) (*Agent, error)
     Create(ctx context.Context, agent *Agent) error
     Update(ctx context.Context, agent *Agent) error
-    Delete(ctx context.Context, id int) error
+    UpdateInfo(ctx context.Context, id int, system, ipAddress, version string) error
     UpdateStatus(ctx context.Context, id int, status string) error
-    UpdateInfo(ctx context.Context, id int, system, ip, version string) error
+    UpdateTransportMode(ctx context.Context, id int, mode string) error
+    UpdateLastPoll(ctx context.Context, id int) error
+    Delete(ctx context.Context, id int) error
 }
 
 // domain/job/entity.go
@@ -87,6 +97,17 @@ type Repository interface {
     Create(ctx context.Context, transfer *Transfer) error
     UpdateStatus(ctx context.Context, id int, status Status, errorMsg string) error
     UpdateProgress(ctx context.Context, id int, progress float64) error
+    UpdateChunkProgress(ctx context.Context, id int, completedChunks int, bytesTransferred int64) error
+    UpdateFileHash(ctx context.Context, id int, hash string) error
+}
+
+// domain/transfer/entity.go — Phase 2
+type ChunkRepository interface {
+    CreateChunks(ctx context.Context, transferID int, totalChunks int) error
+    MarkChunkReceived(ctx context.Context, transferID int, chunkIndex int, hash string, compressedSize, originalSize int) error
+    GetChunkStatus(ctx context.Context, transferID int) ([]ChunkStatus, error)
+    GetPendingChunks(ctx context.Context, transferID int) ([]int, error)
+    GetCompletedCount(ctx context.Context, transferID int) (int, error)
 }
 ```
 
@@ -101,6 +122,8 @@ type Repository interface {
 | Scheduling | robfig/cron/v3 | Job scheduling |
 | Config | gopkg.in/yaml.v2 | YAML configuration |
 | Password Hashing | golang.org/x/crypto/bcrypt | Secure password storage |
+| Compression (zstd) | klauspost/compress | Fast zstd compression for chunk transfer |
+| Compression (LZ4) | pierrec/lz4/v4 | Ultra-fast LZ4 compression alternative |
 
 ## ADRs
 

@@ -54,7 +54,7 @@ chmod +x fileflux-agent-linux-amd64
 mv fileflux-agent-linux-amd64 /usr/local/bin/fileflux-agent
 
 # Configure
-fileflux-agent init --server https://your-fileflux-server:3002
+fileflux-agent -config /path/to/config.yaml
 ```
 
 ### Windows
@@ -67,14 +67,13 @@ irm https://github.com/stefanposs/file-flux/releases/latest/download/install.ps1
 ### Verify Installation
 
 ```bash
-fileflux-agent version
-fileflux-agent status
+fileflux-agent -version
 ```
 
 ## Build from Source
 
 ```bash
-# Prerequisites: Go 1.22+, Node.js 20+, just
+# Prerequisites: Go 1.23+, Node.js 20+, just
 just setup
 just build
 ```

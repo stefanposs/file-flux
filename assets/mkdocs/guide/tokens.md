@@ -10,7 +10,9 @@ Tokens are used to authenticate agents with the FileFlux backend.
 | Type | Purpose | Expiry |
 |------|---------|--------|
 | Agent Token | Authenticate agent connections | Configurable |
-| API Token | Authenticate REST API calls | Configurable |
+
+!!! note "User-Authentifizierung"
+    User authentifizieren sich per JWT-Token über `POST /auth/login`, nicht über Agent-Tokens.
 
 ## Creating Tokens
 
@@ -20,7 +22,8 @@ Tokens are used to authenticate agents with the FileFlux backend.
 4. Copy the token — **it is shown only once**
 
 !!! warning "Token Security"
-    Tokens are hashed before storage. The plaintext token cannot be retrieved after creation. Store it securely.
+    The plaintext token is shown only once at creation time. Store it securely.
+    Tokens are currently stored as plain text in the database (`tokens.token_value`).
 
 ## Token States
 

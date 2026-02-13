@@ -40,13 +40,23 @@ Each transfer tracks:
 
 ## Chunked Transfer
 
-Files are split into chunks (default 1 MB) for reliable transfer:
+Files are split into chunks (default 8 MB) for reliable transfer:
 
 1. Source agent reads a chunk from disk
-2. Chunk is sent as a binary WebSocket frame to the backend
-3. Backend relays the chunk to the destination agent
-4. Destination agent writes the chunk to disk
-5. After all chunks, both sides verify the SHA-256 checksum
+2. Chunk is compressed (zstd or LZ4)
+3. SHA-256 hash is computed per chunk
+4. Chunk is sent as a binary WebSocket frame (57-byte header + compressed data)
+5. Backend relays the chunk to the destination agent
+6. Destination agent verifies the hash, decompresses, and writes to disk
+7. After all chunks, the full file SHA-256 is verified
+
+### Compression
+
+| Algorithm | Beschreibung |
+|-----------|-------------|
+| zstd | Standard — gute Balance aus Geschwindigkeit und Kompressionsrate |
+| LZ4 | Ultra-schnell — ideal für LAN-Transfers mit geringer Latenz |
+| none | Keine Kompression — für bereits komprimierte Dateien |
 
 ## Retry Behavior
 

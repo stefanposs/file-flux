@@ -13,10 +13,10 @@ weight: 4
 | ADR-003 | [Backend relay for file chunks](#adr-003) | Accepted | 2024-01 |
 | ADR-004 | [Binary WebSocket frames](#adr-004) | Accepted | 2024-01 |
 | ADR-005 | [SHA-256 checksums](#adr-005) | Accepted | 2024-01 |
-| ADR-006 | [SSE for frontend updates](#adr-006) | Accepted | 2024-01 |
+| ADR-006 | [Polling + Event Bus for frontend updates](#adr-006) | Accepted | 2024-01 |
 | ADR-007 | [Keep Lit Web Components](#adr-007) | Accepted | 2024-01 |
-| ADR-008 | [golang-migrate for migrations](#adr-008) | Accepted | 2024-01 |
-| ADR-009 | [log/slog for logging](#adr-009) | Accepted | 2024-01 |
+| ADR-008 | [Schema SQL with auto-migration](#adr-008) | Accepted | 2024-01 |
+| ADR-009 | [log/slog for logging](#adr-009) | Accepted (not yet implemented) | 2024-01 |
 | ADR-010 | [robfig/cron for scheduling](#adr-010) | Accepted | 2024-01 |
 
 ---
@@ -75,13 +75,13 @@ weight: 4
 
 ---
 
-## ADR-006: SSE for frontend updates {#adr-006}
+## ADR-006: Polling + Event Bus for frontend updates {#adr-006}
 
 **Context:** How to push real-time updates to the web frontend?
 
-**Decision:** Server-Sent Events (SSE) over HTTP/1.1.
+**Decision:** REST API polling combined with an in-app event bus (`event-bus.ts`).
 
-**Rationale:** Simpler than WebSocket for unidirectional updates, works through proxies, auto-reconnects.
+**Rationale:** Simple, works through all proxies, no additional connection management. SSE was considered but not implemented due to limited browser `EventSource` API (no custom headers for auth).
 
 ---
 
@@ -95,13 +95,13 @@ weight: 4
 
 ---
 
-## ADR-008: golang-migrate for migrations {#adr-008}
+## ADR-008: Schema SQL with auto-migration {#adr-008}
 
 **Context:** How to manage database schema changes?
 
-**Decision:** Use `golang-migrate` with SQL files.
+**Decision:** Single `schema.sql` file in `backend/internal/db/` with idempotent DDL (`IF NOT EXISTS`). Applied automatically on startup via `pgDB.Migrate()`. `golang-migrate` CLI is available in Docker for optional manual migrations.
 
-**Rationale:** Lightweight, supports PostgreSQL, CLI for manual operations, embeddable in Go binary.
+**Rationale:** Simple for single-instance deployment. The full schema is always visible in one file.
 
 ---
 
