@@ -194,8 +194,8 @@ export class Dashboard extends LitElement {
     }
     
     .status-pending {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
+      background-color: rgba(217, 119, 6, 0.1);
+      color: #92400e;
     }
     
     .error-container {
@@ -260,6 +260,51 @@ export class Dashboard extends LitElement {
     .job-next-run {
       font-size: 14px;
       color: #6c757d;
+    }
+    
+    .detailed-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .detailed-stats-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    
+    .detailed-stats-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #122e53;
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    
+    .detailed-stats-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .detailed-stats-item:last-child {
+      border-bottom: none;
+    }
+    
+    .detailed-stats-label {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    
+    .detailed-stats-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #122e53;
     }
     
     @media (max-width: 768px) {
@@ -542,19 +587,35 @@ export class Dashboard extends LitElement {
   }
 
   _navigateToTransfers() {
-    window.location.href = '/transfers';
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: '/transfers' },
+      bubbles: true,
+      composed: true
+    }));
   }
 
-  _navigateToTransfer(id) {
-    window.location.href = `/transfers/${id}`;
+  _navigateToTransfer(id: string) {
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/transfers/${id}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _navigateToJobs() {
-    window.location.href = '/jobs';
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: '/jobs' },
+      bubbles: true,
+      composed: true
+    }));
   }
 
-  _navigateToJob(id) {
-    window.location.href = `/jobs/${id}`;
+  _navigateToJob(id: string) {
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/jobs/${id}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _refreshData() {

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoTransfers, getDemoJobs, getDemoAgents } from '../../demo-mode';
+import { showToast } from '../shared/toast';
 
 @customElement('ff-transfer-detail')
 export class TransferDetail extends LitElement {
@@ -169,8 +170,8 @@ export class TransferDetail extends LitElement {
     }
     
     .status-pending {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
+      background-color: rgba(217, 119, 6, 0.1);
+      color: #92400e;
     }
     
     .transfer-link {
@@ -507,20 +508,32 @@ export class TransferDetail extends LitElement {
   }
 
   _navigateBack() {
-    window.location.href = '/transfers';
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: '/transfers' },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _navigateToJob(jobId) {
-    window.location.href = `/jobs/${jobId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/jobs/${jobId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _navigateToAgent(agentId) {
-    window.location.href = `/agents/${agentId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/agents/${agentId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _cancelTransfer() {
     if (confirm('Möchten Sie diesen Transfer wirklich abbrechen?')) {
-      alert('Transfer wurde abgebrochen.');
+      showToast('Transfer wurde abgebrochen.', 'warning');
       // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
       clearInterval(this._progressInterval);
       this.transfer = { ...this.transfer, status: 'failed' };
@@ -531,7 +544,7 @@ export class TransferDetail extends LitElement {
 
   _retryTransfer() {
     if (confirm('Möchten Sie diesen Transfer wiederholen?')) {
-      alert('Transfer wird wiederholt.');
+      showToast('Transfer wird wiederholt.', 'info');
       // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
       // Aktualisiere den Status und setze den Fortschritt zurück
       this.transfer = { 

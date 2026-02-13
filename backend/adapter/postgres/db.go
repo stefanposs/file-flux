@@ -56,11 +56,25 @@ func (db *DB) Close() error {
 
 // Migrate fuehrt das Schema-SQL aus.
 func (db *DB) Migrate() error {
-	schemaPath := filepath.Join("internal", "db", "schema.sql")
-	schema, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return fmt.Errorf("schema read: %w", err)
+	// Try multiple paths: works both locally and inside Docker container
+	candidates := []string{
+		filepath.Join("internal", "db", "schema.sql"),
+		filepath.Join("migrations", "schema.sql"),
+		"schema.sql",
 	}
+
+	var schema []byte
+	var err error
+	for _, p := range candidates {
+		schema, err = os.ReadFile(p)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("schema read (tried %v): %w", candidates, err)
+	}
+
 	_, err = db.Pool.Exec(string(schema))
 	if err != nil {
 		return fmt.Errorf("schema exec: %w", err)

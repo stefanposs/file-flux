@@ -205,8 +205,8 @@ export class TransferList extends LitElement {
     }
     
     .status-pending {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
+      background-color: rgba(217, 119, 6, 0.1);
+      color: #92400e;
     }
     
     .pagination {
@@ -439,7 +439,11 @@ export class TransferList extends LitElement {
   }
 
   _navigateToTransfer(id) {
-    window.location.href = `/transfers/${id}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/transfers/${id}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _formatStatus(status) {

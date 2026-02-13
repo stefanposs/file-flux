@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoAgents } from '../../demo-mode';
+import { showToast } from '../shared/toast';
 
 @customElement('ff-agent-list')
 export class AgentList extends LitElement {
@@ -372,11 +373,15 @@ export class AgentList extends LitElement {
   }
 
   _navigateToAgent(agentId) {
-    window.location.href = `/agents/${agentId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/agents/${agentId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _showAgentInstallModal() {
-    alert('In einer vollständigen Implementierung würde hier ein Modal mit Installationsanweisungen erscheinen.');
+    showToast('Installationsanweisungen werden vorbereitet...', 'info');
   }
 
   render() {

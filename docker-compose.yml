@@ -51,7 +51,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-fileflux}
       - DB_NAME=${DB_NAME:-fileflux}
       - DB_SSLMODE=${DB_SSLMODE:-disable}
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
       - SERVER_PORT=3001
       - WEBSOCKET_PORT=3002
       - LOG_LEVEL=${LOG_LEVEL:-info}

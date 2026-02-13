@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoJobs, getDemoTransfers } from '../../demo-mode';
+import { showToast } from '../shared/toast';
 
 @customElement('ff-job-detail')
 export class JobDetail extends LitElement {
@@ -263,8 +264,8 @@ export class JobDetail extends LitElement {
     }
     
     .transfer-status-pending {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
+      background-color: rgba(217, 119, 6, 0.1);
+      color: #92400e;
     }
     
     .config-section {
@@ -627,11 +628,19 @@ export class JobDetail extends LitElement {
   }
 
   _navigateBack() {
-    window.location.href = '/jobs';
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: '/jobs' },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _editJob() {
-    window.location.href = `/jobs/edit/${this.jobId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/jobs/edit/${this.jobId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _showDeleteConfirm() {
@@ -644,23 +653,31 @@ export class JobDetail extends LitElement {
 
   _confirmDelete() {
     // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    alert(`Job "${this.job.name}" würde jetzt gelöscht werden.`);
+    showToast(`Job "${this.job?.name}" gelöscht.`, 'success');
     this.showConfirmDelete = false;
     this._navigateBack();
   }
 
   _navigateToTransfer(transferId) {
-    window.location.href = `/transfers/${transferId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/transfers/${transferId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _viewAllTransfers() {
-    window.location.href = `/transfers?jobId=${this.jobId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/transfers?jobId=${this.jobId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _runJob() {
     if (confirm(`Möchten Sie den Job "${this.job.name}" jetzt ausführen?`)) {
       // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      alert('Job würde jetzt ausgeführt werden.');
+      showToast('Job wird ausgeführt...', 'info');
     }
   }
 

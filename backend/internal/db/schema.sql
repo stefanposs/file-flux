@@ -75,7 +75,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM users WHERE role = 'admin') THEN
     INSERT INTO users (name, email, password_hash, role)
-    VALUES ('Admin', 'admin@fileflux.de', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin');
+    VALUES ('Admin', 'admin@fileflux.de', '$2a$10$pYCe9H.DBLyg77sT5d9PruqXEy8ZRlGIt7bGFWA9yHTwcLgGovzJC', 'admin');
   END IF;
 END $$; 
 

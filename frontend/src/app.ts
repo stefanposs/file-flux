@@ -9,6 +9,7 @@ import { isDemoMode, getDemoUser, getDemoTransfers, getDemoJobs, getDemoAgents, 
 
 // Komponenten importieren
 import './components/shared/header';
+import './components/shared/toast';
 import './components/dashboard/dashboard';
 import './components/jobs/job-list';
 import './components/jobs/job-detail';
@@ -74,6 +75,10 @@ export class FileFluxApp extends LitElement {
       --light-bg: #f8f9fa;
       --border-color: #e9ecef;
       height: 100vh;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
 
     .app-container {
@@ -258,6 +263,17 @@ export class FileFluxApp extends LitElement {
     
     // Event-Listener für Browser-Navigation
     window.addEventListener('popstate', () => this._handleRoute());
+    
+    // Event-Listener für SPA-Navigation aus Kindkomponenten
+    this.addEventListener('navigate', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const path = detail?.path || detail?.route;
+      if (path) {
+        // Support both /path and route-name formats
+        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+        this._navigate(normalizedPath);
+      }
+    });
     
     // Initialisiere Demo-Modus, wenn aktiviert
     if (this.isDemoMode) {
@@ -482,6 +498,7 @@ export class FileFluxApp extends LitElement {
     }
 
     return html`
+      <ff-toast-container></ff-toast-container>
       <div class="app-container">
         ${this.isDemoMode ? html`
           <div class="demo-mode-banner">

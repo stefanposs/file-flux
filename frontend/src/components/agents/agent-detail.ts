@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoAgents, getDemoTransfers, getDemoTokens } from '../../demo-mode';
+import { showToast } from '../shared/toast';
 
 @customElement('ff-agent-detail')
 export class AgentDetail extends LitElement {
@@ -250,8 +251,8 @@ export class AgentDetail extends LitElement {
     }
     
     .status-pending {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
+      background-color: rgba(217, 119, 6, 0.1);
+      color: #92400e;
     }
     
     .agent-type-badge {
@@ -747,7 +748,7 @@ transfers:
     
     try {
       await navigator.clipboard.writeText(config);
-      alert('Konfiguration in die Zwischenablage kopiert!');
+      showToast('Konfiguration in die Zwischenablage kopiert!', 'success');
     } catch (err) {
       console.error('Failed to copy config:', err);
       
@@ -761,10 +762,10 @@ transfers:
       
       try {
         document.execCommand('copy');
-        alert('Konfiguration in die Zwischenablage kopiert!');
+        showToast('Konfiguration in die Zwischenablage kopiert!', 'success');
       } catch (e) {
         console.error('Failed to copy using execCommand:', e);
-        alert('Konnte nicht in die Zwischenablage kopieren. Bitte kopieren Sie die Konfiguration manuell.');
+        showToast('Konnte nicht in die Zwischenablage kopieren.', 'error');
       }
       
       document.body.removeChild(textArea);
@@ -859,24 +860,36 @@ transfers:
   }
 
   _navigateBack() {
-    window.location.href = '/agents';
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: '/agents' },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _testConnection() {
-    alert(`Verbindung zum Agenten ${this.agent?.name} wird getestet...`);
+    showToast('Verbindungstest wird durchgeführt...', 'info');
     
     // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
     setTimeout(() => {
-      alert('Verbindungstest erfolgreich!');
+      showToast('Verbindungstest erfolgreich!', 'success');
     }, 1500);
   }
 
   _createToken() {
-    window.location.href = `/tokens?agent=${this.agentId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/tokens?agent=${this.agentId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _editAgent() {
-    window.location.href = `/agents/edit/${this.agentId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/agents/edit/${this.agentId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _showDeleteConfirm() {
@@ -889,7 +902,7 @@ transfers:
 
   _confirmDelete() {
     // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    alert(`Agent "${this.agent?.name}" würde jetzt gelöscht werden.`);
+    showToast(`Agent "${this.agent?.name}" gelöscht.`, 'success');
     this.showConfirmDelete = false;
     this._navigateBack();
   }
@@ -930,9 +943,9 @@ transfers:
         ...this.tokens.slice(tokenIndex + 1)
       ];
       
-      alert('Token erfolgreich erneuert!');
+      showToast('Token erfolgreich erneuert!', 'success');
     } catch (err) {
-      alert('Fehler beim Erneuern des Tokens: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Erneuern des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');
       console.error('Error renewing token:', err);
     }
   }
@@ -953,9 +966,9 @@ transfers:
       // Entferne das Token aus der Liste
       this.tokens = this.tokens.filter(token => token.id !== tokenId);
       
-      alert('Token erfolgreich widerrufen!');
+      showToast('Token erfolgreich widerrufen!', 'success');
     } catch (err) {
-      alert('Fehler beim Widerrufen des Tokens: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Widerrufen des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');
       console.error('Error revoking token:', err);
     }
   }

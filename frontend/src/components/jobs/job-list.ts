@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoJobs } from '../../demo-mode';
+import { showToast } from '../shared/toast';
 
 interface Job {
   id: string;
@@ -331,7 +332,7 @@ export class JobList extends LitElement {
     return html`
       <div class="header">
         <h1>Transfer-Jobs</h1>
-        <button class="add-job-button">+ Neuen Job erstellen</button>
+        <button class="add-job-button" @click=${this._openCreateJobModal}>+ Neuen Job erstellen</button>
       </div>
       
       <div class="filters">
@@ -509,7 +510,7 @@ export class JobList extends LitElement {
     const scheduleInput = form.querySelector('#job-schedule') as HTMLInputElement;
     
     if (!nameInput.value || !sourceInput.value || !destinationInput.value || !scheduleInput.value) {
-      alert('Bitte fülle alle erforderlichen Felder aus.');
+      showToast('Bitte fülle alle erforderlichen Felder aus.', 'warning');
       return;
     }
     
@@ -538,7 +539,7 @@ export class JobList extends LitElement {
     this._applyFilters();
     this._closeCreateJobModal();
     
-    alert('Job erfolgreich erstellt!');
+    showToast('Job erfolgreich erstellt!', 'success');
   }
 
   _calculateNextRun(cronExpression: string): string {
@@ -567,7 +568,7 @@ export class JobList extends LitElement {
       }
     } catch (err) {
       console.error('Error toggling job enabled state:', err);
-      alert('Fehler beim Aktualisieren des Jobs: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Aktualisieren des Jobs: ' + (err instanceof Error ? err.message : String(err)), 'error');
     }
   }
 
@@ -599,15 +600,19 @@ export class JobList extends LitElement {
         this._applyFilters();
       }
       
-      alert('Job wurde erfolgreich gestartet!');
+      showToast('Job wurde erfolgreich gestartet!', 'success');
     } catch (err) {
       console.error('Error running job:', err);
-      alert('Fehler beim Starten des Jobs: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Starten des Jobs: ' + (err instanceof Error ? err.message : String(err)), 'error');
     }
   }
 
   _editJob(jobId: string) {
-    window.location.href = `/jobs/edit/${jobId}`;
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path: `/jobs/${jobId}` },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   async _deleteJob(jobId: string) {
@@ -628,10 +633,10 @@ export class JobList extends LitElement {
       this.jobs = this.jobs.filter(j => j.id !== jobId);
       this._applyFilters();
       
-      alert('Job wurde erfolgreich gelöscht!');
+      showToast('Job wurde erfolgreich gelöscht!', 'success');
     } catch (err) {
       console.error('Error deleting job:', err);
-      alert('Fehler beim Löschen des Jobs: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Löschen des Jobs: ' + (err instanceof Error ? err.message : String(err)), 'error');
     }
   }
 

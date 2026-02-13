@@ -16,13 +16,13 @@ const (
 
 // User ist die Domain-Entität für einen Benutzer
 type User struct {
-	ID           int
-	Name         string
-	Email        string
-	PasswordHash string
-	Role         Role
-	CreatedAt    time.Time
-	LastLogin    *time.Time
+	ID           int        `json:"id"`
+	Name         string     `json:"name"`
+	Email        string     `json:"email"`
+	PasswordHash string     `json:"-"`
+	Role         Role       `json:"role"`
+	CreatedAt    time.Time  `json:"created_at"`
+	LastLogin    *time.Time `json:"last_login,omitempty"`
 }
 
 // Repository definiert die Schnittstelle für User-Datenzugriff

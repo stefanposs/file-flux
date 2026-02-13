@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isDemoMode, getDemoTokens, getDemoAgents, createDemoToken, deleteDemoToken } from '../../demo-mode';
+import { showToast } from '../shared/toast';
 
 @customElement('ff-token-list')
 export class TokenList extends LitElement {
@@ -432,7 +433,7 @@ export class TokenList extends LitElement {
     e.preventDefault();
     
     if (!this.newTokenName.trim()) {
-      alert('Bitte geben Sie einen Namen für das Token ein.');
+      showToast('Bitte geben Sie einen Namen für das Token ein.', 'warning');
       return;
     }
     
@@ -467,7 +468,7 @@ export class TokenList extends LitElement {
         this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
       }
     } catch (err) {
-      alert('Fehler beim Erstellen des Tokens: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Erstellen des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');
       console.error('Error creating token:', err);
     }
   }
@@ -489,7 +490,7 @@ export class TokenList extends LitElement {
     
     try {
       await navigator.clipboard.writeText(this.generatedToken);
-      alert('Token in die Zwischenablage kopiert!');
+      showToast('Token in die Zwischenablage kopiert!', 'success');
     } catch (err) {
       console.error('Failed to copy token:', err);
       
@@ -504,13 +505,13 @@ export class TokenList extends LitElement {
       try {
         const successful = document.execCommand('copy');
         if (successful) {
-          alert('Token in die Zwischenablage kopiert!');
+          showToast('Token in die Zwischenablage kopiert!', 'success');
         } else {
-          alert('Konnte nicht in die Zwischenablage kopieren. Bitte kopieren Sie das Token manuell.');
+          showToast('Konnte nicht in die Zwischenablage kopieren.', 'error');
         }
       } catch (e) {
         console.error('Failed to copy using execCommand:', e);
-        alert('Konnte nicht in die Zwischenablage kopieren. Bitte kopieren Sie das Token manuell.');
+        showToast('Konnte nicht in die Zwischenablage kopieren.', 'error');
       }
       
       document.body.removeChild(textArea);
@@ -532,12 +533,12 @@ export class TokenList extends LitElement {
         this.tokens = this.tokens.filter(token => token.id !== tokenId);
         this._applyFilters();
         
-        alert('Token erfolgreich widerrufen.');
+        showToast('Token erfolgreich widerrufen.', 'success');
       } else {
         this.error = 'API noch nicht implementiert. Bitte aktiviere den Demo-Modus.';
       }
     } catch (err) {
-      alert('Fehler beim Widerrufen des Tokens: ' + (err instanceof Error ? err.message : String(err)));
+      showToast('Fehler beim Widerrufen des Tokens: ' + (err instanceof Error ? err.message : String(err)), 'error');
       console.error('Error revoking token:', err);
     }
   }

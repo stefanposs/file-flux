@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { showToast } from './toast';
 
 @customElement('ff-header')
 export class Header extends LitElement {
@@ -189,30 +190,35 @@ export class Header extends LitElement {
             <a 
               class="nav-link ${this.currentRoute === '/' ? 'active' : ''}" 
               href="/"
+              @click=${(e: Event) => this._handleNavClick(e, '/')}
             >
               Dashboard
             </a>
             <a 
               class="nav-link ${this.currentRoute.startsWith('/jobs') ? 'active' : ''}" 
               href="/jobs"
+              @click=${(e: Event) => this._handleNavClick(e, '/jobs')}
             >
               Jobs
             </a>
             <a 
               class="nav-link ${this.currentRoute.startsWith('/agents') ? 'active' : ''}" 
               href="/agents"
+              @click=${(e: Event) => this._handleNavClick(e, '/agents')}
             >
               Agents
             </a>
             <a 
               class="nav-link ${this.currentRoute.startsWith('/tokens') ? 'active' : ''}" 
               href="/tokens"
+              @click=${(e: Event) => this._handleNavClick(e, '/tokens')}
             >
               Tokens
             </a>
             <a 
               class="nav-link ${this.currentRoute.startsWith('/transfers') ? 'active' : ''}" 
               href="/transfers"
+              @click=${(e: Event) => this._handleNavClick(e, '/transfers')}
             >
               Transfers
             </a>
@@ -241,7 +247,16 @@ export class Header extends LitElement {
   }
 
   _showUserMenu() {
-    alert('Benutzermenü: Einstellungen, Profil, Abmelden');
+    showToast('Benutzermenü öffnet in einer zukünftigen Version.', 'info');
+  }
+
+  _handleNavClick(e: Event, path: string) {
+    e.preventDefault();
+    this.dispatchEvent(new CustomEvent('navigate', {
+      detail: { path },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   _getUserInitials() {
