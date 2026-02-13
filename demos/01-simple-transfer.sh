@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ============================================================================
-# FileFlux Demo 1: Einfacher File-Transfer (Agent A → Agent B)
+# FileFlux Demo 1: Simple File Transfer (Agent A → Agent B)
 # ============================================================================
-# Zeigt: Agent-Registrierung, Token-Erstellung, Job-Anlage, Transfer-Ausführung
-# Dauer: ~2 Minuten
+# Shows: Agent registration, token creation, job setup, transfer execution
+# Duration: ~2 minutes
 # ============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -12,12 +12,12 @@ source "$SCRIPT_DIR/common.sh"
 echo ""
 echo -e "${BOLD}${CYAN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║         FileFlux — Demo 1: Einfacher File-Transfer      ║"
+echo "  ║         FileFlux — Demo 1: Simple File Transfer        ║"
 echo "  ║                   Agent A  ──→  Agent B                  ║"
 echo "  ╚══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
-echo "  Dieser Demo zeigt einen kompletten File-Transfer zwischen"
-echo "  zwei Agents über die FileFlux-Plattform."
+echo "  This demo shows a complete file transfer between"
+echo "  two agents via the FileFlux platform."
 echo ""
 
 pause
@@ -30,54 +30,54 @@ check_health
 
 login
 
-# ── 3. Agents anzeigen ───────────────────────────────────────────
+# ── 3. Show Agents ───────────────────────────────────────────────
 
-step "Vorhandene Agents prüfen"
+step "Check existing agents"
 show_agents
 
-# ── 4. Demo-Agents erstellen ────────────────────────────────────
+# ── 4. Create Demo Agents ────────────────────────────────────────
 
-step "Demo-Agents erstellen"
+step "Create demo agents"
 
-AGENT_A_ID=$(create_agent "Berlin-Office" "client" "Standort Berlin — Quell-Agent")
-AGENT_B_ID=$(create_agent "München-Office" "client" "Standort München — Ziel-Agent")
+AGENT_A_ID=$(create_agent "Berlin-Office" "client" "Berlin location — source agent")
+AGENT_B_ID=$(create_agent "Munich-Office" "client" "Munich location — destination agent")
 
 echo ""
-info "Übersicht:"
-echo -e "    ├─ Agent A (Quelle):  ${BOLD}Berlin-Office${NC}  (ID: $AGENT_A_ID)"
-echo -e "    └─ Agent B (Ziel):    ${BOLD}München-Office${NC} (ID: $AGENT_B_ID)"
+info "Overview:"
+echo -e "    ├─ Agent A (source):  ${BOLD}Berlin-Office${NC}  (ID: $AGENT_A_ID)"
+echo -e "    └─ Agent B (target):  ${BOLD}Munich-Office${NC}  (ID: $AGENT_B_ID)"
 
 pause
 
-# ── 5. Tokens erstellen ─────────────────────────────────────────
+# ── 5. Create Tokens ─────────────────────────────────────────
 
-step "Agent-Tokens erstellen"
-info "Jeder Agent benötigt einen Authentifizierungs-Token"
+step "Create agent tokens"
+info "Each agent requires an authentication token"
 
 TOKEN_A=$(create_token "$AGENT_A_ID" "berlin-token")
-TOKEN_B=$(create_token "$AGENT_B_ID" "muenchen-token")
+TOKEN_B=$(create_token "$AGENT_B_ID" "munich-token")
 
 echo ""
-info "Tokens können nun in den Agent-Konfigurationen hinterlegt werden"
+info "Tokens can now be used in the agent configurations"
 echo -e "    ├─ Berlin:  ${BOLD}CONNECTION_TOKEN=$TOKEN_A${NC}"
-echo -e "    └─ München: ${BOLD}CONNECTION_TOKEN=$TOKEN_B${NC}"
+echo -e "    └─ Munich:  ${BOLD}CONNECTION_TOKEN=$TOKEN_B${NC}"
 
 pause
 
-# ── 6. Job erstellen ────────────────────────────────────────────
+# ── 6. Create Job ────────────────────────────────────────────
 
-step "Transfer-Job erstellen"
-info "Job definiert Quelle, Ziel und optionalen Schedule"
+step "Create transfer job"
+info "A job defines source, destination, and an optional schedule"
 
 JOB_ID=$(create_job \
-  "Berlin → München Backup" \
+  "Berlin → Munich Backup" \
   "$AGENT_A_ID" \
   "$AGENT_B_ID" \
   "/data/reports/quartal-q4.pdf" \
   "/data/backup/berlin/quartal-q4.pdf")
 
 echo ""
-info "Job-Details:"
+info "Job details:"
 api_get "/api/jobs/$JOB_ID" | jq '{
   id, name, type, status,
   source_path, destination_path,
@@ -86,39 +86,39 @@ api_get "/api/jobs/$JOB_ID" | jq '{
 
 pause
 
-# ── 7. Transfer starten ─────────────────────────────────────────
+# ── 7. Start Transfer ────────────────────────────────────────
 
-step "Transfer manuell auslösen"
-info "In Produktion laufen Transfers automatisch per Schedule"
-info "Für die Demo lösen wir manuell aus..."
+step "Trigger transfer manually"
+info "In production, transfers run automatically via schedule"
+info "For this demo, we trigger it manually..."
 
 RUN_RESPONSE=$(api_post "/api/jobs/$JOB_ID/run" "{}")
 echo ""
 echo "$RUN_RESPONSE" | jq .
 
-success "Transfer wurde gestartet!"
+success "Transfer has been started!"
 
-# ── 8. Transfer überwachen ──────────────────────────────────────
+# ── 8. Watch Transfer ───────────────────────────────────────
 
-step "Transfer-Fortschritt überwachen"
-info "Der Agent lädt die Datei hoch, der Ziel-Agent lädt sie herunter"
-info "(In der Demo ggf. 'pending' da keine echten Agents laufen)"
+step "Monitor transfer progress"
+info "The source agent uploads the file, the destination agent downloads it"
+info "(In the demo this may show 'pending' since no real agents are running)"
 
 watch_transfer "$JOB_ID" 30
 
-# ── 9. Ergebnis anzeigen ────────────────────────────────────────
+# ── 9. Show Result ───────────────────────────────────────────
 
-step "Ergebnis"
+step "Result"
 show_transfers
 
 echo ""
 echo -e "${BOLD}${GREEN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║                    Demo abgeschlossen!                   ║"
+echo "  ║                     Demo completed!                     ║"
 echo "  ╚══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
-info "Nächste Schritte:"
-echo "    ├─ Frontend öffnen: http://localhost:3000"
-echo "    ├─ Agent starten:   CONNECTION_TOKEN=<token> ./fileflux-agent"
-echo "    └─ Weitere Demo:    ./02-scheduled-transfer.sh"
+info "Next steps:"
+echo "    ├─ Open frontend: http://localhost:3000"
+echo "    ├─ Start agent:   CONNECTION_TOKEN=<token> ./fileflux-agent"
+echo "    └─ Next demo:     ./02-scheduled-transfer.sh"
 echo ""

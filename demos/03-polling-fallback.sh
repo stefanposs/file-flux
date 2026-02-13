@@ -2,8 +2,8 @@
 # ============================================================================
 # FileFlux Demo 3: WebSocket → HTTP Long-Polling Fallback
 # ============================================================================
-# Zeigt: Automatischer Transport-Wechsel wenn WebSocket nicht verfügbar ist
-# Dauer: ~2 Minuten
+# Shows: Automatic transport switch when WebSocket is unavailable
+# Duration: ~2 minutes
 # ============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -12,74 +12,74 @@ source "$SCRIPT_DIR/common.sh"
 echo ""
 echo -e "${BOLD}${CYAN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║    FileFlux — Demo 3: Transport-Fallback (Enterprise)    ║"
+echo "  ║    FileFlux — Demo 3: Transport Fallback (Enterprise)    ║"
 echo "  ║          WebSocket  ──→  HTTP Long-Polling               ║"
 echo "  ╚══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
-echo "  In vielen Unternehmensumgebungen blockieren Firewalls oder"
-echo "  Proxies WebSocket-Verbindungen. FileFlux erkennt das automatisch"
-echo "  und wechselt auf HTTP Long-Polling als Fallback."
+echo "  In many enterprise environments, firewalls or proxies"
+echo "  block WebSocket connections. FileFlux detects this automatically"
+echo "  and switches to HTTP Long-Polling as a fallback."
 echo ""
 
 pause
 
-# ── 1. Vorbereitung ─────────────────────────────────────────────
+# ── 1. Preparation ─────────────────────────────────────────────
 
 check_health
 login
 
-# ── 2. Szenario erklären ────────────────────────────────────────
+# ── 2. Explain Scenario ──────────────────────────────────────
 
-step "Enterprise-Szenario"
+step "Enterprise Scenario"
 
 echo ""
-echo -e "  ${BOLD}Netzwerk-Topologie:${NC}"
+echo -e "  ${BOLD}Network Topology:${NC}"
 echo ""
 echo "    ┌──────────────┐     WebSocket ✘     ┌──────────────┐"
-echo "    │   Standort A  │ ─ ─ ─ ─ ─ ✘ ─ ─ ─ │  FileFlux    │"
-echo "    │  (hinter Proxy)│                    │  Server      │"
+echo "    │   Location A  │ ─ ─ ─ ─ ─ ✘ ─ ─ ─ │  FileFlux    │"
+echo "    │  (behind proxy)│                    │  Server      │"
 echo "    │               │ ════ HTTPS ════════ │              │"
 echo "    └──────────────┘    Long-Polling ✔    └──────────────┘"
 echo ""
-echo -e "  ${YELLOW}Problem:${NC}  Corporate Proxy blockiert WebSocket-Upgrade"
-echo -e "  ${GREEN}Lösung:${NC}   Agent wechselt automatisch auf HTTP Long-Polling"
+echo -e "  ${YELLOW}Problem:${NC}  Corporate proxy blocks WebSocket upgrade"
+echo -e "  ${GREEN}Solution:${NC} Agent automatically switches to HTTP Long-Polling"
 echo ""
 
 pause
 
-# ── 3. Agent mit Auto-Transport registrieren ────────────────────
+# ── 3. Register Agent with Auto-Transport ────────────────────
 
-step "Agent mit Transport-Auto-Detection registrieren"
+step "Register agent with transport auto-detection"
 
-PROXY_AGENT_ID=$(create_agent "Frankfurt-Proxy" "client" "Agent hinter Corporate Proxy — kein WebSocket")
+PROXY_AGENT_ID=$(create_agent "Frankfurt-Proxy" "client" "Agent behind corporate proxy — no WebSocket")
 PROXY_TOKEN=$(create_token "$PROXY_AGENT_ID" "proxy-token")
 
 echo ""
-info "Agent-Konfiguration für Proxy-Umgebung:"
+info "Agent configuration for proxy environment:"
 echo ""
 echo -e "  ${BOLD}config.yaml:${NC}"
 echo -e "    ${CYAN}connection:${NC}"
 echo -e "      ${CYAN}server_url:${NC} ws://fileflux.example.com:3002/ws/agent"
 echo -e "      ${CYAN}server_http_url:${NC} https://fileflux.example.com"
-echo -e "      ${CYAN}transport_mode:${NC} ${BOLD}auto${NC}    ${GREEN}← Schlüssel-Einstellung${NC}"
+echo -e "      ${CYAN}transport_mode:${NC} ${BOLD}auto${NC}    ${GREEN}<─ key setting${NC}"
 echo -e "      ${CYAN}poll_timeout:${NC} 30"
 echo -e "      ${CYAN}ws_probe_interval:${NC} 300"
 echo ""
-echo -e "  ${BOLD}Ablauf bei ${CYAN}transport_mode: auto${NC}${BOLD}:${NC}"
-echo "    1. Agent versucht WebSocket-Verbindung (3 Versuche)"
-echo "    2. WebSocket fehlgeschlagen → Wechsel auf HTTP Long-Polling"
-echo "    3. Polling-Registrierung via POST /api/agent/connect"
-echo "    4. Agent pollt via GET /api/agent/poll (30s Hold)"
-echo "    5. Alle 5 Min: Probe ob WebSocket wieder geht → Auto-Upgrade"
+echo -e "  ${BOLD}Behavior with ${CYAN}transport_mode: auto${NC}${BOLD}:${NC}"
+echo "    1. Agent attempts WebSocket connection (3 retries)"
+echo "    2. WebSocket failed → switch to HTTP Long-Polling"
+echo "    3. Polling registration via POST /api/agent/connect"
+echo "    4. Agent polls via GET /api/agent/poll (30s hold)"
+echo "    5. Every 5 min: probe if WebSocket is available → auto-upgrade"
 echo ""
 
 pause
 
-# ── 4. Polling-Verbindung simulieren ───────────────────────────
+# ── 4. Simulate Polling Connection ─────────────────────────
 
-step "HTTP Long-Polling Verbindung simulieren"
+step "Simulate HTTP Long-Polling connection"
 
-info "Simuliere Agent-Registrierung via Polling..."
+info "Simulating agent registration via polling..."
 echo ""
 
 # Polling Connect
@@ -104,35 +104,35 @@ CONNECT_RESPONSE=$(curl -s -X POST \
 echo -e "  ${BOLD}POST /api/agent/connect${NC}"
 echo "$CONNECT_RESPONSE" | jq .
 
-success "Agent via Polling registriert!"
+success "Agent registered via polling!"
 
 pause
 
-# ── 5. Long-Poll Request zeigen ─────────────────────────────────
+# ── 5. Show Long-Poll Request ───────────────────────────────
 
-step "Long-Poll Request demonstrieren"
+step "Demonstrate long-poll request"
 
-info "Agent sendet Long-Poll Request (hält 5s offen)..."
+info "Agent sends long-poll request (holds 5s open)..."
 echo -e "  ${BOLD}GET /api/agent/poll?timeout=5${NC}"
 echo ""
 
-POLL_RESPONSE=$(curl -s -w "\n--- HTTP Status: %{http_code} | Dauer: %{time_total}s ---" \
+POLL_RESPONSE=$(curl -s -w "\n--- HTTP Status: %{http_code} | Duration: %{time_total}s ---" \
   -H "Authorization: Bearer $PROXY_TOKEN" \
   "$API_URL/api/agent/poll?timeout=5")
 
 echo "$POLL_RESPONSE"
 echo ""
 
-info "Bei timeout=30 hält der Server die Verbindung bis zu 30s offen"
-info "Sobald eine Nachricht vorliegt, wird sofort geantwortet"
+info "With timeout=30, the server holds the connection up to 30s"
+info "As soon as a message is available, it responds immediately"
 
 pause
 
-# ── 6. Agent-Status prüfen ──────────────────────────────────────
+# ── 6. Check Agent Status ────────────────────────────────────
 
-step "Agent-Status im Dashboard"
+step "Agent status in dashboard"
 
-info "Agent-Übersicht:"
+info "Agent overview:"
 api_get "/api/agents" | jq '.[] | {
   id, name, status, transport_mode,
   last_poll_at, system, ip_address
@@ -140,12 +140,12 @@ api_get "/api/agents" | jq '.[] | {
 
 pause
 
-# ── 7. Transfer via Polling starten ────────────────────────────
+# ── 7. Start Transfer via Polling ──────────────────────────
 
-step "Transfer über Polling-Agent"
+step "Transfer via polling agent"
 
-# Zweiten Agent erstellen (normaler WS-Agent)
-HQ_AGENT_ID=$(create_agent "HQ-Server" "server" "Hauptquartier — WebSocket-Verbindung")
+# Create second agent (normal WS agent)
+HQ_AGENT_ID=$(create_agent "HQ-Server" "server" "Headquarters — WebSocket connection")
 HQ_TOKEN=$(create_token "$HQ_AGENT_ID" "hq-token")
 
 JOB_ID=$(create_job \
@@ -156,27 +156,27 @@ JOB_ID=$(create_job \
   "/data/incoming/frankfurt/daily-report.pdf")
 
 echo ""
-info "Transfer-Job erstellt:"
-echo -e "    ├─ Quelle: ${BOLD}Frankfurt-Proxy${NC} (Polling)"
-echo -e "    ├─ Ziel:   ${BOLD}HQ-Server${NC} (WebSocket)"
-echo -e "    └─ Datei:  daily-report.pdf"
+info "Transfer job created:"
+echo -e "    ├─ Source: ${BOLD}Frankfurt-Proxy${NC} (polling)"
+echo -e "    ├─ Target: ${BOLD}HQ-Server${NC} (WebSocket)"
+echo -e "    └─ File:   daily-report.pdf"
 
 pause
 
-info "Job auslösen..."
+info "Triggering job..."
 api_post "/api/jobs/$JOB_ID/run" "{}" | jq .
 
-success "Transfer gestartet — Befehl wird via Polling-Queue zugestellt!"
+success "Transfer started — command will be delivered via polling queue!"
 
 echo ""
-info "Der Transfer-Befehl wurde in die Message-Queue eingereiht."
-info "Beim nächsten Poll des Frankfurt-Agents wird er zugestellt."
+info "The transfer command has been enqueued in the message queue."
+info "It will be delivered on the Frankfurt agent's next poll."
 
-# ── 8. Message senden (Agent → Server via Polling) ─────────────
+# ── 8. Send Message (Agent → Server via Polling) ───────────────
 
-step "Agent sendet Status via HTTP (statt WebSocket)"
+step "Agent sends status via HTTP (instead of WebSocket)"
 
-info "Simuliere Heartbeat via POST /api/agent/messages..."
+info "Simulating heartbeat via POST /api/agent/messages..."
 
 HEARTBEAT_RESPONSE=$(curl -s -X POST \
   -H "Content-Type: application/json" \
@@ -189,54 +189,54 @@ HEARTBEAT_RESPONSE=$(curl -s -X POST \
 
 echo -e "  ${BOLD}POST /api/agent/messages${NC}"
 echo "$HEARTBEAT_RESPONSE" | jq .
-success "Heartbeat via HTTP erfolgreich!"
+success "Heartbeat via HTTP successful!"
 
 pause
 
-# ── 9. Vergleich ────────────────────────────────────────────────
+# ── 9. Comparison ───────────────────────────────────────────
 
-step "Transport-Vergleich"
+step "Transport Comparison"
 
 echo ""
 echo -e "  ${BOLD}┌─────────────────┬──────────────────┬──────────────────┐${NC}"
 echo -e "  ${BOLD}│                 │   WebSocket       │   Long-Polling   │${NC}"
 echo -e "  ${BOLD}├─────────────────┼──────────────────┼──────────────────┤${NC}"
-echo -e "  │ Latenz          │ ${GREEN}~10ms${NC}            │ ${YELLOW}~100-500ms${NC}       │"
-echo -e "  │ Firewall        │ ${RED}Kann blockiert${NC}   │ ${GREEN}Immer offen${NC}      │"
-echo -e "  │ Proxy-Support   │ ${RED}Problematisch${NC}    │ ${GREEN}Standard HTTPS${NC}   │"
-echo -e "  │ Bidirektional   │ ${GREEN}Ja${NC}               │ ${YELLOW}Emuliert${NC}         │"
-echo -e "  │ Auto-Reconnect  │ ${GREEN}Ja${NC}               │ ${GREEN}Ja${NC}               │"
-echo -e "  │ Upgrade-Probe   │ —                │ ${GREEN}Alle 5 Min${NC}       │"
+echo -e "  │ Latency         │ ${GREEN}~10ms${NC}            │ ${YELLOW}~100-500ms${NC}       │"
+echo -e "  │ Firewall        │ ${RED}May be blocked${NC}   │ ${GREEN}Always open${NC}      │"
+echo -e "  │ Proxy support   │ ${RED}Problematic${NC}      │ ${GREEN}Standard HTTPS${NC}   │"
+echo -e "  │ Bidirectional   │ ${GREEN}Yes${NC}              │ ${YELLOW}Emulated${NC}         │"
+echo -e "  │ Auto-reconnect  │ ${GREEN}Yes${NC}              │ ${GREEN}Yes${NC}              │"
+echo -e "  │ Upgrade probe   │ —                │ ${GREEN}Every 5 min${NC}      │"
 echo -e "  ${BOLD}└─────────────────┴──────────────────┴──────────────────┘${NC}"
 echo ""
 
 pause
 
-# ── 10. Zusammenfassung ─────────────────────────────────────────
+# ── 10. Summary ─────────────────────────────────────────────────
 
 echo ""
 echo -e "${BOLD}${GREEN}"
 echo "  ╔══════════════════════════════════════════════════════════╗"
-echo "  ║                    Demo abgeschlossen!                   ║"
+echo "  ║                     Demo completed!                     ║"
 echo "  ╚══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 echo ""
-info "Key Takeaways für Enterprise-Kunden:"
-echo "    ├─ ${BOLD}transport_mode: auto${NC} — kein manuelles Konfigurieren nötig"
-echo "    ├─ Agent erkennt automatisch ob WebSocket möglich ist"
-echo "    ├─ Fallback auf HTTP Long-Polling ist transparent"
-echo "    ├─ Kein Funktionsverlust — alle Features verfügbar"
-echo "    └─ Automatisches Upgrade wenn WebSocket wieder verfügbar"
+info "Key takeaways for enterprise customers:"
+echo "    ├─ ${BOLD}transport_mode: auto${NC} — no manual configuration needed"
+echo "    ├─ Agent automatically detects if WebSocket is available"
+echo "    ├─ Fallback to HTTP Long-Polling is transparent"
+echo "    ├─ No loss of functionality — all features available"
+echo "    └─ Automatic upgrade when WebSocket becomes available again"
 echo ""
-info "Agent-Startup-Kommandos:"
+info "Agent startup commands:"
 echo ""
-echo -e "    ${BOLD}# Modus: Automatisch (empfohlen)${NC}"
+echo -e "    ${BOLD}# Mode: Automatic (recommended)${NC}"
 echo "    CONNECTION_TOKEN=<token> ./fileflux-agent"
 echo ""
-echo -e "    ${BOLD}# Modus: Nur Polling (z.B. bei bekanntem WS-Block)${NC}"
+echo -e "    ${BOLD}# Mode: Polling only (e.g. with known WS block)${NC}"
 echo "    CONNECTION_TOKEN=<token> CONNECTION_TRANSPORT_MODE=polling ./fileflux-agent"
 echo ""
-echo -e "    ${BOLD}# Docker-Variante${NC}"
+echo -e "    ${BOLD}# Docker variant${NC}"
 echo "    docker run -e CONNECTION_TOKEN=<token> \\"
 echo "               -e CONNECTION_HTTP_URL=https://fileflux.example.com \\"
 echo "               -e CONNECTION_TRANSPORT_MODE=auto \\"

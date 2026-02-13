@@ -1,17 +1,17 @@
-# FileFlux — E2E Demo-Skripte
+# FileFlux — E2E Demo Scripts
 
-Interaktive Demo-Skripte für Kunden-Präsentationen. Jedes Skript zeigt einen
-kompletten Use-Case vom Login bis zum fertigen Transfer.
+Interactive demo scripts for customer presentations. Each script demonstrates
+a complete use case from login to finished transfer.
 
-## Voraussetzungen
+## Prerequisites
 
 ```bash
-# Stack starten
+# Start the stack
 just dev
-# oder:
+# or:
 docker compose up -d
 
-# Warten bis healthy
+# Wait until healthy
 docker compose ps
 ```
 
@@ -23,53 +23,53 @@ docker compose ps
 
 **Login:** `admin@fileflux.de` / `admin123`
 
-**Benötigt:** `curl`, `jq`, `bash`
+**Required:** `curl`, `jq`, `bash`
 
-## Demo-Skripte
+## Demo Scripts
 
-| # | Skript                     | Szenario                                | Dauer  |
-|---|----------------------------|-----------------------------------------|--------|
-| 1 | `01-simple-transfer.sh`    | File-Transfer Agent A → Agent B         | ~2 min |
-| 2 | `02-scheduled-transfer.sh` | Automatisierter Cron-Transfer           | ~3 min |
-| 3 | `03-polling-fallback.sh`   | WebSocket → HTTP Long-Polling Fallback  | ~2 min |
+| # | Script                     | Scenario                                | Duration |
+|---|----------------------------|-----------------------------------------|----------|
+| 1 | `01-simple-transfer.sh`    | File transfer Agent A → Agent B         | ~2 min   |
+| 2 | `02-scheduled-transfer.sh` | Automated cron-based transfer           | ~3 min   |
+| 3 | `03-polling-fallback.sh`   | WebSocket → HTTP Long-Polling fallback  | ~2 min   |
 
-## Ausführung
+## Running
 
 ```bash
 cd demos/
 chmod +x *.sh
 
-# Demo 1: Einfacher Transfer zwischen zwei Standorten
+# Demo 1: Simple transfer between two locations
 ./01-simple-transfer.sh
 
-# Demo 2: Automatisierte Backups per Cron-Schedule
+# Demo 2: Automated backups via cron schedule
 ./02-scheduled-transfer.sh
 
-# Demo 3: Enterprise-Fallback wenn WebSocket blockiert ist
+# Demo 3: Enterprise fallback when WebSocket is blocked
 ./03-polling-fallback.sh
 ```
 
-## Tipps für die Präsentation
+## Presentation Tips
 
-- **Frontend parallel öffnen** (http://localhost:3000) — zeigt UI live
-- **Agents starten** für echte Transfers:
+- **Open the frontend in parallel** (http://localhost:3000) — shows live UI updates
+- **Start agents** for real transfers:
   ```bash
   # Terminal 1: Agent A
   CONNECTION_TOKEN=<token-a> AGENT_NAME=Berlin ./fileflux-agent
 
   # Terminal 2: Agent B  
-  CONNECTION_TOKEN=<token-b> AGENT_NAME=München ./fileflux-agent
+  CONNECTION_TOKEN=<token-b> AGENT_NAME=Munich ./fileflux-agent
   ```
-- **Polling-Demo**: Agent mit `CONNECTION_TRANSPORT_MODE=polling` starten
-- Skripte pausieren mit ENTER — gibt Zeit für Erklärungen
-- `API_URL` überschreiben falls Backend nicht auf localhost läuft:
+- **Polling demo**: Start agent with `CONNECTION_TRANSPORT_MODE=polling`
+- Scripts pause on ENTER — gives time for explanations
+- Override `API_URL` if the backend is not running on localhost:
   ```bash
   API_URL=https://demo.fileflux.de ./01-simple-transfer.sh
   ```
 
-## Nach der Demo
+## After the Demo
 
 ```bash
-just down        # Services stoppen
-just down-clean  # + Volumes löschen (komplettes Reset)
+just down        # Stop services
+just down-clean  # + Delete volumes (full reset)
 ```

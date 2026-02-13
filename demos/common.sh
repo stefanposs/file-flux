@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-# FileFlux Demo — Gemeinsame Hilfsfunktionen
+# FileFlux Demo — Common Helper Functions
 # ============================================================================
 
 set -euo pipefail
 
-# Farben
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -20,7 +20,7 @@ ADMIN_EMAIL="admin@fileflux.de"
 ADMIN_PASSWORD="admin123"
 JWT_TOKEN=""
 
-# --- Ausgabe-Helpers ---
+# --- Output Helpers ---
 
 step() {
   echo "" >&2
@@ -37,7 +37,7 @@ error()   { echo -e "  ${RED}✘${NC}  $1" >&2; }
 pause() {
   if [ -t 0 ]; then
     echo "" >&2
-    echo -e "  ${YELLOW}⏸  Weiter mit ENTER...${NC}" >&2
+    echo -e "  ${YELLOW}⏸  Press ENTER to continue...${NC}" >&2
     read -r
   else
     sleep 1
@@ -69,7 +69,7 @@ api_put() {
 # --- Login ---
 
 login() {
-  step "Login als Admin"
+  step "Login as Admin"
 
   local response
   response=$(curl -s -X POST -H "Content-Type: application/json" \
@@ -79,24 +79,24 @@ login() {
   JWT_TOKEN=$(echo "$response" | jq -r '.token')
 
   if [ "$JWT_TOKEN" = "null" ] || [ -z "$JWT_TOKEN" ]; then
-    error "Login fehlgeschlagen!"
+    error "Login failed!"
     echo "$response" | jq . >&2
     exit 1
   fi
 
   local user_name
   user_name=$(echo "$response" | jq -r '.user.name')
-  success "Eingeloggt als ${BOLD}$user_name${NC}"
+  success "Logged in as ${BOLD}$user_name${NC}"
 }
 
-# --- Agent erstellen ---
+# --- Create Agent ---
 
 create_agent() {
   local name="$1"
   local type="${2:-client}"
-  local desc="${3:-Demo-Agent}"
+  local desc="${3:-Demo Agent}"
 
-  info "Erstelle Agent: ${BOLD}$name${NC} (Typ: $type)"
+  info "Creating agent: ${BOLD}$name${NC} (type: $type)"
 
   local response
   response=$(api_post "/api/agents" \
@@ -106,22 +106,22 @@ create_agent() {
   agent_id=$(echo "$response" | jq -r '.id')
 
   if [ "$agent_id" = "null" ] || [ -z "$agent_id" ]; then
-    error "Agent-Erstellung fehlgeschlagen!"
+    error "Agent creation failed!"
     echo "$response" | jq . >&2
     exit 1
   fi
 
-  success "Agent erstellt: ID=${BOLD}$agent_id${NC}"
+  success "Agent created: ID=${BOLD}$agent_id${NC}"
   echo "$agent_id"
 }
 
-# --- Token erstellen ---
+# --- Create Token ---
 
 create_token() {
   local agent_id="$1"
   local name="${2:-demo-token}"
 
-  info "Erstelle Token für Agent $agent_id"
+  info "Creating token for agent $agent_id"
 
   local response
   response=$(api_post "/api/tokens" \
@@ -131,16 +131,16 @@ create_token() {
   token_value=$(echo "$response" | jq -r '.value')
 
   if [ "$token_value" = "null" ] || [ -z "$token_value" ]; then
-    error "Token-Erstellung fehlgeschlagen!"
+    error "Token creation failed!"
     echo "$response" | jq . >&2
     exit 1
   fi
 
-  success "Token erstellt: ${BOLD}${token_value:0:12}...${NC}"
+  success "Token created: ${BOLD}${token_value:0:12}...${NC}"
   echo "$token_value"
 }
 
-# --- Job erstellen ---
+# --- Create Job ---
 
 create_job() {
   local name="$1"
@@ -155,7 +155,7 @@ create_job() {
     schedule_json="\"$schedule\""
   fi
 
-  info "Erstelle Job: ${BOLD}$name${NC}"
+  info "Creating job: ${BOLD}$name${NC}"
 
   local response
   response=$(api_post "/api/jobs" \
@@ -165,28 +165,28 @@ create_job() {
   job_id=$(echo "$response" | jq -r '.id')
 
   if [ "$job_id" = "null" ] || [ -z "$job_id" ]; then
-    error "Job-Erstellung fehlgeschlagen!"
+    error "Job creation failed!"
     echo "$response" | jq . >&2
     exit 1
   fi
 
-  success "Job erstellt: ID=${BOLD}$job_id${NC}"
+  success "Job created: ID=${BOLD}$job_id${NC}"
   echo "$job_id"
 }
 
-# --- Transfer-Status überwachen ---
+# --- Watch Transfer Status ---
 
 watch_transfer() {
   local job_id="$1"
   local timeout="${2:-60}"
   local start_time=$SECONDS
 
-  info "Überwache Transfers für Job $job_id..."
+  info "Watching transfers for job $job_id..."
 
   while true; do
     local elapsed=$(( SECONDS - start_time ))
     if [ $elapsed -gt $timeout ]; then
-      warn "Timeout nach ${timeout}s erreicht"
+      warn "Timeout after ${timeout}s"
       break
     fi
 
@@ -197,7 +197,7 @@ watch_transfer() {
     latest=$(echo "$transfers" | jq -r "[.[] | select(.job_id == $job_id)] | sort_by(.created_at) | last")
 
     if [ "$latest" = "null" ]; then
-      info "Warte auf Transfer..."
+      info "Waiting for transfer..."
       sleep 2
       continue
     fi
@@ -208,21 +208,21 @@ watch_transfer() {
 
     case "$status" in
       pending)
-        echo -ne "\r  ⏳  Status: ${YELLOW}ausstehend${NC}                    " >&2
+        echo -ne "\r  ⏳  Status: ${YELLOW}pending${NC}                    " >&2
         ;;
       running)
-        echo -ne "\r  🔄  Status: ${BLUE}läuft${NC} — Fortschritt: ${BOLD}${progress}%${NC}    " >&2
+        echo -ne "\r  🔄  Status: ${BLUE}running${NC} — Progress: ${BOLD}${progress}%${NC}    " >&2
         ;;
       completed)
         echo "" >&2
-        success "Transfer ${GREEN}abgeschlossen${NC}! (${progress}%)"
+        success "Transfer ${GREEN}completed${NC}! (${progress}%)"
         break
         ;;
       failed)
         echo "" >&2
         local err_msg
-        err_msg=$(echo "$latest" | jq -r '.error // "unbekannt"')
-        error "Transfer fehlgeschlagen: $err_msg"
+        err_msg=$(echo "$latest" | jq -r '.error // "unknown"')
+        error "Transfer failed: $err_msg"
         break
         ;;
     esac
@@ -242,35 +242,35 @@ check_health() {
   status=$(echo "$response" | jq -r '.status' 2>/dev/null || echo "error")
 
   if [ "$status" = "ok" ] || [ "$status" = "healthy" ]; then
-    success "Backend ist ${GREEN}online${NC}"
+    success "Backend is ${GREEN}online${NC}"
   else
-    error "Backend ist nicht erreichbar! Starte mit: ${BOLD}just dev${NC}"
+    error "Backend is not reachable! Start with: ${BOLD}just dev${NC}"
     exit 1
   fi
 }
 
-# --- Agents auflisten ---
+# --- List Agents ---
 
 show_agents() {
-  info "Registrierte Agents:"
+  info "Registered agents:"
   local data
   data=$(api_get "/api/agents")
   if echo "$data" | jq -e 'length > 0' >/dev/null 2>&1; then
     echo "$data" | jq -r '.[] | "    ├─ \(.id): \(.name) [\(.type)] — Status: \(.status)"' >&2
   else
-    info "(keine Agents vorhanden)"
+    info "(no agents found)"
   fi
 }
 
-# --- Transfers auflisten ---
+# --- List Transfers ---
 
 show_transfers() {
-  info "Aktuelle Transfers:"
+  info "Current transfers:"
   local data
   data=$(api_get "/api/transfers")
   if echo "$data" | jq -e 'length > 0' >/dev/null 2>&1; then
     echo "$data" | jq -r '.[] | "    ├─ #\(.id): \(.status) (\(.progress // 0)%) — \(.source_path) → \(.destination_path)"' >&2
   else
-    info "(keine Transfers vorhanden)"
+    info "(no transfers found)"
   fi
 }
