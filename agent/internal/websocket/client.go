@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -52,20 +54,43 @@ func (c *Client) SetTransferManager(handler TransferHandler) {
 }
 
 // Connect stellt die WebSocket-Verbindung zum Server her.
+// Versucht unbegrenzt mit exponentiellem Backoff + Jitter (max 5 Min).
 func (c *Client) Connect() error {
-	for attempt := 0; attempt <= c.config.ReconnectAttempts; attempt++ {
+	const maxBackoff = 5 * time.Minute
+	baseDelay := time.Duration(c.config.ReconnectDelay) * time.Second
+	if baseDelay < time.Second {
+		baseDelay = 2 * time.Second
+	}
+	attempt := 0
+
+	for {
+		select {
+		case <-c.done:
+			return fmt.Errorf("client wurde gestoppt")
+		default:
+		}
+
 		if attempt > 0 {
-			delay := time.Duration(c.config.ReconnectDelay) * time.Second
-			c.logger.Printf("Reconnect-Versuch %d/%d in %v...", attempt, c.config.ReconnectAttempts, delay)
+			// Exponentieller Backoff: baseDelay * 2^(attempt-1), gedeckelt bei maxBackoff
+			backoff := time.Duration(float64(baseDelay) * math.Pow(2, float64(attempt-1)))
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+			// Jitter: 0-25% des Backoffs hinzufuegen
+			jitter := time.Duration(rand.Int63n(int64(backoff / 4)))
+			delay := backoff + jitter
+			c.logger.Printf("Reconnect-Versuch %d in %v...", attempt, delay)
 			time.Sleep(delay)
 		}
 
 		if err := c.dial(); err != nil {
 			c.logger.Printf("Verbindungsfehler: %v", err)
+			attempt++
 			continue
 		}
 
-		// Verbindung erfolgreich — Lese-Schleife starten
+		// Verbindung erfolgreich — Backoff zuruecksetzen
+		attempt = 0
 		c.connected = true
 		c.sendAgentInfo()
 		go c.heartbeatLoop()
@@ -74,9 +99,8 @@ func (c *Client) Connect() error {
 		// readLoop beendet → Verbindung verloren
 		c.connected = false
 		c.logger.Println("Verbindung zum Server verloren")
+		attempt = 1 // Beim Reconnect mit Versuch 1 starten
 	}
-
-	return fmt.Errorf("maximale Reconnect-Versuche (%d) erreicht", c.config.ReconnectAttempts)
 }
 
 // Disconnect trennt die WebSocket-Verbindung.

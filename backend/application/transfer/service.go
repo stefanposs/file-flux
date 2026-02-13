@@ -34,6 +34,15 @@ func (s *Service) GetByID(ctx context.Context, id int) (*transfer.Transfer, erro
 	return t, nil
 }
 
+// GetByIDForUser gibt einen Transfer zurueck, der dem Benutzer gehoert.
+func (s *Service) GetByIDForUser(ctx context.Context, id int, userID int) (*transfer.Transfer, error) {
+	t, err := s.transfers.GetByIDForUser(ctx, id, userID)
+	if err != nil {
+		return nil, common.ErrNotFound
+	}
+	return t, nil
+}
+
 // Create erstellt einen neuen Transfer.
 func (s *Service) Create(ctx context.Context, t *transfer.Transfer) error {
 	if t.Filename == "" {

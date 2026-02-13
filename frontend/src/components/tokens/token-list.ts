@@ -482,14 +482,14 @@ export class TokenList extends LitElement {
           });
           this.generatedToken = created.value;
           this.tokens = [{
-            id: String(created.id),
-            name: created.name,
+            id: String(created.token.id),
+            name: created.token.name,
             token: created.value,
-            agentId: created.agent_id ? String(created.agent_id) : null,
+            agentId: created.token.agent_id ? String(created.token.agent_id) : null,
             status: 'active',
-            createdAt: created.created_at,
-            expiresAt: created.expires_at,
-            lastUsedAt: created.last_used,
+            createdAt: created.token.created_at,
+            expiresAt: created.token.expires_at,
+            lastUsedAt: created.token.last_used,
           }, ...this.tokens];
           this._applyFilters();
           return;

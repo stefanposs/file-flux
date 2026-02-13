@@ -74,6 +74,31 @@ func (r *TransferRepo) GetByID(ctx context.Context, id int) (*transfer.Transfer,
 	return &t, nil
 }
 
+func (r *TransferRepo) GetByIDForUser(ctx context.Context, id int, userID int) (*transfer.Transfer, error) {
+	var t transfer.Transfer
+	err := r.db.QueryRowContext(ctx, `
+		SELECT t.id, t.job_id, t.filename, t.size, t.status, t.progress,
+		       t.source_path, t.destination_path,
+		       t.source_agent_id, t.destination_agent_id,
+		       t.start_time, t.end_time, t.error, t.created_at
+		FROM transfers t
+		LEFT JOIN jobs j ON t.job_id = j.id
+		WHERE t.id = $1 AND j.user_id = $2
+	`, id, userID).Scan(
+		&t.ID, &t.JobID, &t.Filename, &t.Size, &t.Status, &t.Progress,
+		&t.SourcePath, &t.DestinationPath,
+		&t.SourceAgentID, &t.DestinationAgentID,
+		&t.StartTime, &t.EndTime, &t.Error, &t.CreatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, common.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
 func (r *TransferRepo) Create(ctx context.Context, t *transfer.Transfer) error {
 	return r.db.QueryRowContext(ctx, `
 		INSERT INTO transfers (job_id, filename, size, status, source_path, destination_path,

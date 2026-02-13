@@ -48,13 +48,19 @@ func (h *TransferHandler) GetTransfers(w http.ResponseWriter, r *http.Request) {
 
 // GetTransfer gibt einen einzelnen Transfer zurueck.
 func (h *TransferHandler) GetTransfer(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := parseID(r)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid transfer ID")
 		return
 	}
 
-	t, err := h.service.GetByID(r.Context(), id)
+	t, err := h.service.GetByIDForUser(r.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, common.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "transfer not found")
@@ -97,9 +103,22 @@ func (h *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 
 // CancelTransfer bricht einen Transfer ab.
 func (h *TransferHandler) CancelTransfer(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := parseID(r)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid transfer ID")
+		return
+	}
+
+	// Ownership pruefen
+	_, err = h.service.GetByIDForUser(r.Context(), id, userID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "transfer not found")
 		return
 	}
 

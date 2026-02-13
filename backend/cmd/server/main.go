@@ -19,6 +19,7 @@ import (
 	transfersvc "github.com/stefanposs/file-flux/backend/application/transfer"
 
 	// Domain Layer
+	jobdomain "github.com/stefanposs/file-flux/backend/domain/job"
 	transferdomain "github.com/stefanposs/file-flux/backend/domain/transfer"
 
 	// Adapter Layer
@@ -68,6 +69,30 @@ func (a *transferGetterAdapter) GetByID(ctx context.Context, id int) (websocket.
 		DestinationPath:    t.DestinationPath,
 		Filename:           t.Filename,
 	}, nil
+}
+
+// jobListerAdapter adapts the job service to the scheduler.JobLister interface.
+type jobListerAdapter struct {
+	svc interface {
+		ListActive(ctx context.Context) ([]jobdomain.Job, error)
+	}
+}
+
+func (a *jobListerAdapter) ListActive(ctx context.Context) ([]scheduler.ActiveJob, error) {
+	jobs, err := a.svc.ListActive(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var result []scheduler.ActiveJob
+	for _, j := range jobs {
+		if j.Schedule != nil && *j.Schedule != "" {
+			result = append(result, scheduler.ActiveJob{
+				ID:       j.ID,
+				Schedule: *j.Schedule,
+			})
+		}
+	}
+	return result, nil
 }
 
 func main() {
@@ -152,23 +177,16 @@ func main() {
 
 	// ─── Scheduler starten ─────────────────────────────────────────
 
-	jobScheduler := scheduler.New(jobService, logger)
-	activeJobs, err := jobService.ListActive(context.Background())
+	jobLister := &jobListerAdapter{svc: jobService}
+	jobScheduler := scheduler.New(jobService, jobLister, logger)
+	activeJobs, err := jobLister.ListActive(context.Background())
 	if err != nil {
 		logger.Printf("Warnung: Aktive Jobs konnten nicht geladen werden: %v", err)
 	} else {
-		var schedulerJobs []scheduler.ActiveJob
-		for _, j := range activeJobs {
-			if j.Schedule != nil && *j.Schedule != "" {
-				schedulerJobs = append(schedulerJobs, scheduler.ActiveJob{
-					ID:       j.ID,
-					Schedule: *j.Schedule,
-				})
-			}
-		}
-		jobScheduler.LoadJobs(schedulerJobs)
+		jobScheduler.LoadJobs(activeJobs)
 	}
 	jobScheduler.Start()
+	jobService.SetScheduler(jobScheduler) // Scheduler fuer automatischen Reload bei Job-CRUD
 	defer jobScheduler.Stop()
 
 	// ─── Server starten ─────────────────────────────────────────────

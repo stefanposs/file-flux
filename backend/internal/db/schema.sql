@@ -79,6 +79,15 @@ BEGIN
   END IF;
 END $$;
 
+-- Performance-Indexes
+CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
+CREATE INDEX IF NOT EXISTS idx_transfers_job_id ON transfers(job_id);
+CREATE INDEX IF NOT EXISTS idx_transfers_status ON transfers(status);
+CREATE INDEX IF NOT EXISTS idx_tokens_token_value ON tokens(token_value);
+CREATE INDEX IF NOT EXISTS idx_tokens_agent_id ON tokens(agent_id);
+CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
+
 -- Erstelle einen Admin-Benutzer, falls keiner existiert
 DO $$
 BEGIN

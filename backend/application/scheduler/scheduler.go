@@ -28,14 +28,16 @@ type ActiveJob struct {
 type Scheduler struct {
 	cron   *cron.Cron
 	runner JobRunner
+	lister JobLister
 	logger *log.Logger
 }
 
 // New erstellt einen neuen Scheduler.
-func New(runner JobRunner, logger *log.Logger) *Scheduler {
+func New(runner JobRunner, lister JobLister, logger *log.Logger) *Scheduler {
 	return &Scheduler{
 		cron:   cron.New(cron.WithSeconds()),
 		runner: runner,
+		lister: lister,
 		logger: logger,
 	}
 }
@@ -69,4 +71,40 @@ func (s *Scheduler) Stop() {
 	ctx := s.cron.Stop()
 	<-ctx.Done()
 	s.logger.Println("Scheduler gestoppt")
+}
+
+// Reload stoppt den aktuellen Cron, laedt aktive Jobs neu und startet erneut.
+func (s *Scheduler) Reload() {
+	// Aktuellen Cron sauber stoppen
+	ctx := s.cron.Stop()
+	<-ctx.Done()
+
+	// Neuen Cron erstellen
+	s.cron = cron.New(cron.WithSeconds())
+
+	// Aktive Jobs laden
+	activeJobs, err := s.lister.ListActive(context.Background())
+	if err != nil {
+		s.logger.Printf("Scheduler Reload: Fehler beim Laden der Jobs: %v", err)
+		s.cron.Start()
+		return
+	}
+
+	// Jobs registrieren
+	for _, aj := range activeJobs {
+		job := aj
+		_, err := s.cron.AddFunc(job.Schedule, func() {
+			s.logger.Printf("Scheduler: Job %d wird ausgefuehrt (schedule: %s)", job.ID, job.Schedule)
+			if err := s.runner.Run(context.Background(), job.ID); err != nil {
+				s.logger.Printf("Scheduler: Job %d fehlgeschlagen: %v", job.ID, err)
+			}
+		})
+		if err != nil {
+			s.logger.Printf("Scheduler Reload: Ungueltige Cron-Expression fuer Job %d (%s): %v", job.ID, job.Schedule, err)
+			continue
+		}
+	}
+
+	s.cron.Start()
+	s.logger.Printf("Scheduler Reload: %d Entries registriert", len(s.cron.Entries()))
 }

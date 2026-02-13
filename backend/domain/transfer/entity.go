@@ -38,6 +38,7 @@ type Transfer struct {
 type Repository interface {
 	ListByUser(ctx context.Context, userID int) ([]Transfer, error)
 	GetByID(ctx context.Context, id int) (*Transfer, error)
+	GetByIDForUser(ctx context.Context, id int, userID int) (*Transfer, error)
 	Create(ctx context.Context, transfer *Transfer) error
 	UpdateStatus(ctx context.Context, id int, status Status, errorMsg string) error
 	UpdateProgress(ctx context.Context, id int, progress float64) error

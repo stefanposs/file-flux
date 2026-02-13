@@ -993,12 +993,21 @@ transfers:
       const token = this.tokens.find(t => t.id === tokenId);
       const description = token?.description || 'Erneuertes Token';
 
-      const newToken = await api.createToken({ name: description, agent_id: agentId });
+      const result = await api.createToken({ name: description, agent_id: agentId });
       await api.revokeToken(Number(tokenId));
 
       // Replace old token with new one in the list
       this.tokens = this.tokens.map(t =>
-        t.id === tokenId ? { ...newToken, id: newToken.id } : t
+        t.id === tokenId ? {
+          id: String(result.token.id),
+          name: result.token.name,
+          token: result.value,
+          agentId: result.token.agent_id ? String(result.token.agent_id) : null,
+          status: 'active',
+          createdAt: result.token.created_at,
+          expiresAt: result.token.expires_at,
+          lastUsedAt: result.token.last_used,
+        } : t
       );
       
       showToast('Token erfolgreich erneuert!', 'success');

@@ -24,16 +24,34 @@ type TransferCreator interface {
 	Create(ctx context.Context, t *transfer.Transfer) error
 }
 
+// SchedulerReloader erlaubt dem Service, den Scheduler bei Job-Aenderungen neu zu laden.
+type SchedulerReloader interface {
+	Reload()
+}
+
 // Service implementiert die Job-Geschaeftslogik.
 type Service struct {
 	jobs       job.Repository
 	dispatcher TransferDispatcher
 	transfers  TransferCreator
+	scheduler  SchedulerReloader
 }
 
 // NewService erstellt einen neuen JobService.
 func NewService(jobs job.Repository, dispatcher TransferDispatcher, transfers TransferCreator) *Service {
 	return &Service{jobs: jobs, dispatcher: dispatcher, transfers: transfers}
+}
+
+// SetScheduler setzt den Scheduler (wird nach Initialisierung aufgerufen, um Zirkelabhaengigkeit zu vermeiden).
+func (s *Service) SetScheduler(scheduler SchedulerReloader) {
+	s.scheduler = scheduler
+}
+
+// reloadScheduler laedt den Scheduler neu, falls vorhanden.
+func (s *Service) reloadScheduler() {
+	if s.scheduler != nil {
+		s.scheduler.Reload()
+	}
 }
 
 // ListByUser gibt alle Jobs eines Benutzers zurueck.
@@ -65,7 +83,11 @@ func (s *Service) Create(ctx context.Context, j *job.Job) error {
 		j.Type = job.TypePush
 	}
 	j.Status = job.StatusInactive
-	return s.jobs.Create(ctx, j)
+	if err := s.jobs.Create(ctx, j); err != nil {
+		return err
+	}
+	s.reloadScheduler()
+	return nil
 }
 
 // Update aktualisiert einen Job.
@@ -73,12 +95,20 @@ func (s *Service) Update(ctx context.Context, j *job.Job) error {
 	if j.Name == "" {
 		return errors.Join(common.ErrValidation, errors.New("job name is required"))
 	}
-	return s.jobs.Update(ctx, j)
+	if err := s.jobs.Update(ctx, j); err != nil {
+		return err
+	}
+	s.reloadScheduler()
+	return nil
 }
 
 // Delete loescht einen Job.
 func (s *Service) Delete(ctx context.Context, id int) error {
-	return s.jobs.Delete(ctx, id)
+	if err := s.jobs.Delete(ctx, id); err != nil {
+		return err
+	}
+	s.reloadScheduler()
+	return nil
 }
 
 // Activate aktiviert einen Job.

@@ -54,6 +54,12 @@ func (h *JobHandler) GetJobs(w http.ResponseWriter, r *http.Request) {
 
 // GetJob gibt einen einzelnen Job zurueck.
 func (h *JobHandler) GetJob(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getUserID(r)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := parseID(r)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid job ID")
@@ -67,6 +73,11 @@ func (h *JobHandler) GetJob(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		respondError(w, http.StatusInternalServerError, "failed to get job")
+		return
+	}
+
+	if j.UserID != userID {
+		respondError(w, http.StatusNotFound, "job not found")
 		return
 	}
 	respondJSON(w, http.StatusOK, j)
@@ -111,6 +122,12 @@ func (h *JobHandler) CreateJob(w http.ResponseWriter, r *http.Request) {
 
 // UpdateJob aktualisiert einen Job.
 func (h *JobHandler) UpdateJob(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getUserID(r)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := parseID(r)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid job ID")
@@ -120,6 +137,11 @@ func (h *JobHandler) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	// Bestehenden Job laden, um UserID zu bewahren
 	existing, err := h.service.GetByID(r.Context(), id)
 	if err != nil {
+		respondError(w, http.StatusNotFound, "job not found")
+		return
+	}
+
+	if existing.UserID != userID {
 		respondError(w, http.StatusNotFound, "job not found")
 		return
 	}
@@ -157,9 +179,26 @@ func (h *JobHandler) UpdateJob(w http.ResponseWriter, r *http.Request) {
 
 // DeleteJob loescht einen Job.
 func (h *JobHandler) DeleteJob(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getUserID(r)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := parseID(r)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid job ID")
+		return
+	}
+
+	// Ownership pruefen
+	j, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "job not found")
+		return
+	}
+	if j.UserID != userID {
+		respondError(w, http.StatusNotFound, "job not found")
 		return
 	}
 
@@ -172,9 +211,26 @@ func (h *JobHandler) DeleteJob(w http.ResponseWriter, r *http.Request) {
 
 // RunJob startet die Ausfuehrung eines Jobs.
 func (h *JobHandler) RunJob(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getUserID(r)
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := parseID(r)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid job ID")
+		return
+	}
+
+	// Ownership pruefen
+	j, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "job not found")
+		return
+	}
+	if j.UserID != userID {
+		respondError(w, http.StatusNotFound, "job not found")
 		return
 	}
 

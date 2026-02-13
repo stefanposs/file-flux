@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { api, ApiAgent, ApiToken } from '../../services/api-service';
+import { api, ApiAgent, CreateTokenResponse } from '../../services/api-service';
 import { showToast } from '../shared/toast';
 
 /**
@@ -22,7 +22,7 @@ export class AgentOnboarding extends LitElement {
 
   // Step 2 – Token result
   @state() private createdAgent: ApiAgent | null = null;
-  @state() private createdToken: ApiToken | null = null;
+  @state() private createdToken: CreateTokenResponse | null = null;
   @state() private tokenCopied = false;
 
   // Step 4 – Connection check
@@ -599,7 +599,7 @@ export class AgentOnboarding extends LitElement {
       <div class="info-card">
         <p>
           Agent-ID: <strong>#${this.createdAgent.id}</strong> &nbsp;|&nbsp;
-          Token-Name: <strong>${this.createdToken.name}</strong>
+          Token-Name: <strong>${this.createdToken.token.name}</strong>
         </p>
       </div>
     `;

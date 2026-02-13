@@ -54,10 +54,10 @@ func main() {
 	// WebSocket-Client als Progress-Reporter setzen
 	transferManager.SetReporter(wsClient)
 
-	// Verbindung zum Server herstellen
+	// Verbindung zum Server herstellen (infinite retry mit Backoff)
 	go func() {
 		if err := wsClient.Connect(); err != nil {
-			logger.Fatalf("Fehler beim Herstellen der WebSocket-Verbindung: %v", err)
+			logger.Printf("WebSocket-Verbindung beendet: %v", err)
 		}
 	}()
 

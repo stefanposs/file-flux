@@ -80,6 +80,11 @@ export interface ApiToken {
   description: string | null;
 }
 
+export interface CreateTokenResponse {
+  token: ApiToken;
+  value: string;
+}
+
 export interface HealthResponse {
   status: string;
   version: string;
@@ -245,8 +250,8 @@ class ApiService {
     return (await this.request<ApiToken[]>('/tokens')) || [];
   }
 
-  async createToken(data: { name: string; agent_id: number }): Promise<ApiToken> {
-    return this.request<ApiToken>('/tokens', {
+  async createToken(data: { name: string; agent_id: number }): Promise<CreateTokenResponse> {
+    return this.request<CreateTokenResponse>('/tokens', {
       method: 'POST',
       body: JSON.stringify(data),
     });

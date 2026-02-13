@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,6 +68,8 @@ type Client struct {
 
 // NewManager erstellt einen neuen WebSocket-Manager
 func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValidator, transfers TransferUpdater, transferGetter TransferGetter) *Manager {
+	allowedOrigins := parseAllowedOrigins()
+
 	return &Manager{
 		clients:        make(map[int]*Client),
 		agents:         agents,
@@ -77,10 +81,41 @@ func NewManager(logger *log.Logger, agents AgentStatusUpdater, tokens TokenValid
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
 			CheckOrigin: func(r *http.Request) bool {
-				return true // In Produktion sollte dies restriktiver sein
+				// Agent-Verbindungen kommen mit Authorization-Header (kein Browser-Origin)
+				if r.Header.Get("Authorization") != "" {
+					return true
+				}
+				// Wenn keine Origins konfiguriert, alle erlauben (Development)
+				if len(allowedOrigins) == 0 {
+					return true
+				}
+				origin := r.Header.Get("Origin")
+				for _, allowed := range allowedOrigins {
+					if origin == allowed {
+						return true
+					}
+				}
+				logger.Printf("WebSocket-Verbindung von unerlaubtem Origin abgelehnt: %s", origin)
+				return false
 			},
 		},
 	}
+}
+
+// parseAllowedOrigins liest WS_ALLOWED_ORIGINS (kommagetrennt) aus der Umgebung.
+func parseAllowedOrigins() []string {
+	raw := os.Getenv("WS_ALLOWED_ORIGINS")
+	if raw == "" {
+		return nil
+	}
+	var origins []string
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			origins = append(origins, o)
+		}
+	}
+	return origins
 }
 
 // Handler gibt einen HTTP-Handler zurück, der WebSocket-Verbindungen akzeptiert
@@ -401,19 +436,9 @@ func (c *Client) writePump() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			// Nachricht aus dem Kanal warten
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
+			// Jede Nachricht als eigenen WebSocket-Frame senden,
+			// damit jeder Frame gültiges JSON bleibt.
+			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				return
 			}
 		case <-ticker.C:
