@@ -12,7 +12,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "lit": "^2.6.1"
+    "lit": "^3.3.2"
   },
   "devDependencies": {
     "@open-wc/testing": "^4.0.0",
