@@ -26,6 +26,7 @@ type RouterDeps struct {
 	DBPinger        DBPinger // fuer Deep Health Check
 	TokenValidator  TokenValidatorFunc
 	StorageDir      string
+	PollHandler     *PollHandler // optional: HTTP Long-Polling Endpoints
 }
 
 // DBPinger interface fuer Health Checks.
@@ -100,6 +101,15 @@ func NewRouter(deps RouterDeps) http.Handler {
 		fileRoutes := api.PathPrefix("/files").Subrouter()
 		fileRoutes.HandleFunc("/{transferId:[0-9]+}/upload", files.Upload).Methods("PUT")
 		fileRoutes.HandleFunc("/{transferId:[0-9]+}/download", files.Download).Methods("GET")
+	}
+
+	// ── Agent Polling Routes (Agent-Token-Authentifizierung, Long-Polling Fallback) ──
+	if deps.PollHandler != nil {
+		pollRoutes := api.PathPrefix("/agent").Subrouter()
+		pollRoutes.HandleFunc("/connect", deps.PollHandler.Connect).Methods("POST")
+		pollRoutes.HandleFunc("/poll", deps.PollHandler.Poll).Methods("GET")
+		pollRoutes.HandleFunc("/messages", deps.PollHandler.Messages).Methods("POST")
+		pollRoutes.HandleFunc("/ack", deps.PollHandler.Ack).Methods("POST")
 	}
 
 	// ── Health Check (Deep — prüft DB-Konnektivitaet) ──

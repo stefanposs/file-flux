@@ -12,7 +12,7 @@ import (
 
 	"github.com/stefanposs/file-flux/agent/internal/api"
 	"github.com/stefanposs/file-flux/agent/internal/config"
-	"github.com/stefanposs/file-flux/agent/internal/websocket"
+	"github.com/stefanposs/file-flux/agent/internal/transport"
 )
 
 // ProgressReporter sendet Fortschritts- und Fertigmeldungen an den Server.
@@ -58,7 +58,7 @@ func (m *Manager) SetReporter(r ProgressReporter) {
 }
 
 // StartTransfer startet einen neuen Transfer gemäß der Server-Anfrage.
-func (m *Manager) StartTransfer(request websocket.TransferRequest) error {
+func (m *Manager) StartTransfer(request transport.TransferRequest) error {
 	t := request.Transfer
 
 	m.activeMu.Lock()

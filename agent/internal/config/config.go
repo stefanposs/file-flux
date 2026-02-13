@@ -33,6 +33,9 @@ type ConnectionConfig struct {
 	HeartbeatInterval int    `yaml:"heartbeat_interval"`
 	ReconnectAttempts int    `yaml:"reconnect_attempts"`
 	ReconnectDelay    int    `yaml:"reconnect_delay"`
+	TransportMode     string `yaml:"transport_mode"`    // "auto" (default), "websocket", "polling"
+	PollTimeout       int    `yaml:"poll_timeout"`      // Long-Poll Timeout in Sekunden (default: 30)
+	WSProbeInterval   int    `yaml:"ws_probe_interval"` // Sekunden bis zum nächsten WS-Upgrade-Versuch im Polling-Modus (default: 300)
 }
 
 // TransferConfig enthält die Transfereinstellungen
@@ -82,6 +85,9 @@ func DefaultConfig() *Config {
 			HeartbeatInterval: 60,
 			ReconnectAttempts: 5,
 			ReconnectDelay:    10,
+			TransportMode:     "auto",
+			PollTimeout:       30,
+			WSProbeInterval:   300,
 		},
 		Transfers: TransferConfig{
 			ChunkSize:           8,

@@ -22,7 +22,7 @@ var _ agent.Repository = (*AgentRepo)(nil)
 
 func (r *AgentRepo) List(ctx context.Context) ([]agent.Agent, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, name, type, status, ip_address, system, version, last_seen, description, created_at
+		SELECT id, name, type, status, ip_address, system, version, last_seen, description, transport_mode, last_poll_at, created_at
 		FROM agents ORDER BY name
 	`)
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *AgentRepo) List(ctx context.Context) ([]agent.Agent, error) {
 		err := rows.Scan(
 			&a.ID, &a.Name, &a.Type, &a.Status,
 			&a.IPAddress, &a.System, &a.Version,
-			&a.LastSeen, &a.Description, &a.CreatedAt,
+			&a.LastSeen, &a.Description, &a.TransportMode, &a.LastPollAt, &a.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -49,12 +49,12 @@ func (r *AgentRepo) List(ctx context.Context) ([]agent.Agent, error) {
 func (r *AgentRepo) GetByID(ctx context.Context, id int) (*agent.Agent, error) {
 	var a agent.Agent
 	err := r.db.QueryRowContext(ctx, `
-		SELECT id, name, type, status, ip_address, system, version, last_seen, description, created_at
+		SELECT id, name, type, status, ip_address, system, version, last_seen, description, transport_mode, last_poll_at, created_at
 		FROM agents WHERE id = $1
 	`, id).Scan(
 		&a.ID, &a.Name, &a.Type, &a.Status,
 		&a.IPAddress, &a.System, &a.Version,
-		&a.LastSeen, &a.Description, &a.CreatedAt,
+		&a.LastSeen, &a.Description, &a.TransportMode, &a.LastPollAt, &a.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, common.ErrNotFound
@@ -92,6 +92,20 @@ func (r *AgentRepo) UpdateStatus(ctx context.Context, id int, status string) err
 	_, err := r.db.ExecContext(ctx, `
 		UPDATE agents SET status = $1, last_seen = NOW() WHERE id = $2
 	`, status, id)
+	return err
+}
+
+func (r *AgentRepo) UpdateTransportMode(ctx context.Context, id int, mode string) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE agents SET transport_mode = $1 WHERE id = $2
+	`, mode, id)
+	return err
+}
+
+func (r *AgentRepo) UpdateLastPoll(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE agents SET last_poll_at = NOW(), last_seen = NOW() WHERE id = $1
+	`, id)
 	return err
 }
 

@@ -19,6 +19,7 @@ import (
 type AgentStatusUpdater interface {
 	UpdateStatus(ctx context.Context, id int, status string) error
 	UpdateInfo(ctx context.Context, id int, system, ipAddress, version string) error
+	UpdateTransportMode(ctx context.Context, id int, mode string) error
 }
 
 // TransferUpdater defines the transfer status operations the WS manager needs.
@@ -268,9 +269,10 @@ func (c *Client) readPump(m *Manager) {
 		case MessageTypeAgentInfo:
 			// Agent-Informationen aktualisieren
 			var info struct {
-				System    string `json:"system"`
-				IPAddress string `json:"ip_address"`
-				Version   string `json:"version"`
+				System        string `json:"system"`
+				IPAddress     string `json:"ip_address"`
+				Version       string `json:"version"`
+				TransportMode string `json:"transport_mode"`
 			}
 			if err := json.Unmarshal(msg.Data, &info); err != nil {
 				m.logger.Printf("Fehler beim Parsen der Agent-Info: %v", err)
@@ -283,6 +285,15 @@ func (c *Client) readPump(m *Manager) {
 				m.logger.Printf("Fehler beim Aktualisieren der Agent-Info: %v", err)
 			} else {
 				m.logger.Printf("Agent %d Info aktualisiert: system=%s, ip=%s, version=%s", c.agentID, info.System, info.IPAddress, info.Version)
+			}
+
+			// Transport-Modus speichern
+			transportMode := info.TransportMode
+			if transportMode == "" {
+				transportMode = "websocket"
+			}
+			if err := m.agents.UpdateTransportMode(ctx, c.agentID, transportMode); err != nil {
+				m.logger.Printf("Fehler beim Aktualisieren des Transport-Modus: %v", err)
 			}
 
 		case MessageTypeTransferProgress:

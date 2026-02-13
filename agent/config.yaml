@@ -5,10 +5,14 @@ agent:
 
 connection:
   server_url: "ws://backend:3002/ws/agent"
+  server_http_url: "http://backend:3001"
   token: "demo-token"
   heartbeat_interval: 60
   reconnect_attempts: 5
   reconnect_delay: 10
+  transport_mode: "auto"        # "auto", "websocket" oder "polling"
+  poll_timeout: 30              # Long-Poll Timeout in Sekunden
+  ws_probe_interval: 300        # WebSocket-Probe-Intervall im Polling-Modus (Sekunden)
 
 transfers:
   chunk_size: 8  # MB

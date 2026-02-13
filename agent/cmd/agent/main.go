@@ -11,7 +11,7 @@ import (
 	"github.com/stefanposs/file-flux/agent/internal/config"
 	"github.com/stefanposs/file-flux/agent/internal/system"
 	"github.com/stefanposs/file-flux/agent/internal/transfer"
-	"github.com/stefanposs/file-flux/agent/internal/websocket"
+	"github.com/stefanposs/file-flux/agent/internal/transport"
 )
 
 func main() {
@@ -46,18 +46,44 @@ func main() {
 	apiClient := api.NewClient(cfg.Connection.ServerHTTPURL, cfg.Connection.Token)
 	transferManager := transfer.NewManager(logger, cfg.Transfers, apiClient)
 
-	// WebSocket-Client erstellen
-	wsClient := websocket.NewClient(cfg.Connection, logger)
-	wsClient.SetSystemInfo(sysInfo)
-	wsClient.SetTransferManager(transferManager)
+	// Transport erstellen (Auto: WebSocket mit Polling-Fallback)
+	sysInfoTransport := &transport.SystemInfo{
+		Hostname:   sysInfo.Hostname,
+		OSName:     sysInfo.OSName,
+		OSVersion:  sysInfo.OSVersion,
+		IPAddress:  sysInfo.IPAddress,
+		NumCPU:     sysInfo.NumCPUs,
+		TotalMemMB: sysInfo.TotalMemMB,
+		GoVersion:  sysInfo.GoVersion,
+		Version:    "1.0.0",
+	}
 
-	// WebSocket-Client als Progress-Reporter setzen
-	transferManager.SetReporter(wsClient)
+	autoTransport := transport.NewAutoTransport(transport.AutoConfig{
+		TransportMode: cfg.Connection.TransportMode,
+		WS: transport.WSConfig{
+			ServerURL:         cfg.Connection.ServerURL,
+			Token:             cfg.Connection.Token,
+			HeartbeatInterval: cfg.Connection.HeartbeatInterval,
+			ReconnectDelay:    cfg.Connection.ReconnectDelay,
+		},
+		Polling: transport.PollingConfig{
+			ServerHTTPURL:  cfg.Connection.ServerHTTPURL,
+			Token:          cfg.Connection.Token,
+			PollTimeout:    cfg.Connection.PollTimeout,
+			ReconnectDelay: cfg.Connection.ReconnectDelay,
+		},
+		WSProbeInterval: cfg.Connection.WSProbeInterval,
+	}, logger, sysInfoTransport)
 
-	// Verbindung zum Server herstellen (infinite retry mit Backoff)
+	autoTransport.SetTransferHandler(transferManager)
+
+	// AutoTransport als Progress-Reporter setzen
+	transferManager.SetReporter(autoTransport)
+
+	// Verbindung zum Server herstellen (Auto: WS mit Polling-Fallback)
 	go func() {
-		if err := wsClient.Connect(); err != nil {
-			logger.Printf("WebSocket-Verbindung beendet: %v", err)
+		if err := autoTransport.Connect(); err != nil {
+			logger.Printf("Transport-Verbindung beendet: %v", err)
 		}
 	}()
 
@@ -68,7 +94,7 @@ func main() {
 
 	// Aufräumen
 	logger.Println("Agent wird beendet...")
-	wsClient.Disconnect()
+	autoTransport.Disconnect()
 	transferManager.StopAll()
 	logger.Println("Agent erfolgreich beendet.")
 }

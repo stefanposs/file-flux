@@ -29,6 +29,7 @@ import (
 
 	// Internal (wird schrittweise ersetzt)
 	"github.com/stefanposs/file-flux/backend/internal/config"
+	"github.com/stefanposs/file-flux/backend/internal/dispatch"
 	"github.com/stefanposs/file-flux/backend/internal/middleware"
 	"github.com/stefanposs/file-flux/backend/internal/websocket"
 )
@@ -62,6 +63,28 @@ func (a *transferGetterAdapter) GetByID(ctx context.Context, id int) (websocket.
 		return websocket.TransferInfo{}, err
 	}
 	return websocket.TransferInfo{
+		ID:                 t.ID,
+		SourceAgentID:      t.SourceAgentID,
+		DestinationAgentID: t.DestinationAgentID,
+		SourcePath:         t.SourcePath,
+		DestinationPath:    t.DestinationPath,
+		Filename:           t.Filename,
+	}, nil
+}
+
+// dispatchTransferGetterAdapter adapts the transfer repo to the dispatch.TransferGetter interface.
+type dispatchTransferGetterAdapter struct {
+	repo interface {
+		GetByID(ctx context.Context, id int) (*transferdomain.Transfer, error)
+	}
+}
+
+func (a *dispatchTransferGetterAdapter) GetByID(ctx context.Context, id int) (dispatch.TransferInfo, error) {
+	t, err := a.repo.GetByID(ctx, id)
+	if err != nil {
+		return dispatch.TransferInfo{}, err
+	}
+	return dispatch.TransferInfo{
 		ID:                 t.ID,
 		SourceAgentID:      t.SourceAgentID,
 		DestinationAgentID: t.DestinationAgentID,
@@ -147,12 +170,31 @@ func main() {
 	// WebSocket-Manager (nutzt jetzt Domain-Repos)
 	wsManager := websocket.NewManager(logger, agentRepo, tokenRepo, &transferUpdaterAdapter{repo: transferRepo}, &transferGetterAdapter{repo: transferRepo})
 
+	// ─── Message Queue & Hybrid Dispatcher (WS + Polling Fallback) ──
+
+	messageQueue := postgres.NewAgentMessageQueue(pgDB)
+	hybridDispatcher := dispatch.NewHybridDispatcher(wsManager, messageQueue, agentRepo, logger)
+
+	// Cleanup-Loop: Stale Polling-Agents offline setzen + Queue aufräumen
+	dispatchCtx, dispatchCancel := context.WithCancel(context.Background())
+	defer dispatchCancel()
+	hybridDispatcher.StartCleanupLoop(dispatchCtx, 2*time.Minute, 2*time.Minute)
+
+	// Message Router für eingehende Polling-Nachrichten
+	messageRouter := dispatch.NewMessageRouter(
+		agentRepo,
+		&transferUpdaterAdapter{repo: transferRepo},
+		&dispatchTransferGetterAdapter{repo: transferRepo},
+		hybridDispatcher,
+		logger,
+	)
+
 	// ─── Application Layer (Services) ───────────────────────────────
 
 	tokenGen := jwtadapter.New()
 	authService := authsvc.NewService(userRepo, tokenGen, cfg.Auth.TokenExpiresIn)
-	agentService := agentsvc.NewService(agentRepo, wsManager) // wsManager implementiert ConnectionChecker
-	jobService := jobsvc.NewService(jobRepo, wsManager, transferRepo)
+	agentService := agentsvc.NewService(agentRepo, hybridDispatcher)         // hybridDispatcher implementiert ConnectionChecker
+	jobService := jobsvc.NewService(jobRepo, hybridDispatcher, transferRepo) // hybridDispatcher implementiert TransferDispatcher
 	transferService := transfersvc.NewService(transferRepo)
 	tokenService := tokensvc.NewService(tokenRepo)
 
@@ -160,6 +202,20 @@ func main() {
 
 	// Storage-Verzeichnis sicherstellen
 	os.MkdirAll(cfg.Server.StorageDir, 0o755)
+
+	// PollHandler erstellen (HTTP Long-Polling Fallback)
+	tokenValidatorFunc := func(tokenValue string) (int, error) {
+		return tokenRepo.Validate(context.Background(), tokenValue)
+	}
+
+	pollHandler := httpadapter.NewPollHandler(httpadapter.PollDeps{
+		TokenValidator: tokenValidatorFunc,
+		AgentRepo:      agentRepo,
+		MessageQueue:   messageQueue,
+		MessageRouter:  messageRouter,
+		Logger:         logger,
+		PollingTracker: hybridDispatcher,
+	})
 
 	router := httpadapter.NewRouter(httpadapter.RouterDeps{
 		AuthService:     authService,
@@ -170,9 +226,8 @@ func main() {
 		Logger:          logger,
 		DBPinger:        pgDB,
 		StorageDir:      cfg.Server.StorageDir,
-		TokenValidator: func(tokenValue string) (int, error) {
-			return tokenRepo.Validate(context.Background(), tokenValue)
-		},
+		TokenValidator:  tokenValidatorFunc,
+		PollHandler:     pollHandler,
 	})
 
 	// ─── Scheduler starten ─────────────────────────────────────────
@@ -196,7 +251,7 @@ func main() {
 		Addr:         httpAddr,
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 45 * time.Second, // Erhöht für Long-Polling (30s Poll + Verarbeitung)
 		IdleTimeout:  60 * time.Second,
 	}
 

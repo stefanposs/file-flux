@@ -88,6 +88,36 @@ CREATE INDEX IF NOT EXISTS idx_tokens_token_value ON tokens(token_value);
 CREATE INDEX IF NOT EXISTS idx_tokens_agent_id ON tokens(agent_id);
 CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
 
+-- Migration: transport_mode und last_poll_at Spalten für Polling-Support (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agents' AND column_name='transport_mode') THEN
+    ALTER TABLE agents ADD COLUMN transport_mode VARCHAR(20) NOT NULL DEFAULT 'websocket';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agents' AND column_name='last_poll_at') THEN
+    ALTER TABLE agents ADD COLUMN last_poll_at TIMESTAMP WITH TIME ZONE;
+  END IF;
+END $$;
+
+-- Agent Message Queue für HTTP Long-Polling Fallback
+CREATE TABLE IF NOT EXISTS agent_message_queue (
+  id BIGSERIAL PRIMARY KEY,
+  agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+  message_type VARCHAR(50) NOT NULL,
+  payload JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  delivered_at TIMESTAMP WITH TIME ZONE,
+  acked_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_message_queue_agent_pending
+  ON agent_message_queue (agent_id, created_at)
+  WHERE acked_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_agent_message_queue_cleanup
+  ON agent_message_queue (acked_at)
+  WHERE acked_at IS NOT NULL;
+
 -- Erstelle einen Admin-Benutzer, falls keiner existiert
 DO $$
 BEGIN
