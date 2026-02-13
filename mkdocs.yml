@@ -3,7 +3,7 @@
 # ==============================================================================
 # Based on WebMACS documentation setup.
 # Source:  assets/mkdocs/
-# Output:  docs-site/
+# Output:  docs/
 #
 # Serve:   mkdocs serve -a localhost:8001
 # Build:   mkdocs build
@@ -22,7 +22,7 @@ edit_uri: edit/main/assets/mkdocs/
 copyright: '&copy; 2024–2025 FileFlux'
 
 docs_dir: assets/mkdocs
-site_dir: docs-site
+site_dir: docs
 
 theme:
   name: material
