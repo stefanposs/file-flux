@@ -707,11 +707,7 @@ export class JobList extends LitElement {
     }
     
     try {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      // await jobService.runJob(jobId);
-      
-      // Demo-Implementierung
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simuliere Netzwerklatenz
+      await api.runJob(Number(jobId));
       
       const now = new Date().toISOString();
       const jobIndex = this.jobs.findIndex(job => job.id === jobId);
@@ -753,11 +749,7 @@ export class JobList extends LitElement {
     }
     
     try {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      // await jobService.deleteJob(jobId);
-      
-      // Demo-Implementierung
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simuliere Netzwerklatenz
+      await api.deleteJob(Number(jobId));
       
       this.jobs = this.jobs.filter(j => j.id !== jobId);
       this._applyFilters();

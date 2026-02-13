@@ -57,9 +57,12 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_FORMAT=${LOG_FORMAT:-json}
       - ENV=${ENV:-production}
+      - STORAGE_DIR=/app/storage
     ports:
       - "${API_PORT:-3001}:3001"
       - "${WS_PORT:-3002}:3002"
+    volumes:
+      - file-storage:/app/storage
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
       interval: 15s
@@ -103,6 +106,7 @@ services:
       - CONNECTION_TOKEN=${AGENT_TOKEN:-demo-agent-secret-token}
       - AGENT_NAME=${AGENT_NAME:-Central-Agent}
       - AGENT_TYPE=server
+      - CONNECTION_HTTP_URL=http://backend:3001
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - agent-data:/data
@@ -122,6 +126,8 @@ volumes:
   postgres-data:
     driver: local
   agent-data:
+    driver: local
+  file-storage:
     driver: local
 
 networks:

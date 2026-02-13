@@ -24,6 +24,8 @@ type RouterDeps struct {
 	TokenService    *tokensvc.Service
 	Logger          *log.Logger
 	DBPinger        DBPinger // fuer Deep Health Check
+	TokenValidator  TokenValidatorFunc
+	StorageDir      string
 }
 
 // DBPinger interface fuer Health Checks.
@@ -90,6 +92,14 @@ func NewRouter(deps RouterDeps) http.Handler {
 	tokenRoutes.Handle("", middleware.Auth(http.HandlerFunc(tokens.GetTokens))).Methods("GET")
 	tokenRoutes.Handle("", middleware.Auth(middleware.AdminOnly(http.HandlerFunc(tokens.CreateToken)))).Methods("POST")
 	tokenRoutes.Handle("/{id:[0-9]+}", middleware.Auth(middleware.AdminOnly(http.HandlerFunc(tokens.RevokeToken)))).Methods("DELETE")
+
+	// ── File Transfer Routes (Agent-Token-Authentifizierung) ──
+	if deps.TokenValidator != nil && deps.StorageDir != "" {
+		files := NewFileHandler(deps.StorageDir, deps.TokenValidator)
+		fileRoutes := api.PathPrefix("/files").Subrouter()
+		fileRoutes.HandleFunc("/{transferId:[0-9]+}/upload", files.Upload).Methods("PUT")
+		fileRoutes.HandleFunc("/{transferId:[0-9]+}/download", files.Download).Methods("GET")
+	}
 
 	// ── Health Check (Deep — prüft DB-Konnektivitaet) ──
 	router.HandleFunc("/health", NewHealthHandler(deps.DBPinger)).Methods("GET", "HEAD")

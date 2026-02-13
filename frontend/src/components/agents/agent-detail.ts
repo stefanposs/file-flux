@@ -406,7 +406,7 @@ export class AgentDetail extends LitElement {
             try {
               const apiTransfers = await api.getTransfers();
               this.transfers = apiTransfers
-                .filter(t => String(t.job_id) === this.agentId)
+                .filter(t => String(t.source_agent_id) === this.agentId || String(t.destination_agent_id) === this.agentId)
                 .map(t => ({
                   id: String(t.id),
                   jobId: String(t.job_id),

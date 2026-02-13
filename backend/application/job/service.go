@@ -4,19 +4,36 @@ package job
 import (
 	"context"
 	"errors"
+	"fmt"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/stefanposs/file-flux/backend/domain/common"
 	"github.com/stefanposs/file-flux/backend/domain/job"
+	"github.com/stefanposs/file-flux/backend/domain/transfer"
 )
+
+// TransferDispatcher sendet Nachrichten an verbundene Agenten.
+type TransferDispatcher interface {
+	SendToAgent(agentID int, message interface{}) error
+}
+
+// TransferCreator erstellt Transfer-Datensaetze.
+type TransferCreator interface {
+	Create(ctx context.Context, t *transfer.Transfer) error
+}
 
 // Service implementiert die Job-Geschaeftslogik.
 type Service struct {
-	jobs job.Repository
+	jobs       job.Repository
+	dispatcher TransferDispatcher
+	transfers  TransferCreator
 }
 
 // NewService erstellt einen neuen JobService.
-func NewService(jobs job.Repository) *Service {
-	return &Service{jobs: jobs}
+func NewService(jobs job.Repository, dispatcher TransferDispatcher, transfers TransferCreator) *Service {
+	return &Service{jobs: jobs, dispatcher: dispatcher, transfers: transfers}
 }
 
 // ListByUser gibt alle Jobs eines Benutzers zurueck.
@@ -87,4 +104,81 @@ func (s *Service) Pause(ctx context.Context, id int) error {
 // CountByUser gibt die Anzahl der Jobs eines Benutzers zurueck.
 func (s *Service) CountByUser(ctx context.Context, userID int) (int, error) {
 	return s.jobs.CountByUser(ctx, userID)
+}
+
+// Run fuehrt einen Job aus: erstellt einen Transfer und dispatcht ihn an den Quell-Agenten.
+func (s *Service) Run(ctx context.Context, id int) error {
+	j, err := s.jobs.GetByID(ctx, id)
+	if err != nil {
+		return common.ErrNotFound
+	}
+
+	// Transfer-Datensatz erstellen
+	t := &transfer.Transfer{
+		JobID:              &j.ID,
+		Filename:           filepath.Base(j.SourcePath),
+		Status:             transfer.StatusPending,
+		SourcePath:         j.SourcePath,
+		DestinationPath:    j.DestinationPath,
+		SourceAgentID:      &j.SourceAgentID,
+		DestinationAgentID: &j.DestinationAgentID,
+	}
+	if err := s.transfers.Create(ctx, t); err != nil {
+		return fmt.Errorf("transfer erstellen: %w", err)
+	}
+
+	// TransferRequest-Nachricht an den Quell-Agenten senden
+	msg := struct {
+		Type     string      `json:"type"`
+		Data     interface{} `json:"data"`
+	}{
+		Type: "transfer_request",
+		Data: struct {
+			Transfer struct {
+				ID               string `json:"id"`
+				JobID            string `json:"job_id"`
+				SourcePath       string `json:"source_path"`
+				DestinationPath  string `json:"destination_path"`
+				Compressed       bool   `json:"compressed"`
+				ChunkSize        int    `json:"chunk_size"`
+				TransferType     string `json:"transfer_type"`
+				DestinationAgent string `json:"destination_agent,omitempty"`
+			} `json:"transfer"`
+		}{
+			Transfer: struct {
+				ID               string `json:"id"`
+				JobID            string `json:"job_id"`
+				SourcePath       string `json:"source_path"`
+				DestinationPath  string `json:"destination_path"`
+				Compressed       bool   `json:"compressed"`
+				ChunkSize        int    `json:"chunk_size"`
+				TransferType     string `json:"transfer_type"`
+				DestinationAgent string `json:"destination_agent,omitempty"`
+			}{
+				ID:               strconv.Itoa(t.ID),
+				JobID:            strconv.Itoa(j.ID),
+				SourcePath:       j.SourcePath,
+				DestinationPath:  j.DestinationPath,
+				Compressed:       false,
+				ChunkSize:        8,
+				TransferType:     "upload",
+				DestinationAgent: strconv.Itoa(j.DestinationAgentID),
+			},
+		},
+	}
+
+	if err := s.dispatcher.SendToAgent(j.SourceAgentID, msg); err != nil {
+		return fmt.Errorf("dispatch an agent %d: %w", j.SourceAgentID, err)
+	}
+
+	// Job-Status aktualisieren
+	j.Status = job.StatusActive
+	now := time.Now()
+	j.LastRun = &now
+	return s.jobs.Update(ctx, j)
+}
+
+// ListActive gibt alle aktiven Jobs mit Schedule zurueck (fuer den Scheduler).
+func (s *Service) ListActive(ctx context.Context) ([]job.Job, error) {
+	return s.jobs.ListActive(ctx)
 }

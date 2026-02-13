@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -234,57 +235,75 @@ func (c *Client) readPump(m *Manager) {
 		case MessageTypeTransferProgress:
 			// Fortschritt eines Transfers aktualisieren
 			var progress struct {
-				TransferID int     `json:"transfer_id"`
-				Progress   float64 `json:"progress"`
+				TransferID json.RawMessage `json:"transfer_id"`
+				Progress   float64         `json:"progress"`
 			}
 			if err := json.Unmarshal(msg.Data, &progress); err != nil {
 				m.logger.Printf("Fehler beim Parsen des Transfer-Fortschritts: %v", err)
 				continue
 			}
 
+			transferID := parseTransferID(progress.TransferID)
+			if transferID <= 0 {
+				m.logger.Printf("Ungueltige Transfer-ID im Fortschritt")
+				continue
+			}
+
 			// Transfer als laufend markieren
 			ctx := context.Background()
-			if err := m.transfers.UpdateStatus(ctx, progress.TransferID, "running", ""); err != nil {
+			if err := m.transfers.UpdateStatus(ctx, transferID, "running", ""); err != nil {
 				m.logger.Printf("Fehler beim Aktualisieren des Transfer-Fortschritts: %v", err)
 			} else {
-				m.logger.Printf("Transfer %d Fortschritt: %.1f%%", progress.TransferID, progress.Progress*100)
+				m.logger.Printf("Transfer %d Fortschritt: %.1f%%", transferID, progress.Progress*100)
 			}
 
 		case MessageTypeTransferComplete:
 			// Transfer als abgeschlossen markieren
 			var complete struct {
-				TransferID int `json:"transfer_id"`
+				TransferID json.RawMessage `json:"transfer_id"`
 			}
 			if err := json.Unmarshal(msg.Data, &complete); err != nil {
 				m.logger.Printf("Fehler beim Parsen der Transfer-Fertigstellung: %v", err)
 				continue
 			}
 
+			transferID := parseTransferID(complete.TransferID)
+			if transferID <= 0 {
+				m.logger.Printf("Ungueltige Transfer-ID in Fertigstellung")
+				continue
+			}
+
 			// Transfer als abgeschlossen in der Datenbank markieren
 			ctx := context.Background()
-			if err := m.transfers.UpdateStatus(ctx, complete.TransferID, "completed", ""); err != nil {
-				m.logger.Printf("Fehler beim Abschließen des Transfers %d: %v", complete.TransferID, err)
+			if err := m.transfers.UpdateStatus(ctx, transferID, "completed", ""); err != nil {
+				m.logger.Printf("Fehler beim Abschließen des Transfers %d: %v", transferID, err)
 			} else {
-				m.logger.Printf("Transfer %d abgeschlossen", complete.TransferID)
+				m.logger.Printf("Transfer %d abgeschlossen", transferID)
 			}
 
 		case MessageTypeTransferError:
 			// Fehlermeldung für einen Transfer
 			var errorMsg struct {
-				TransferID int    `json:"transfer_id"`
-				Error      string `json:"error"`
+				TransferID json.RawMessage `json:"transfer_id"`
+				Error      string          `json:"error"`
 			}
 			if err := json.Unmarshal(msg.Data, &errorMsg); err != nil {
 				m.logger.Printf("Fehler beim Parsen des Transfer-Fehlers: %v", err)
 				continue
 			}
 
+			transferID := parseTransferID(errorMsg.TransferID)
+			if transferID <= 0 {
+				m.logger.Printf("Ungueltige Transfer-ID im Fehler")
+				continue
+			}
+
 			// Transfer als fehlgeschlagen in der Datenbank markieren
 			ctx := context.Background()
-			if err := m.transfers.UpdateStatus(ctx, errorMsg.TransferID, "failed", errorMsg.Error); err != nil {
-				m.logger.Printf("Fehler beim Markieren des Transfer-Fehlers %d: %v", errorMsg.TransferID, err)
+			if err := m.transfers.UpdateStatus(ctx, transferID, "failed", errorMsg.Error); err != nil {
+				m.logger.Printf("Fehler beim Markieren des Transfer-Fehlers %d: %v", transferID, err)
 			} else {
-				m.logger.Printf("Transfer %d fehlgeschlagen: %s", errorMsg.TransferID, errorMsg.Error)
+				m.logger.Printf("Transfer %d fehlgeschlagen: %s", transferID, errorMsg.Error)
 			}
 
 		default:
@@ -333,4 +352,20 @@ func (c *Client) writePump() {
 			}
 		}
 	}
+}
+
+// parseTransferID parst eine Transfer-ID aus json.RawMessage (kann int oder string sein).
+func parseTransferID(raw json.RawMessage) int {
+	// Versuche als int
+	var intID int
+	if err := json.Unmarshal(raw, &intID); err == nil {
+		return intID
+	}
+	// Versuche als string
+	var strID string
+	if err := json.Unmarshal(raw, &strID); err == nil {
+		id, _ := strconv.Atoi(strID)
+		return id
+	}
+	return 0
 }

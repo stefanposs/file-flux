@@ -20,6 +20,7 @@ type ServerConfig struct {
 	Port          int    `yaml:"port"`
 	WebSocketPort int    `yaml:"websocket_port"`
 	Host          string `yaml:"host"`
+	StorageDir    string `yaml:"storage_dir"`
 }
 
 // DatabaseConfig enthält die Datenbankeinstellungen
@@ -52,6 +53,7 @@ func LoadConfig(filePath string) (*Config, error) {
 			Port:          3001,
 			WebSocketPort: 3002,
 			Host:          "localhost",
+			StorageDir:    "./storage",
 		},
 		Database: DatabaseConfig{
 			Host:     "localhost",
@@ -101,6 +103,9 @@ func loadFromEnv(config *Config) {
 	}
 	if host := os.Getenv("SERVER_HOST"); host != "" {
 		config.Server.Host = host
+	}
+	if storageDir := os.Getenv("STORAGE_DIR"); storageDir != "" {
+		config.Server.StorageDir = storageDir
 	}
 
 	// Datenbank

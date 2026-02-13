@@ -14,6 +14,7 @@ import (
 	agentsvc "github.com/stefanposs/file-flux/backend/application/agent"
 	authsvc "github.com/stefanposs/file-flux/backend/application/auth"
 	jobsvc "github.com/stefanposs/file-flux/backend/application/job"
+	"github.com/stefanposs/file-flux/backend/application/scheduler"
 	tokensvc "github.com/stefanposs/file-flux/backend/application/token"
 	transfersvc "github.com/stefanposs/file-flux/backend/application/transfer"
 
@@ -99,11 +100,14 @@ func main() {
 	tokenGen := jwtadapter.New()
 	authService := authsvc.NewService(userRepo, tokenGen, cfg.Auth.TokenExpiresIn)
 	agentService := agentsvc.NewService(agentRepo, wsManager) // wsManager implementiert ConnectionChecker
-	jobService := jobsvc.NewService(jobRepo)
+	jobService := jobsvc.NewService(jobRepo, wsManager, transferRepo)
 	transferService := transfersvc.NewService(transferRepo)
 	tokenService := tokensvc.NewService(tokenRepo)
 
 	// ─── Adapter Layer (HTTP Router) ────────────────────────────────
+
+	// Storage-Verzeichnis sicherstellen
+	os.MkdirAll(cfg.Server.StorageDir, 0o755)
 
 	router := httpadapter.NewRouter(httpadapter.RouterDeps{
 		AuthService:     authService,
@@ -113,7 +117,32 @@ func main() {
 		TokenService:    tokenService,
 		Logger:          logger,
 		DBPinger:        pgDB,
+		StorageDir:      cfg.Server.StorageDir,
+		TokenValidator: func(tokenValue string) (int, error) {
+			return tokenRepo.Validate(context.Background(), tokenValue)
+		},
 	})
+
+	// ─── Scheduler starten ─────────────────────────────────────────
+
+	jobScheduler := scheduler.New(jobService, logger)
+	activeJobs, err := jobService.ListActive(context.Background())
+	if err != nil {
+		logger.Printf("Warnung: Aktive Jobs konnten nicht geladen werden: %v", err)
+	} else {
+		var schedulerJobs []scheduler.ActiveJob
+		for _, j := range activeJobs {
+			if j.Schedule != nil && *j.Schedule != "" {
+				schedulerJobs = append(schedulerJobs, scheduler.ActiveJob{
+					ID:       j.ID,
+					Schedule: *j.Schedule,
+				})
+			}
+		}
+		jobScheduler.LoadJobs(schedulerJobs)
+	}
+	jobScheduler.Start()
+	defer jobScheduler.Stop()
 
 	// ─── Server starten ─────────────────────────────────────────────
 

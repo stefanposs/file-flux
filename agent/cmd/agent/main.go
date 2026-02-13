@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/stefanposs/file-flux/agent/internal/api"
 	"github.com/stefanposs/file-flux/agent/internal/config"
 	"github.com/stefanposs/file-flux/agent/internal/system"
 	"github.com/stefanposs/file-flux/agent/internal/transfer"
@@ -42,12 +43,16 @@ func main() {
 	logger.Printf("IP-Adresse: %s", sysInfo.IPAddress)
 
 	// Transfer-Manager erstellen
-	transferManager := transfer.NewManager(logger, cfg.Transfers)
+	apiClient := api.NewClient(cfg.Connection.ServerHTTPURL, cfg.Connection.Token)
+	transferManager := transfer.NewManager(logger, cfg.Transfers, apiClient)
 
 	// WebSocket-Client erstellen
 	wsClient := websocket.NewClient(cfg.Connection, logger)
 	wsClient.SetSystemInfo(sysInfo)
 	wsClient.SetTransferManager(transferManager)
+
+	// WebSocket-Client als Progress-Reporter setzen
+	transferManager.SetReporter(wsClient)
 
 	// Verbindung zum Server herstellen
 	go func() {

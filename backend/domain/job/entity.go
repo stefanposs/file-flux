@@ -50,4 +50,5 @@ type Repository interface {
 	Update(ctx context.Context, job *Job) error
 	Delete(ctx context.Context, id int) error
 	CountByUser(ctx context.Context, userID int) (int, error)
+	ListActive(ctx context.Context) ([]Job, error)
 }

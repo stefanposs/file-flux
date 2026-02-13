@@ -169,9 +169,13 @@ func (h *JobHandler) RunJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.Activate(r.Context(), id); err != nil {
+	if err := h.service.Run(r.Context(), id); err != nil {
 		if errors.Is(err, common.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "job not found")
+			return
+		}
+		if errors.Is(err, common.ErrAgentNotConnected) {
+			respondError(w, http.StatusServiceUnavailable, "source agent not connected")
 			return
 		}
 		respondError(w, http.StatusInternalServerError, "failed to run job")

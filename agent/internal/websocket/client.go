@@ -272,3 +272,46 @@ func (c *Client) sendTransferError(transferID, errMsg string) {
 		Data: data,
 	})
 }
+
+// SendTransferError implementiert transfer.ProgressReporter.
+func (c *Client) SendTransferError(transferID, errMsg string) {
+	c.sendTransferError(transferID, errMsg)
+}
+
+// SendTransferProgress meldet den Transfer-Fortschritt an den Server.
+func (c *Client) SendTransferProgress(transferID string, progress float64, currentBytes, totalBytes int64) {
+	progressData := struct {
+		TransferID   string  `json:"transfer_id"`
+		Progress     float64 `json:"progress"`
+		CurrentBytes int64   `json:"current_bytes"`
+		TotalBytes   int64   `json:"total_bytes"`
+	}{
+		TransferID:   transferID,
+		Progress:     progress,
+		CurrentBytes: currentBytes,
+		TotalBytes:   totalBytes,
+	}
+
+	data, _ := json.Marshal(progressData)
+	c.sendMessage(Message{
+		Type: MessageTypeTransferProgress,
+		Data: data,
+	})
+}
+
+// SendTransferComplete meldet den erfolgreichen Abschluss eines Transfers.
+func (c *Client) SendTransferComplete(transferID string, duration time.Duration) {
+	completeData := struct {
+		TransferID string `json:"transfer_id"`
+		Duration   int64  `json:"duration"`
+	}{
+		TransferID: transferID,
+		Duration:   duration.Milliseconds(),
+	}
+
+	data, _ := json.Marshal(completeData)
+	c.sendMessage(Message{
+		Type: MessageTypeTransferComplete,
+		Data: data,
+	})
+}

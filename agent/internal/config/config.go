@@ -28,6 +28,7 @@ type AgentConfig struct {
 // ConnectionConfig enthält die Verbindungseinstellungen
 type ConnectionConfig struct {
 	ServerURL         string `yaml:"server_url"`
+	ServerHTTPURL     string `yaml:"server_http_url"`
 	Token             string `yaml:"token"`
 	HeartbeatInterval int    `yaml:"heartbeat_interval"`
 	ReconnectAttempts int    `yaml:"reconnect_attempts"`
@@ -76,6 +77,7 @@ func DefaultConfig() *Config {
 		},
 		Connection: ConnectionConfig{
 			ServerURL:         "ws://localhost:3002/ws/agent",
+			ServerHTTPURL:     "http://localhost:3001",
 			Token:             "",
 			HeartbeatInterval: 60,
 			ReconnectAttempts: 5,
@@ -143,6 +145,9 @@ func loadFromEnv(config *Config) {
 	}
 	if token := os.Getenv("CONNECTION_TOKEN"); token != "" {
 		config.Connection.Token = token
+	}
+	if httpURL := os.Getenv("CONNECTION_HTTP_URL"); httpURL != "" {
+		config.Connection.ServerHTTPURL = httpURL
 	}
 
 	// Weitere Umgebungsvariablen...

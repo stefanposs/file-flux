@@ -700,11 +700,15 @@ export class JobDetail extends LitElement {
     this.showConfirmDelete = false;
   }
 
-  _confirmDelete() {
-    // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-    showToast(`Job "${this.job?.name}" gelöscht.`, 'success');
-    this.showConfirmDelete = false;
-    this._navigateBack();
+  async _confirmDelete() {
+    try {
+      await api.deleteJob(Number(this.jobId));
+      showToast(`Job "${this.job?.name}" gelöscht.`, 'success');
+      this.showConfirmDelete = false;
+      this._navigateBack();
+    } catch (err) {
+      showToast('Fehler beim Löschen: ' + (err instanceof Error ? err.message : String(err)), 'error');
+    }
   }
 
   _navigateToTransfer(transferId) {
@@ -723,10 +727,16 @@ export class JobDetail extends LitElement {
     }));
   }
 
-  _runJob() {
+  async _runJob() {
     if (confirm(`Möchten Sie den Job "${this.job.name}" jetzt ausführen?`)) {
-      // In einer echten Implementierung würde hier ein API-Aufruf erfolgen
-      showToast('Job wird ausgeführt...', 'info');
+      try {
+        await api.runJob(Number(this.jobId));
+        showToast('Job wird ausgeführt...', 'success');
+        // Job-Daten neu laden
+        this._loadJobData();
+      } catch (err) {
+        showToast('Fehler beim Starten: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      }
     }
   }
 

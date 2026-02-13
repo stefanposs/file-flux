@@ -104,3 +104,32 @@ func (r *JobRepo) CountByUser(ctx context.Context, userID int) (int, error) {
 	err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM jobs WHERE user_id = $1`, userID).Scan(&count)
 	return count, err
 }
+
+func (r *JobRepo) ListActive(ctx context.Context) ([]job.Job, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT id, user_id, name, type, status, schedule, source_path, destination_path,
+		       source_agent_id, destination_agent_id, last_run, next_run, description, created_at
+		FROM jobs WHERE status = 'active' AND schedule IS NOT NULL
+		ORDER BY created_at ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var jobs []job.Job
+	for rows.Next() {
+		var j job.Job
+		err := rows.Scan(
+			&j.ID, &j.UserID, &j.Name, &j.Type, &j.Status, &j.Schedule,
+			&j.SourcePath, &j.DestinationPath,
+			&j.SourceAgentID, &j.DestinationAgentID,
+			&j.LastRun, &j.NextRun, &j.Description, &j.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, j)
+	}
+	return jobs, rows.Err()
+}
