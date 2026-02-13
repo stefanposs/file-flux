@@ -48,8 +48,8 @@ export class AgentOnboarding extends LitElement {
 
     .wizard {
       background: white;
-      border-radius: var(--radius-lg, 12px);
-      box-shadow: var(--shadow-lg, 0 8px 24px rgba(0,0,0,0.15));
+      border-radius: var(--ff-radius-lg, 12px);
+      box-shadow: var(--ff-shadow-lg, 0 8px 24px rgba(0,0,0,0.15));
       width: 640px;
       max-width: 92vw;
       max-height: 88vh;
@@ -61,14 +61,14 @@ export class AgentOnboarding extends LitElement {
     /* ── Header ─────────────────────────────────── */
     .wizard-header {
       padding: 24px 28px 20px;
-      border-bottom: 1px solid var(--gray-200, #e5e7eb);
+      border-bottom: 1px solid var(--ff-gray-200, #e5e7eb);
     }
 
     .wizard-header h2 {
       margin: 0 0 20px;
       font-size: 20px;
       font-weight: 700;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
     }
 
     /* ── Stepper ────────────────────────────────── */
@@ -89,13 +89,13 @@ export class AgentOnboarding extends LitElement {
       content: '';
       flex: 1;
       height: 2px;
-      background: var(--gray-200, #e5e7eb);
+      background: var(--ff-gray-200, #e5e7eb);
       margin: 0 8px;
     }
 
     .step-item.active:not(:last-child)::after,
     .step-item.done:not(:last-child)::after {
-      background: var(--primary-color, #4f46e5);
+      background: var(--ff-primary, #4f46e5);
     }
 
     .step-circle {
@@ -112,34 +112,34 @@ export class AgentOnboarding extends LitElement {
     }
 
     .step-item.done .step-circle {
-      background: var(--success-color, #10b981);
+      background: var(--ff-success, #10b981);
       color: white;
     }
 
     .step-item.active .step-circle {
-      background: var(--primary-color, #4f46e5);
+      background: var(--ff-primary, #4f46e5);
       color: white;
     }
 
     .step-item.pending .step-circle {
-      background: var(--gray-100, #f3f4f6);
-      color: var(--gray-400, #9ca3af);
-      border: 2px solid var(--gray-300, #d1d5db);
+      background: var(--ff-gray-100, #f3f4f6);
+      color: var(--ff-gray-400, #9ca3af);
+      border: 2px solid var(--ff-gray-300, #d1d5db);
     }
 
     .step-label {
       font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
-      color: var(--gray-500, #6b7280);
+      color: var(--ff-gray-500, #6b7280);
     }
 
     .step-item.active .step-label {
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
     }
 
     .step-item.done .step-label {
-      color: var(--success-color, #10b981);
+      color: var(--ff-success, #10b981);
     }
 
     /* ── Body ───────────────────────────────────── */
@@ -152,13 +152,13 @@ export class AgentOnboarding extends LitElement {
     .step-title {
       font-size: 17px;
       font-weight: 700;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0 0 4px;
     }
 
     .step-subtitle {
       font-size: 13px;
-      color: var(--gray-500, #6b7280);
+      color: var(--ff-gray-500, #6b7280);
       margin: 0 0 24px;
     }
 
@@ -171,7 +171,7 @@ export class AgentOnboarding extends LitElement {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: var(--gray-700, #374151);
+      color: var(--ff-gray-700, #374151);
       margin-bottom: 6px;
     }
 
@@ -180,8 +180,8 @@ export class AgentOnboarding extends LitElement {
     .form-group textarea {
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid var(--gray-300, #d1d5db);
-      border-radius: var(--radius-md, 8px);
+      border: 1px solid var(--ff-gray-300, #d1d5db);
+      border-radius: var(--ff-radius-md, 8px);
       font-size: 14px;
       font-family: inherit;
       transition: border-color 0.15s, box-shadow 0.15s;
@@ -192,8 +192,8 @@ export class AgentOnboarding extends LitElement {
     .form-group select:focus,
     .form-group textarea:focus {
       outline: none;
-      border-color: var(--primary-color, #4f46e5);
-      box-shadow: 0 0 0 3px var(--primary-light, rgba(79,70,229,0.1));
+      border-color: var(--ff-primary, #4f46e5);
+      box-shadow: 0 0 0 3px var(--ff-primary-light, var(--ff-primary-light));
     }
 
     .form-group textarea {
@@ -203,14 +203,14 @@ export class AgentOnboarding extends LitElement {
 
     .form-hint {
       font-size: 12px;
-      color: var(--gray-400, #9ca3af);
+      color: var(--ff-gray-400, #9ca3af);
       margin-top: 4px;
     }
 
     /* Token display */
     .token-display {
-      background: var(--gray-900, #111827);
-      border-radius: var(--radius-md, 8px);
+      background: var(--ff-gray-900, #111827);
+      border-radius: var(--ff-radius-md, 8px);
       padding: 16px;
       margin: 16px 0;
       position: relative;
@@ -218,7 +218,7 @@ export class AgentOnboarding extends LitElement {
 
     .token-value {
       font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-      color: #10b981;
+      color: var(--ff-success);
       font-size: 13px;
       word-break: break-all;
       line-height: 1.5;
@@ -229,9 +229,9 @@ export class AgentOnboarding extends LitElement {
       align-items: flex-start;
       gap: 8px;
       padding: 12px 14px;
-      background: var(--warning-light, #fef3c7);
-      border: 1px solid var(--warning-color, #f59e0b);
-      border-radius: var(--radius-md, 8px);
+      background: var(--ff-warning-light, #fef3c7);
+      border: 1px solid var(--ff-warning, #f59e0b);
+      border-radius: var(--ff-radius-md, 8px);
       margin-top: 12px;
     }
 
@@ -244,14 +244,14 @@ export class AgentOnboarding extends LitElement {
     .token-warning p {
       margin: 0;
       font-size: 13px;
-      color: var(--gray-700, #374151);
+      color: var(--ff-gray-700, #374151);
       line-height: 1.4;
     }
 
     /* Code blocks */
     .code-block {
-      background: var(--gray-900, #111827);
-      border-radius: var(--radius-md, 8px);
+      background: var(--ff-gray-900, #111827);
+      border-radius: var(--ff-radius-md, 8px);
       padding: 16px;
       margin: 12px 0;
       position: relative;
@@ -261,7 +261,7 @@ export class AgentOnboarding extends LitElement {
       margin: 0;
       font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
       font-size: 13px;
-      color: #e5e7eb;
+      color: var(--ff-gray-200);
       line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-all;
@@ -271,10 +271,10 @@ export class AgentOnboarding extends LitElement {
       position: absolute;
       top: 8px;
       right: 8px;
-      background: var(--gray-700, #374151);
-      color: var(--gray-300, #d1d5db);
+      background: var(--ff-gray-700, #374151);
+      color: var(--ff-gray-300, #d1d5db);
       border: none;
-      border-radius: var(--radius-sm, 4px);
+      border-radius: var(--ff-radius-sm, 4px);
       padding: 4px 10px;
       font-size: 11px;
       cursor: pointer;
@@ -282,12 +282,12 @@ export class AgentOnboarding extends LitElement {
     }
 
     .copy-btn:hover {
-      background: var(--gray-600, #4b5563);
+      background: var(--ff-gray-600, #4b5563);
       color: white;
     }
 
     .copy-btn.copied {
-      background: var(--success-color, #10b981);
+      background: var(--ff-success, #10b981);
       color: white;
     }
 
@@ -297,7 +297,7 @@ export class AgentOnboarding extends LitElement {
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--gray-400, #9ca3af);
+      color: var(--ff-gray-400, #9ca3af);
       margin: 20px 0 6px;
     }
 
@@ -319,16 +319,16 @@ export class AgentOnboarding extends LitElement {
     }
 
     .status-icon.waiting {
-      background: var(--primary-light, rgba(79,70,229,0.1));
+      background: var(--ff-primary-light, var(--ff-primary-light));
       animation: pulse 2s infinite;
     }
 
     .status-icon.connected {
-      background: var(--success-light, #d1fae5);
+      background: var(--ff-success-light, #d1fae5);
     }
 
     .status-icon.timeout {
-      background: var(--warning-light, #fef3c7);
+      background: var(--ff-warning-light, #fef3c7);
     }
 
     @keyframes pulse {
@@ -339,13 +339,13 @@ export class AgentOnboarding extends LitElement {
     .status-text {
       font-size: 15px;
       font-weight: 600;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0 0 6px;
     }
 
     .status-detail {
       font-size: 13px;
-      color: var(--gray-500, #6b7280);
+      color: var(--ff-gray-500, #6b7280);
       margin: 0;
     }
 
@@ -353,27 +353,27 @@ export class AgentOnboarding extends LitElement {
       margin-top: 24px;
       text-align: left;
       padding: 16px;
-      background: var(--gray-50, #f9fafb);
-      border-radius: var(--radius-md, 8px);
+      background: var(--ff-gray-50, #f9fafb);
+      border-radius: var(--ff-radius-md, 8px);
     }
 
     .troubleshoot h4 {
       font-size: 13px;
       font-weight: 700;
-      color: var(--gray-700, #374151);
+      color: var(--ff-gray-700, #374151);
       margin: 0 0 8px;
     }
 
     .troubleshoot li {
       font-size: 13px;
-      color: var(--gray-600, #4b5563);
+      color: var(--ff-gray-600, #4b5563);
       margin-bottom: 4px;
     }
 
     /* ── Footer ─────────────────────────────────── */
     .wizard-footer {
       padding: 16px 28px;
-      border-top: 1px solid var(--gray-200, #e5e7eb);
+      border-top: 1px solid var(--ff-gray-200, #e5e7eb);
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -381,7 +381,7 @@ export class AgentOnboarding extends LitElement {
 
     .btn {
       padding: 10px 20px;
-      border-radius: var(--radius-md, 8px);
+      border-radius: var(--ff-radius-md, 8px);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -398,51 +398,38 @@ export class AgentOnboarding extends LitElement {
     }
 
     .btn-secondary {
-      background: var(--gray-100, #f3f4f6);
-      color: var(--gray-700, #374151);
+      background: var(--ff-gray-100, #f3f4f6);
+      color: var(--ff-gray-700, #374151);
     }
 
     .btn-secondary:hover:not(:disabled) {
-      background: var(--gray-200, #e5e7eb);
+      background: var(--ff-gray-200, #e5e7eb);
     }
 
     .btn-primary {
-      background: var(--primary-color, #4f46e5);
+      background: var(--ff-primary, #4f46e5);
       color: white;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: var(--primary-hover, #4338ca);
+      background: var(--ff-primary-hover, #4338ca);
     }
 
     .btn-success {
-      background: var(--success-color, #10b981);
+      background: var(--ff-success, #10b981);
       color: white;
     }
 
     .btn-success:hover:not(:disabled) {
-      background: #059669;
+      background: var(--ff-success);
     }
 
-    /* Spinner */
-    .spinner-inline {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      display: inline-block;
-    }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
 
     .info-card {
-      background: var(--primary-light, rgba(79,70,229,0.1));
-      border: 1px solid var(--primary-color, #4f46e5);
-      border-radius: var(--radius-md, 8px);
+      background: var(--ff-primary-light, var(--ff-primary-light));
+      border: 1px solid var(--ff-primary, #4f46e5);
+      border-radius: var(--ff-radius-md, 8px);
       padding: 14px 16px;
       margin-top: 16px;
     }
@@ -450,12 +437,12 @@ export class AgentOnboarding extends LitElement {
     .info-card p {
       margin: 0;
       font-size: 13px;
-      color: var(--gray-700, #374151);
+      color: var(--ff-gray-700, #374151);
       line-height: 1.5;
     }
 
     .info-card strong {
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
     }
   `;
 
@@ -707,7 +694,7 @@ paths:
     return html`
       <div class="connection-check">
         <div class="status-icon waiting">
-          <span class="spinner-inline" style="width:28px;height:28px;border-width:3px"></span>
+          <ff-loading-spinner size="small"></ff-loading-spinner>
         </div>
         <p class="status-text">Warte auf Verbindung…</p>
         <p class="status-detail">
@@ -855,7 +842,7 @@ paths:
                   ?disabled=${!this._canNext() || this.isSubmitting}
                   @click=${this._next}
                 >
-                  ${this.isSubmitting ? html`<span class="spinner-inline"></span> Erstelle…` : 'Weiter →'}
+                  ${this.isSubmitting ? html`<ff-loading-spinner size="small"></ff-loading-spinner> Erstelle…` : 'Weiter →'}
                 </button>
               `}
             </div>

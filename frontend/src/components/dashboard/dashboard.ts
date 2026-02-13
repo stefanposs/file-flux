@@ -55,7 +55,7 @@ export class Dashboard extends LitElement {
     
     .dashboard-title {
       font-size: 24px;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0;
       font-weight: 700;
     }
@@ -68,12 +68,12 @@ export class Dashboard extends LitElement {
     .refresh-button {
       padding: 8px 16px;
       background-color: white;
-      border: 1px solid var(--gray-200, #e5e7eb);
-      border-radius: var(--radius-sm, 6px);
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-sm, 6px);
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
-      color: var(--gray-700, #374151);
+      color: var(--ff-gray-700, #374151);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -81,29 +81,11 @@ export class Dashboard extends LitElement {
     }
 
     .refresh-button:hover {
-      border-color: var(--gray-300, #d1d5db);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border-color: var(--ff-gray-300, #d1d5db);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
     }
     
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 300px;
-    }
-    
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--gray-200, #e5e7eb);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+
     
     .stats-grid {
       display: grid;
@@ -114,67 +96,67 @@ export class Dashboard extends LitElement {
     
     .stat-card {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
       padding: 24px;
       display: flex;
       align-items: flex-start;
       gap: 16px;
-      border: 1px solid var(--gray-200, #e5e7eb);
-      border-left: 4px solid var(--primary-color, #4f46e5);
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
+      border-left: 4px solid var(--ff-primary, #4f46e5);
       transition: box-shadow 0.2s, transform 0.15s;
     }
 
     .stat-card:hover {
-      box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+      box-shadow: var(--ff-shadow-md, 0 4px 6px rgba(0,0,0,0.1));
       transform: translateY(-1px);
     }
 
-    .stat-card:nth-child(2) { border-left-color: var(--success-color, #10b981); }
-    .stat-card:nth-child(3) { border-left-color: var(--error-color, #ef4444); }
-    .stat-card:nth-child(4) { border-left-color: var(--info-color, #3b82f6); }
-    .stat-card:nth-child(5) { border-left-color: var(--secondary-color, #06b6d4); }
+    .stat-card:nth-child(2) { border-left-color: var(--ff-success, #10b981); }
+    .stat-card:nth-child(3) { border-left-color: var(--ff-error, #ef4444); }
+    .stat-card:nth-child(4) { border-left-color: var(--ff-info, #3b82f6); }
+    .stat-card:nth-child(5) { border-left-color: var(--ff-secondary, #06b6d4); }
     
     .stat-value {
       font-size: 28px;
       font-weight: 700;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0 0 2px 0;
       line-height: 1.1;
     }
     
     .stat-label {
       font-size: 13px;
-      color: var(--gray-500, #6b7280);
+      color: var(--ff-gray-500, #6b7280);
       font-weight: 500;
     }
     
     .stat-icon {
       width: 40px;
       height: 40px;
-      border-radius: var(--radius-md, 8px);
+      border-radius: var(--ff-radius-md, 8px);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 16px;
       font-weight: 700;
       flex-shrink: 0;
-      background-color: var(--primary-light, #eef2ff);
-      color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary-light, #eef2ff);
+      color: var(--ff-primary, #4f46e5);
     }
     
     .section-title {
       font-size: 17px;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 30px 0 15px 0;
       font-weight: 600;
     }
     
     .transfers-container {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
       overflow: hidden;
     }
     
@@ -187,12 +169,12 @@ export class Dashboard extends LitElement {
     .transfers-table td {
       padding: 12px 15px;
       text-align: left;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
     }
     
     .transfers-table th {
-      background-color: var(--gray-50, #f9fafb);
-      color: var(--gray-600, #4b5563);
+      background-color: var(--ff-gray-50, #f9fafb);
+      color: var(--ff-gray-600, #4b5563);
       font-weight: 600;
       font-size: 12px;
       text-transform: uppercase;
@@ -204,41 +186,13 @@ export class Dashboard extends LitElement {
     }
     
     .transfers-table tr:hover {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
       cursor: pointer;
     }
     
-    .status-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    
-    .status-completed {
-      background-color: var(--success-light, #ecfdf5);
-      color: var(--success-color, #10b981);
-    }
-    
-    .status-failed {
-      background-color: var(--error-light, #fef2f2);
-      color: var(--error-color, #ef4444);
-    }
-    
-    .status-running {
-      background-color: var(--info-light, #eff6ff);
-      color: var(--info-color, #3b82f6);
-    }
-    
-    .status-pending {
-      background-color: var(--warning-light, #fffbeb);
-      color: var(--warning-color, #f59e0b);
-    }
-    
     .error-container {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
+      background-color: var(--ff-error-light);
+      color: var(--ff-error);
       padding: 20px;
       border-radius: 8px;
       text-align: center;
@@ -248,29 +202,23 @@ export class Dashboard extends LitElement {
       display: block;
       text-align: right;
       padding: 12px 16px;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       text-decoration: none;
       cursor: pointer;
-      border-top: 1px solid var(--gray-100, #f3f4f6);
+      border-top: 1px solid var(--ff-gray-100, #f3f4f6);
       font-size: 14px;
       font-weight: 500;
     }
 
     .view-all-link:hover {
-      background: var(--gray-50, #f9fafb);
-    }
-    
-    .empty-message {
-      padding: 24px;
-      text-align: center;
-      color: #6c757d;
+      background: var(--ff-gray-50, #f9fafb);
     }
     
     .job-status-section {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
       padding: 20px;
       margin-bottom: 30px;
     }
@@ -280,7 +228,7 @@ export class Dashboard extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 16px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
       cursor: pointer;
     }
     
@@ -289,22 +237,22 @@ export class Dashboard extends LitElement {
     }
     
     .job-card:hover {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
     }
     
     .job-name {
       font-weight: 500;
-      color: #212529;
+      color: var(--ff-gray-900);
     }
     
     .job-status {
       font-size: 14px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .job-next-run {
       font-size: 14px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .detailed-stats {
@@ -315,19 +263,19 @@ export class Dashboard extends LitElement {
     
     .detailed-stats-card {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
       padding: 20px;
     }
     
     .detailed-stats-title {
       font-size: 15px;
       font-weight: 600;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0 0 16px 0;
       padding-bottom: 8px;
-      border-bottom: 2px solid var(--gray-200, #e5e7eb);
+      border-bottom: 2px solid var(--ff-gray-200, #e5e7eb);
     }
     
     .detailed-stats-item {
@@ -335,7 +283,7 @@ export class Dashboard extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
     }
     
     .detailed-stats-item:last-child {
@@ -344,13 +292,13 @@ export class Dashboard extends LitElement {
     
     .detailed-stats-label {
       font-size: 14px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .detailed-stats-value {
       font-size: 14px;
       font-weight: 600;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
     }
     
     @media (max-width: 768px) {
@@ -527,11 +475,7 @@ export class Dashboard extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -564,7 +508,7 @@ export class Dashboard extends LitElement {
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--success-light,#ecfdf5);color:var(--success-color,#10b981);">✓</div>
+            <div class="stat-icon" style="background:var(--ff-success-light,#ecfdf5);color:var(--ff-success,#10b981);">✓</div>
             <div>
               <div class="stat-value">${this.stats.completedTransfers}</div>
               <div class="stat-label">Abgeschlossene Transfers</div>
@@ -572,7 +516,7 @@ export class Dashboard extends LitElement {
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--error-light,#fef2f2);color:var(--error-color,#ef4444);">!</div>
+            <div class="stat-icon" style="background:var(--ff-error-light,#fef2f2);color:var(--ff-error,#ef4444);">!</div>
             <div>
               <div class="stat-value">${this.stats.failedTransfers}</div>
               <div class="stat-label">Fehlgeschlagene Transfers</div>
@@ -580,7 +524,7 @@ export class Dashboard extends LitElement {
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--info-light,#eff6ff);color:var(--info-color,#3b82f6);">A</div>
+            <div class="stat-icon" style="background:var(--ff-info-light,#eff6ff);color:var(--ff-info,#3b82f6);">A</div>
             <div>
               <div class="stat-value">${this.stats.onlineAgents} / ${this.stats.totalAgents}</div>
               <div class="stat-label">Online Agents</div>
@@ -588,7 +532,7 @@ export class Dashboard extends LitElement {
           </div>
           
           <div class="stat-card">
-            <div class="stat-icon" style="background:#ecfeff;color:#06b6d4;">↕</div>
+            <div class="stat-icon" style="background:var(--ff-secondary-light);color:var(--ff-secondary);">↕</div>
             <div>
               <div class="stat-value">${this._formatFileSize(this.stats.transferVolume)}</div>
               <div class="stat-label">Übertragenes Volumen</div>
@@ -599,7 +543,7 @@ export class Dashboard extends LitElement {
         <h2 class="section-title">Letzte Transfers</h2>
         <div class="transfers-container">
           ${this.stats.recentTransfers.length === 0 ? html`
-            <div class="empty-message">Keine Transfers vorhanden.</div>
+            <ff-empty-state icon="📊" title="Keine Transfers vorhanden"></ff-empty-state>
           ` : html`
             <table class="transfers-table">
               <thead>
@@ -617,9 +561,7 @@ export class Dashboard extends LitElement {
                     <td>${this._formatFileSize(transfer.size)}</td>
                     <td>${this._formatDateTime(transfer.startTime)}</td>
                     <td>
-                      <span class="status-badge status-${transfer.status}">
-                        ${this._formatStatus(transfer.status)}
-                      </span>
+                      <ff-status-badge status="${transfer.status}"></ff-status-badge>
                     </td>
                   </tr>
                 `)}
@@ -634,7 +576,7 @@ export class Dashboard extends LitElement {
         <h2 class="section-title">Aktive Jobs</h2>
         <div class="job-status-section">
           ${this._activeJobs.length === 0 ? html`
-            <div class="empty-message">Keine aktiven Jobs vorhanden.</div>
+            <ff-empty-state icon="📊" title="Keine aktiven Jobs vorhanden"></ff-empty-state>
           ` : html`
             ${this._activeJobs.map(job => html`
               <div class="job-card" @click=${() => this._navigateToJob(job.id)}>
@@ -702,16 +644,6 @@ export class Dashboard extends LitElement {
         ` : ''}
       </div>
     `;
-  }
-
-  _formatStatus(status) {
-    switch (status) {
-      case 'completed': return 'Abgeschlossen';
-      case 'failed': return 'Fehlgeschlagen';
-      case 'running': return 'Wird ausgeführt';
-      case 'pending': return 'Ausstehend';
-      default: return status;
-    }
   }
 
   _formatDateTime(dateStr) {

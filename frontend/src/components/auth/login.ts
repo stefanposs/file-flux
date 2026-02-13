@@ -17,7 +17,7 @@ export class Login extends LitElement {
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #f5f5f5;
+        background-color: var(--ff-gray-100);
       }
       
       .login-container {
@@ -30,7 +30,7 @@ export class Login extends LitElement {
       
       h2 {
         text-align: center;
-        color: var(--primary-color, #4f46e5);
+        color: var(--ff-primary, #4f46e5);
         margin-bottom: 24px;
       }
       
@@ -47,14 +47,14 @@ export class Login extends LitElement {
       input {
         width: 100%;
         padding: 10px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--ff-border);
         border-radius: 4px;
       }
       
       button {
         width: 100%;
         padding: 12px;
-        background-color: var(--primary-color, #4f46e5);
+        background-color: var(--ff-primary, #4f46e5);
         color: white;
         border: none;
         border-radius: 4px;
@@ -63,7 +63,7 @@ export class Login extends LitElement {
       }
       
       button:disabled {
-        background-color: #6c757d;
+        background-color: var(--ff-gray-500);
       }
       
       .error {
@@ -74,7 +74,7 @@ export class Login extends LitElement {
       .demo-hint {
         margin-top: 20px;
         padding: 10px;
-        background-color: #f8f9fa;
+        background-color: var(--ff-gray-50);
         border-radius: 4px;
         font-size: 14px;
       }

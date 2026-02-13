@@ -7,6 +7,7 @@ import { showToast } from './components/shared/toast';
 // Komponenten importieren
 import './components/shared/header';
 import './components/shared/toast';
+import './components/shared/breadcrumb';
 import './components/dashboard/dashboard';
 import './components/jobs/job-list';
 import './components/jobs/job-detail';
@@ -121,7 +122,7 @@ export class FileFluxApp extends LitElement {
 
     main {
       flex: 1;
-      background-color: var(--gray-50);
+      background-color: var(--ff-gray-50);
       padding: 24px;
       overflow-y: auto;
     }
@@ -129,26 +130,6 @@ export class FileFluxApp extends LitElement {
     .content-container {
       max-width: 1400px;
       margin: 0 auto;
-    }
-
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-    }
-
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid var(--gray-200);
-      border-left-color: var(--primary-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
 
     .login-container {
@@ -214,17 +195,17 @@ export class FileFluxApp extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--gray-50);
+      background: var(--ff-gray-50);
     }
 
     .login-box {
       background-color: white;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
+      border-radius: var(--ff-radius-lg);
+      box-shadow: var(--ff-shadow-lg);
       padding: 40px;
       width: 100%;
       max-width: 420px;
-      color: var(--gray-800);
+      color: var(--ff-gray-800);
     }
 
     .login-logo {
@@ -238,8 +219,8 @@ export class FileFluxApp extends LitElement {
       justify-content: center;
       width: 48px;
       height: 48px;
-      border-radius: var(--radius-md);
-      background: var(--primary-color);
+      border-radius: var(--ff-radius-md);
+      background: var(--ff-primary);
       color: white;
       font-size: 18px;
       font-weight: 700;
@@ -248,7 +229,7 @@ export class FileFluxApp extends LitElement {
     }
 
     .login-logo h1 {
-      color: var(--gray-900);
+      color: var(--ff-gray-900);
       margin: 0;
       font-size: 22px;
       font-weight: 700;
@@ -258,7 +239,7 @@ export class FileFluxApp extends LitElement {
       font-size: 15px;
       margin-bottom: 24px;
       text-align: center;
-      color: var(--gray-500);
+      color: var(--ff-gray-500);
       font-weight: 400;
     }
 
@@ -280,23 +261,23 @@ export class FileFluxApp extends LitElement {
     .form-input {
       width: 100%;
       padding: 10px 14px;
-      border: 1px solid var(--gray-300);
-      border-radius: var(--radius-sm);
+      border: 1px solid var(--ff-gray-300);
+      border-radius: var(--ff-radius-sm);
       font-size: 15px;
       transition: border-color 0.2s, box-shadow 0.2s;
       outline: none;
     }
 
     .form-input:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px var(--primary-light);
+      border-color: var(--ff-primary);
+      box-shadow: 0 0 0 3px var(--ff-primary-light);
     }
 
     .login-button {
-      background-color: var(--primary-color);
+      background-color: var(--ff-primary);
       color: white;
       border: none;
-      border-radius: var(--radius-sm);
+      border-radius: var(--ff-radius-sm);
       padding: 12px;
       font-size: 15px;
       font-weight: 600;
@@ -306,7 +287,7 @@ export class FileFluxApp extends LitElement {
     }
 
     .login-button:hover {
-      background-color: var(--primary-hover);
+      background-color: var(--ff-primary-hover);
     }
 
     .login-button:active {
@@ -321,7 +302,7 @@ export class FileFluxApp extends LitElement {
     }
 
     .demo-mode-button {
-      background-color: var(--secondary-color);
+      background-color: var(--ff-secondary);
       color: #333;
       border: none;
       border-radius: 4px;
@@ -337,21 +318,21 @@ export class FileFluxApp extends LitElement {
     }
 
     .demo-mode-banner {
-      background-color: var(--warning-light);
-      color: var(--gray-800);
+      background-color: var(--ff-warning-light);
+      color: var(--ff-gray-800);
       text-align: center;
       padding: 8px;
       font-weight: 500;
       font-size: 14px;
-      border-bottom: 1px solid var(--warning-color);
+      border-bottom: 1px solid var(--ff-warning);
     }
 
     .login-error {
-      color: var(--error-color);
+      color: var(--ff-error);
       margin-bottom: 16px;
       padding: 10px 12px;
-      background-color: var(--error-light);
-      border-radius: var(--radius-sm);
+      background-color: var(--ff-error-light);
+      border-radius: var(--ff-radius-sm);
       text-align: center;
       font-size: 14px;
     }
@@ -667,11 +648,11 @@ export class FileFluxApp extends LitElement {
       default:
         return html`
           <div style="text-align:center;padding:80px 20px;">
-            <div style="width:64px;height:64px;border-radius:12px;background:var(--primary-light);color:var(--primary-color);display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin-bottom:20px;">?</div>
-            <h1 style="font-size:48px;margin:0;color:var(--gray-900);font-weight:700;">404</h1>
-            <p style="font-size:16px;color:var(--gray-500);margin:12px 0 28px;line-height:1.5;">Die Seite <code style="background:var(--gray-100);padding:2px 8px;border-radius:4px;font-size:14px;">${this.currentRoute}</code> wurde nicht gefunden.</p>
+            <div style="width:64px;height:64px;border-radius:12px;background:var(--ff-primary-light);color:var(--ff-primary);display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin-bottom:20px;">?</div>
+            <h1 style="font-size:48px;margin:0;color:var(--ff-gray-900);font-weight:700;">404</h1>
+            <p style="font-size:16px;color:var(--ff-gray-500);margin:12px 0 28px;line-height:1.5;">Die Seite <code style="background:var(--ff-gray-100);padding:2px 8px;border-radius:4px;font-size:14px;">${this.currentRoute}</code> wurde nicht gefunden.</p>
             <button
-              style="background:var(--primary-color);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 24px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s;"
+              style="background:var(--ff-primary);color:#fff;border:none;border-radius:var(--ff-radius-sm);padding:10px 24px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s;"
               @click=${() => this._navigate('/')}
             >Zurück zum Dashboard</button>
           </div>
@@ -681,11 +662,7 @@ export class FileFluxApp extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner label="Laden…"></ff-loading-spinner>`;
     }
 
     if (!this.isAuthenticated) {

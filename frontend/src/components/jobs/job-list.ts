@@ -52,16 +52,16 @@ export class JobList extends LitElement {
     
     h1 {
       font-size: 24px;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0;
       font-weight: 700;
     }
     
     .add-job-button {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       border: none;
-      border-radius: var(--radius-sm, 6px);
+      border-radius: var(--ff-radius-sm, 6px);
       padding: 8px 16px;
       font-weight: 600;
       cursor: pointer;
@@ -73,7 +73,7 @@ export class JobList extends LitElement {
     }
     
     .add-job-button:hover {
-      background-color: var(--primary-hover, #4338ca);
+      background-color: var(--ff-primary-hover, #4338ca);
     }
     
     .filters {
@@ -91,7 +91,7 @@ export class JobList extends LitElement {
     .search-input {
       width: 100%;
       padding: 8px 16px 8px 40px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 16px;
     }
@@ -101,7 +101,7 @@ export class JobList extends LitElement {
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .filter-group {
@@ -112,12 +112,12 @@ export class JobList extends LitElement {
     
     .filter-label {
       font-size: 14px;
-      color: #666;
+      color: var(--ff-gray-500);
     }
     
     .filter-select {
       padding: 8px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       min-width: 120px;
     }
@@ -130,9 +130,9 @@ export class JobList extends LitElement {
     
     .job-card {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
       overflow: hidden;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       cursor: pointer;
@@ -140,11 +140,11 @@ export class JobList extends LitElement {
     
     .job-card:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+      box-shadow: var(--ff-shadow-md, 0 4px 6px rgba(0,0,0,0.1));
     }
     
     .job-header {
-      background: linear-gradient(135deg, var(--primary-color, #4f46e5), var(--primary-dark, #3730a3));
+      background: linear-gradient(135deg, var(--ff-primary, #4f46e5), var(--ff-primary-dark, #3730a3));
       color: white;
       padding: 16px 20px;
       display: flex;
@@ -170,7 +170,7 @@ export class JobList extends LitElement {
     
     .job-description {
       margin-bottom: 16px;
-      color: #666;
+      color: var(--ff-gray-500);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -181,7 +181,7 @@ export class JobList extends LitElement {
       display: flex;
       justify-content: space-between;
       font-size: 14px;
-      color: #666;
+      color: var(--ff-gray-500);
     }
     
     .job-status {
@@ -197,18 +197,18 @@ export class JobList extends LitElement {
     }
     
     .status-active {
-      background-color: var(--success-color, #10b981);
+      background-color: var(--ff-success, #10b981);
     }
     
     .status-inactive {
-      background-color: var(--gray-400, #9ca3af);
+      background-color: var(--ff-gray-400, #9ca3af);
     }
     
     .job-schedule {
       font-style: italic;
     }
     
-    .loading-container, .error-container, .empty-container {
+    .error-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -218,26 +218,8 @@ export class JobList extends LitElement {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
     .error-message {
-      color: #dc3545;
-      text-align: center;
-    }
-    
-    .empty-message {
-      color: #666;
+      color: var(--ff-error);
       text-align: center;
     }
 
@@ -252,7 +234,7 @@ export class JobList extends LitElement {
       z-index: 1000;
     }
     .modal-content {
-      background: #fff;
+      background: var(--ff-surface);
       border-radius: 8px;
       width: 100%;
       max-width: 520px;
@@ -263,11 +245,11 @@ export class JobList extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 16px 20px;
-      border-bottom: 1px solid #e9ecef;
+      border-bottom: 1px solid var(--ff-border);
     }
-    .modal-header h2 { margin: 0; font-size: 18px; color: var(--primary-color, #4f46e5); }
+    .modal-header h2 { margin: 0; font-size: 18px; color: var(--ff-primary, #4f46e5); }
     .modal-close {
-      background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;
+      background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ff-gray-500);
     }
     .modal-body {
       padding: 20px;
@@ -285,23 +267,23 @@ export class JobList extends LitElement {
       display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;
     }
     .modal-body .form-input {
-      width: 100%; padding: 8px 12px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 14px;
+      width: 100%; padding: 8px 12px; border: 1px solid var(--ff-border); border-radius: 4px; font-size: 14px;
       box-sizing: border-box;
     }
     .modal-body textarea.form-input { resize: vertical; }
     .modal-footer {
       display: flex; justify-content: flex-end; gap: 8px;
-      padding: 12px 20px; border-top: 1px solid #e9ecef;
+      padding: 12px 20px; border-top: 1px solid var(--ff-border);
     }
     .btn-cancel {
-      padding: 8px 16px; border: 1px solid #dee2e6; background: #fff;
+      padding: 8px 16px; border: 1px solid var(--ff-border); background: var(--ff-surface);
       border-radius: 4px; cursor: pointer;
     }
     .btn-submit {
-      padding: 8px 16px; border: none; background: var(--primary-color, #4f46e5); color: #fff;
+      padding: 8px 16px; border: none; background: var(--ff-primary, #4f46e5); color: #fff;
       border-radius: 4px; cursor: pointer; font-weight: 500;
     }
-    .btn-submit:hover { background: var(--primary-hover, #4338ca); }
+    .btn-submit:hover { background: var(--ff-primary-hover, #4338ca); }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
     .modal-body select.form-input {
       appearance: auto;
@@ -409,11 +391,7 @@ export class JobList extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -485,19 +463,11 @@ export class JobList extends LitElement {
       ${this.isCreateJobModalOpen ? this._renderCreateJobModal() : ''}
 
       ${this.filteredJobs.length === 0 ? html`
-        <div class="empty-container">
-          <div class="empty-message">
-            <p>Keine Jobs gefunden.</p>
-            ${this.searchQuery || this.statusFilter !== 'all' || this.typeFilter !== 'all' ? html`
-              <button @click=${() => {
-                this.searchQuery = '';
-                this.statusFilter = 'all';
-                this.typeFilter = 'all';
-                this._applyFilters();
-              }}>Filter zurücksetzen</button>
-            ` : ''}
-          </div>
-        </div>
+        <ff-empty-state
+          icon="📋"
+          title="Keine Jobs gefunden"
+          description="Passen Sie den Filter an oder erstellen Sie einen neuen Job."
+        ></ff-empty-state>
       ` : html`
         <div class="job-grid">
           ${this.filteredJobs.map(job => html`

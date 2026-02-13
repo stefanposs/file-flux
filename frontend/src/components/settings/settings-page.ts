@@ -29,10 +29,10 @@ export class SettingsPage extends LitElement {
       margin-bottom: 24px;
     }
     .header h1 {
-      font-size: 24px; color: var(--gray-900, #111827); margin: 0; font-weight: 700;
+      font-size: 24px; color: var(--ff-gray-900, #111827); margin: 0; font-weight: 700;
     }
     .header p {
-      color: var(--gray-500, #6b7280); font-size: 14px; margin: 6px 0 0;
+      color: var(--ff-gray-500, #6b7280); font-size: 14px; margin: 6px 0 0;
     }
 
     .settings-grid {
@@ -44,28 +44,28 @@ export class SettingsPage extends LitElement {
     }
 
     .settings-card {
-      background: #fff; border-radius: 8px;
+      background: var(--ff-surface); border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px;
     }
     .settings-card h2 {
-      font-size: 18px; color: var(--gray-900, #111827); margin: 0 0 16px; font-weight: 600;
+      font-size: 18px; color: var(--ff-gray-900, #111827); margin: 0 0 16px; font-weight: 600;
     }
 
     .info-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 0; border-bottom: 1px solid #f0f0f0;
+      padding: 12px 0; border-bottom: 1px solid var(--ff-gray-100);
     }
     .info-row:last-child { border-bottom: none; }
     .info-label {
-      font-size: 14px; color: var(--gray-500, #6b7280); font-weight: 500;
+      font-size: 14px; color: var(--ff-gray-500, #6b7280); font-weight: 500;
     }
     .info-value {
-      font-size: 14px; color: var(--gray-900, #111827); font-weight: 500;
+      font-size: 14px; color: var(--ff-gray-900, #111827); font-weight: 500;
     }
     .info-value.badge {
       display: inline-block; padding: 2px 10px;
       border-radius: 9999px; font-size: 12px; font-weight: 600;
-      background: var(--primary-light, #eef2ff); color: var(--primary-color, #4f46e5);
+      background: var(--ff-primary-light, #eef2ff); color: var(--ff-primary, #4f46e5);
     }
 
     .form-group {
@@ -73,16 +73,16 @@ export class SettingsPage extends LitElement {
     }
     label {
       display: block; margin-bottom: 6px; font-weight: 500;
-      font-size: 14px; color: var(--gray-700, #374151);
+      font-size: 14px; color: var(--ff-gray-700, #374151);
     }
     .form-input {
-      width: 100%; padding: 8px 12px; border: 1px solid #dee2e6;
+      width: 100%; padding: 8px 12px; border: 1px solid var(--ff-border);
       border-radius: 6px; font-size: 14px; box-sizing: border-box;
       transition: border-color 0.2s;
     }
     .form-input:focus {
-      outline: none; border-color: var(--primary-color, #4f46e5);
-      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+      outline: none; border-color: var(--ff-primary, #4f46e5);
+      box-shadow: 0 0 0 3px var(--ff-primary-light);
     }
 
     .btn {
@@ -90,21 +90,21 @@ export class SettingsPage extends LitElement {
       font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
     }
     .btn-primary {
-      background: var(--primary-color, #4f46e5); color: #fff;
+      background: var(--ff-primary, #4f46e5); color: #fff;
     }
-    .btn-primary:hover { background: var(--primary-hover, #4338ca); }
+    .btn-primary:hover { background: var(--ff-primary-hover, #4338ca); }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .preference-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 0; border-bottom: 1px solid #f0f0f0;
+      padding: 12px 0; border-bottom: 1px solid var(--ff-gray-100);
     }
     .preference-row:last-child { border-bottom: none; }
     .preference-label {
-      font-size: 14px; color: var(--gray-900, #111827); font-weight: 500;
+      font-size: 14px; color: var(--ff-gray-900, #111827); font-weight: 500;
     }
     .preference-desc {
-      font-size: 12px; color: var(--gray-500, #6b7280); margin-top: 2px;
+      font-size: 12px; color: var(--ff-gray-500, #6b7280); margin-top: 2px;
     }
 
     .toggle-switch {
@@ -116,7 +116,7 @@ export class SettingsPage extends LitElement {
     .toggle-slider {
       position: absolute; cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #ccc; border-radius: 24px;
+      background-color: var(--ff-gray-300); border-radius: 24px;
       transition: 0.3s;
     }
     .toggle-slider:before {
@@ -126,7 +126,7 @@ export class SettingsPage extends LitElement {
       transition: 0.3s;
     }
     input:checked + .toggle-slider {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
     }
     input:checked + .toggle-slider:before {
       transform: translateX(20px);
@@ -139,23 +139,13 @@ export class SettingsPage extends LitElement {
       display: flex; gap: 24px; flex-wrap: wrap;
     }
     .version-item {
-      font-size: 14px; color: var(--gray-500, #6b7280);
+      font-size: 14px; color: var(--ff-gray-500, #6b7280);
     }
     .version-item strong {
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
     }
 
-    .loading-container {
-      display: flex; justify-content: center; align-items: center;
-      padding: 48px; background: #fff; border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .loading-spinner {
-      width: 40px; height: 40px;
-      border: 4px solid rgba(79,70,229,0.1); border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
   `;
 
   connectedCallback() {
@@ -228,7 +218,7 @@ export class SettingsPage extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`<div class="loading-container"><div class="loading-spinner"></div></div>`;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     return html`

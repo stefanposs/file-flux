@@ -19,7 +19,7 @@ export class JobDetail extends LitElement {
       display: block;
     }
     
-    .loading-container, .error-container {
+    .error-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -29,21 +29,8 @@ export class JobDetail extends LitElement {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     .error-message {
-      color: #dc3545;
+      color: var(--ff-error);
       text-align: center;
     }
     
@@ -56,22 +43,10 @@ export class JobDetail extends LitElement {
       gap: 16px;
     }
     
-    .back-button {
-      background: none;
-      border: none;
-      color: var(--primary-color, #4f46e5);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      text-decoration: underline;
-    }
-    
     .job-name {
       font-size: 24px;
       margin: 0;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
     }
     
     .job-actions {
@@ -90,21 +65,21 @@ export class JobDetail extends LitElement {
     }
     
     .primary-button {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       border: none;
     }
     
     .secondary-button {
       background-color: white;
-      color: #212529;
-      border: 1px solid #dee2e6;
+      color: var(--ff-gray-900);
+      border: 1px solid var(--ff-border);
     }
     
     .danger-button {
       background-color: white;
-      color: #dc3545;
-      border: 1px solid #dee2e6;
+      color: var(--ff-error);
+      border: 1px solid var(--ff-border);
     }
     
     .job-detail-container {
@@ -117,7 +92,7 @@ export class JobDetail extends LitElement {
     
     .section-title {
       font-size: 18px;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       margin-top: 0;
       margin-bottom: 16px;
     }
@@ -130,47 +105,20 @@ export class JobDetail extends LitElement {
     }
     
     .info-item {
-      border: 1px solid #f0f0f0;
+      border: 1px solid var(--ff-gray-100);
       border-radius: 8px;
       padding: 16px;
     }
     
     .info-label {
       font-size: 14px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
       margin-bottom: 8px;
     }
     
     .info-value {
       font-size: 16px;
       font-weight: 500;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .status-active {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .status-inactive {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
-    }
-    
-    .status-error {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .status-paused {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
     }
     
     .type-badge {
@@ -181,13 +129,13 @@ export class JobDetail extends LitElement {
     }
     
     .type-push {
-      background-color: rgba(13, 110, 253, 0.1);
-      color: #0d6efd;
+      background-color: var(--ff-info-light);
+      color: var(--ff-info);
     }
     
     .type-pull {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
+      background-color: var(--ff-gray-100);
+      color: var(--ff-gray-500);
     }
     
     .description-container {
@@ -205,14 +153,14 @@ export class JobDetail extends LitElement {
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      color: #6c757d;
+      color: var(--ff-gray-500);
       font-size: 14px;
     }
     
     .schedule-tooltip {
       position: absolute;
       background-color: white;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       padding: 12px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -230,43 +178,16 @@ export class JobDetail extends LitElement {
     .transfers-table td {
       padding: 12px;
       text-align: left;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
     }
     
     .transfers-table th {
-      color: #6c757d;
+      color: var(--ff-gray-500);
       font-weight: 500;
     }
     
     .transfers-table tr:hover {
-      background-color: #f8f9fa;
-    }
-    
-    .transfer-status {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    
-    .transfer-status-completed {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .transfer-status-failed {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .transfer-status-running {
-      background-color: rgba(13, 110, 253, 0.1);
-      color: #0d6efd;
-    }
-    
-    .transfer-status-pending {
-      background-color: rgba(217, 119, 6, 0.1);
-      color: #92400e;
+      background-color: var(--ff-gray-50);
     }
     
     .config-section {
@@ -277,50 +198,11 @@ export class JobDetail extends LitElement {
       margin-bottom: 16px;
     }
     
-    .confirm-delete-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    
-    .confirm-delete-dialog {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 24px;
-      width: 400px;
-      max-width: 90%;
-    }
-    
-    .confirm-delete-title {
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 16px;
-      color: #dc3545;
-    }
-    
-    .confirm-delete-message {
-      margin-bottom: 24px;
-    }
-    
-    .confirm-delete-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-    
     .view-all-link {
       display: block;
       text-align: right;
       margin-top: 10px;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       text-decoration: underline;
       cursor: pointer;
     }
@@ -416,11 +298,7 @@ export class JobDetail extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -447,11 +325,12 @@ export class JobDetail extends LitElement {
 
     return html`
       <div>
+        <ff-breadcrumb .items=${[
+          { label: 'Jobs', path: '/jobs' },
+          { label: this.job?.name || 'Job' }
+        ]} @navigate=${(e: CustomEvent) => this._navigate(e.detail.path)}></ff-breadcrumb>
+
         <div class="header">
-          <button class="back-button" @click=${this._navigateBack}>
-            ← Zurück zur Job-Liste
-          </button>
-          
           <h1 class="job-name">${this.job.name}</h1>
           
           <div class="job-actions">
@@ -476,9 +355,7 @@ export class JobDetail extends LitElement {
             <div class="info-item">
               <div class="info-label">Status</div>
               <div class="info-value">
-                <span class="status-badge status-${this.job.status}">
-                  ${this._formatStatus(this.job.status)}
-                </span>
+                <ff-status-badge status="${this.job.status}"></ff-status-badge>
               </div>
             </div>
             
@@ -545,7 +422,11 @@ export class JobDetail extends LitElement {
           <h2 class="section-title">Letzte Transfers</h2>
           
           ${this.recentTransfers.length === 0 ? html`
-            <p>Keine Transfers für diesen Job gefunden.</p>
+            <ff-empty-state
+              icon="↗"
+              title="Keine Transfers"
+              description="Es wurden noch keine Transfers für diesen Job ausgeführt."
+            ></ff-empty-state>
           ` : html`
             <table class="transfers-table">
               <thead>
@@ -565,9 +446,7 @@ export class JobDetail extends LitElement {
                     <td>${this._formatDateTime(transfer.startTime)}</td>
                     <td>${transfer.endTime ? this._formatDateTime(transfer.endTime) : '-'}</td>
                     <td>
-                      <span class="transfer-status transfer-status-${transfer.status}">
-                        ${this._formatTransferStatus(transfer.status)}
-                      </span>
+                      <ff-status-badge status="${transfer.status}"></ff-status-badge>
                     </td>
                   </tr>
                 `)}
@@ -578,53 +457,17 @@ export class JobDetail extends LitElement {
           `}
         </div>
         
-        ${this.showConfirmDelete ? html`
-          <div class="confirm-delete-overlay">
-            <div class="confirm-delete-dialog">
-              <div class="confirm-delete-title">Job löschen?</div>
-              <div class="confirm-delete-message">
-                Sind Sie sicher, dass Sie den Job "${this.job.name}" löschen möchten? 
-                Diese Aktion kann nicht rückgängig gemacht werden.
-              </div>
-              <div class="confirm-delete-actions">
-                <button 
-                  class="job-action-button secondary-button" 
-                  @click=${this._cancelDelete}
-                >
-                  Abbrechen
-                </button>
-                <button 
-                  class="job-action-button danger-button" 
-                  @click=${this._confirmDelete}
-                >
-                  Löschen
-                </button>
-              </div>
-            </div>
-          </div>
-        ` : ''}
+        <ff-confirm-dialog
+          ?open=${this.showConfirmDelete}
+          title="Job löschen?"
+          message="Sind Sie sicher, dass Sie den Job '${this.job.name}' löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+          confirmLabel="Löschen"
+          type="danger"
+          @confirm=${this._confirmDelete}
+          @cancel=${() => this.showConfirmDelete = false}
+        ></ff-confirm-dialog>
       </div>
     `;
-  }
-
-  _formatStatus(status) {
-    switch (status) {
-      case 'active': return 'Aktiv';
-      case 'inactive': return 'Inaktiv';
-      case 'error': return 'Fehler';
-      case 'paused': return 'Pausiert';
-      default: return status;
-    }
-  }
-
-  _formatTransferStatus(status) {
-    switch (status) {
-      case 'completed': return 'Abgeschlossen';
-      case 'failed': return 'Fehlgeschlagen';
-      case 'running': return 'Wird ausgeführt';
-      case 'pending': return 'Ausstehend';
-      default: return status;
-    }
   }
 
   _formatSchedule(schedule) {
@@ -676,12 +519,16 @@ export class JobDetail extends LitElement {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  _navigateBack() {
+  _navigate(path: string) {
     this.dispatchEvent(new CustomEvent('navigate', {
-      detail: { path: '/jobs' },
+      detail: { path },
       bubbles: true,
       composed: true
     }));
+  }
+
+  _navigateBack() {
+    this._navigate('/jobs');
   }
 
   _editJob() {

@@ -21,7 +21,7 @@ export class TransferDetail extends LitElement {
       display: block;
     }
     
-    .loading-container, .error-container {
+    .error-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -31,21 +31,8 @@ export class TransferDetail extends LitElement {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     .error-message {
-      color: #dc3545;
+      color: var(--ff-error);
       text-align: center;
     }
     
@@ -58,22 +45,10 @@ export class TransferDetail extends LitElement {
       gap: 16px;
     }
     
-    .back-button {
-      background: none;
-      border: none;
-      color: var(--primary-color, #4f46e5);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      text-decoration: underline;
-    }
-    
     .transfer-title {
       font-size: 24px;
       margin: 0;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
     }
     
     .transfer-actions {
@@ -92,21 +67,21 @@ export class TransferDetail extends LitElement {
     }
     
     .primary-button {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       border: none;
     }
     
     .secondary-button {
       background-color: white;
-      color: #212529;
-      border: 1px solid #dee2e6;
+      color: var(--ff-gray-900);
+      border: 1px solid var(--ff-border);
     }
     
     .danger-button {
       background-color: white;
-      color: #dc3545;
-      border: 1px solid #dee2e6;
+      color: var(--ff-error);
+      border: 1px solid var(--ff-border);
     }
     
     .content-container {
@@ -119,7 +94,7 @@ export class TransferDetail extends LitElement {
     
     .section-title {
       font-size: 18px;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       margin-top: 0;
       margin-bottom: 16px;
     }
@@ -132,14 +107,14 @@ export class TransferDetail extends LitElement {
     }
     
     .info-item {
-      border: 1px solid #f0f0f0;
+      border: 1px solid var(--ff-gray-100);
       border-radius: 8px;
       padding: 16px;
     }
     
     .info-label {
       font-size: 14px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
       margin-bottom: 8px;
     }
     
@@ -148,35 +123,8 @@ export class TransferDetail extends LitElement {
       font-weight: 500;
     }
     
-    .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .status-completed {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .status-failed {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .status-running {
-      background-color: rgba(13, 110, 253, 0.1);
-      color: #0d6efd;
-    }
-    
-    .status-pending {
-      background-color: rgba(217, 119, 6, 0.1);
-      color: #92400e;
-    }
-    
     .transfer-link {
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       text-decoration: underline;
       cursor: pointer;
     }
@@ -188,7 +136,7 @@ export class TransferDetail extends LitElement {
     .progress-container {
       width: 100%;
       height: 10px;
-      background-color: #f0f0f0;
+      background-color: var(--ff-gray-100);
       border-radius: 5px;
       overflow: hidden;
       margin-bottom: 8px;
@@ -196,7 +144,7 @@ export class TransferDetail extends LitElement {
     
     .progress-bar {
       height: 100%;
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       transition: width 0.5s ease;
     }
     
@@ -204,7 +152,7 @@ export class TransferDetail extends LitElement {
       display: flex;
       justify-content: space-between;
       font-size: 14px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .progress-stats {
@@ -215,7 +163,7 @@ export class TransferDetail extends LitElement {
     }
     
     .log-container {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
       border-radius: 8px;
       padding: 16px;
       font-family: monospace;
@@ -231,7 +179,7 @@ export class TransferDetail extends LitElement {
     
     .log-timestamp {
       flex-shrink: 0;
-      color: #6c757d;
+      color: var(--ff-gray-500);
       margin-right: 12px;
     }
     
@@ -240,15 +188,15 @@ export class TransferDetail extends LitElement {
     }
     
     .log-level-info {
-      color: #0d6efd;
+      color: var(--ff-info);
     }
     
     .log-level-warning {
-      color: #ffc107;
+      color: var(--ff-warning);
     }
     
     .log-level-error {
-      color: #dc3545;
+      color: var(--ff-error);
     }
     
     .files-section {
@@ -266,7 +214,7 @@ export class TransferDetail extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 12px 16px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
     }
     
     .file-item:last-child {
@@ -284,14 +232,14 @@ export class TransferDetail extends LitElement {
     }
     
     .file-size {
-      color: #6c757d;
+      color: var(--ff-gray-500);
       font-size: 14px;
     }
     
     .empty-message {
       padding: 16px;
       text-align: center;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
 
     @media (max-width: 768px) {
@@ -545,16 +493,6 @@ export class TransferDetail extends LitElement {
     );
   }
 
-  _formatStatus(status) {
-    switch (status) {
-      case 'completed': return 'Abgeschlossen';
-      case 'failed': return 'Fehlgeschlagen';
-      case 'running': return 'Wird ausgeführt';
-      case 'pending': return 'Ausstehend';
-      default: return status;
-    }
-  }
-
   _formatDateTime(dateStr) {
     if (!dateStr) return '-';
     
@@ -594,12 +532,16 @@ export class TransferDetail extends LitElement {
     return this._formatFileSize(bytesPerSecond) + '/s';
   }
 
-  _navigateBack() {
+  _navigate(path: string) {
     this.dispatchEvent(new CustomEvent('navigate', {
-      detail: { path: '/transfers' },
+      detail: { path },
       bubbles: true,
       composed: true
     }));
+  }
+
+  _navigateBack() {
+    this._navigate('/transfers');
   }
 
   _navigateToJob(jobId) {
@@ -666,11 +608,7 @@ export class TransferDetail extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -703,11 +641,12 @@ export class TransferDetail extends LitElement {
 
     return html`
       <div>
+        <ff-breadcrumb .items=${[
+          { label: 'Transfers', path: '/transfers' },
+          { label: this.transfer?.filename || 'Transfer' }
+        ]} @navigate=${(e: CustomEvent) => this._navigate(e.detail.path)}></ff-breadcrumb>
+
         <div class="header">
-          <button class="back-button" @click=${this._navigateBack}>
-            ← Zurück zur Transfer-Liste
-          </button>
-          
           <h1 class="transfer-title">${this.transfer.filename}</h1>
           
           <div class="transfer-actions">
@@ -732,9 +671,7 @@ export class TransferDetail extends LitElement {
             <div class="info-item">
               <div class="info-label">Status</div>
               <div class="info-value">
-                <span class="status-badge status-${this.transfer.status}">
-                  ${this._formatStatus(this.transfer.status)}
-                </span>
+                <ff-status-badge status="${this.transfer.status}"></ff-status-badge>
               </div>
             </div>
             

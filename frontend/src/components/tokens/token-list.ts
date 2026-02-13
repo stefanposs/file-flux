@@ -39,7 +39,7 @@ export class TokenList extends LitElement {
     
     .title {
       font-size: 24px;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       margin: 0;
     }
     
@@ -54,7 +54,7 @@ export class TokenList extends LitElement {
     }
     
     .primary-button {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       border: none;
     }
@@ -70,14 +70,14 @@ export class TokenList extends LitElement {
       flex: 1;
       min-width: 200px;
       padding: 8px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 14px;
     }
     
     .filter-select {
       padding: 8px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 14px;
       background-color: white;
@@ -99,12 +99,12 @@ export class TokenList extends LitElement {
     .tokens-table td {
       padding: 12px 16px;
       text-align: left;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
     }
     
     .tokens-table th {
-      background-color: #f8f9fa;
-      color: #6c757d;
+      background-color: var(--ff-gray-50);
+      color: var(--ff-gray-500);
       font-weight: 500;
     }
     
@@ -113,7 +113,7 @@ export class TokenList extends LitElement {
     }
     
     .tokens-table tr:hover {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
     }
     
     .token-actions {
@@ -124,7 +124,7 @@ export class TokenList extends LitElement {
     .token-action {
       background: none;
       border: none;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       cursor: pointer;
       padding: 4px 8px;
       font-size: 13px;
@@ -132,73 +132,26 @@ export class TokenList extends LitElement {
     }
     
     .token-action:hover {
-      background-color: rgba(18, 46, 83, 0.1);
+      background-color: var(--ff-primary-light);
     }
     
     .token-action.danger {
-      color: #dc3545;
+      color: var(--ff-error);
     }
     
     .token-action.danger:hover {
-      background-color: rgba(220, 53, 69, 0.1);
+      background-color: var(--ff-error-light);
     }
     
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 48px;
-    }
-    
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .empty-message {
-      padding: 48px;
-      text-align: center;
-      color: #6c757d;
-    }
+
     
     .error-message {
       padding: 16px;
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
+      background-color: var(--ff-error-light);
+      color: var(--ff-error);
       border-radius: 4px;
       margin-bottom: 20px;
       text-align: center;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    
-    .status-active {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .status-expired {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .status-expiring {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
     }
     
     .modal-overlay {
@@ -227,7 +180,7 @@ export class TokenList extends LitElement {
       font-size: 20px;
       margin-top: 0;
       margin-bottom: 24px;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
     }
     
     .form-group {
@@ -245,7 +198,7 @@ export class TokenList extends LitElement {
     .form-textarea {
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 14px;
     }
@@ -256,7 +209,7 @@ export class TokenList extends LitElement {
     }
     
     .token-display {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
       padding: 16px;
       border-radius: 4px;
       overflow-x: auto;
@@ -270,7 +223,7 @@ export class TokenList extends LitElement {
     }
     
     .token-warning {
-      color: #dc3545;
+      color: var(--ff-error);
       font-size: 14px;
       margin-top: 8px;
     }
@@ -287,7 +240,7 @@ export class TokenList extends LitElement {
       top: 8px;
       right: 8px;
       background-color: white;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       padding: 4px 8px;
       font-size: 12px;
@@ -295,7 +248,7 @@ export class TokenList extends LitElement {
     }
     
     .copy-button:hover {
-      background-color: #f0f0f0;
+      background-color: var(--ff-gray-100);
     }
   `;
 
@@ -399,24 +352,6 @@ export class TokenList extends LitElement {
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
-
-  _formatStatus(status) {
-    switch (status) {
-      case 'active': return 'Aktiv';
-      case 'expired': return 'Abgelaufen';
-      case 'expiring_soon': return 'Läuft bald ab';
-      default: return status;
-    }
-  }
-
-  _getStatusClass(status) {
-    switch (status) {
-      case 'active': return 'status-active';
-      case 'expired': return 'status-expired';
-      case 'expiring_soon': return 'status-expiring';
-      default: return '';
-    }
   }
 
   _getAgentName(agentId) {
@@ -618,11 +553,7 @@ export class TokenList extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -681,9 +612,11 @@ export class TokenList extends LitElement {
         
         <div class="tokens-container">
           ${this.filteredTokens.length === 0 ? html`
-            <div class="empty-message">
-              Keine Tokens gefunden. Erstellen Sie ein neues Token, um zu beginnen.
-            </div>
+            <ff-empty-state
+              icon="🔑"
+              title="Keine Tokens vorhanden"
+              description="Erstellen Sie ein Token, um Agent-Authentifizierung zu ermöglichen."
+            ></ff-empty-state>
           ` : html`
             <table class="tokens-table">
               <thead>
@@ -706,9 +639,7 @@ export class TokenList extends LitElement {
                     <td>${token.expiresAt ? this._formatDateTime(token.expiresAt) : 'Nie'}</td>
                     <td>${token.lastUsedAt ? this._formatDateTime(token.lastUsedAt) : 'Nie'}</td>
                     <td>
-                      <span class="status-badge ${this._getStatusClass(token.status)}">
-                        ${this._formatStatus(token.status)}
-                      </span>
+                      <ff-status-badge status="${token.status}"></ff-status-badge>
                     </td>
                     <td>
                       <div class="token-actions">

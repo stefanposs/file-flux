@@ -56,16 +56,16 @@ export class TransferList extends LitElement {
     
     h1 {
       font-size: 24px;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0;
       font-weight: 700;
     }
     
     .transfers-container {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
       padding: 16px;
     }
     
@@ -85,7 +85,7 @@ export class TransferList extends LitElement {
     .search-input {
       width: 100%;
       padding: 8px 12px 8px 36px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 15px;
     }
@@ -95,40 +95,22 @@ export class TransferList extends LitElement {
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .filter-select {
       padding: 8px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       min-width: 120px;
     }
     
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 48px;
-    }
-    
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+
     
     .error-container {
       padding: 24px;
       background-color: rgba(220, 53, 69, 0.05);
-      color: #dc3545;
+      color: var(--ff-error);
       border-radius: 8px;
       text-align: center;
     }
@@ -141,23 +123,23 @@ export class TransferList extends LitElement {
     th, td {
       padding: 12px 16px;
       text-align: left;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--ff-gray-100);
     }
     
     th {
-      color: var(--gray-600, #4b5563);
+      color: var(--ff-gray-600, #4b5563);
       font-weight: 600;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      background-color: var(--gray-50, #f9fafb);
+      background-color: var(--ff-gray-50, #f9fafb);
       position: relative;
       cursor: pointer;
       user-select: none;
     }
     
     th:hover {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
     }
     
     .sort-icon {
@@ -186,58 +168,28 @@ export class TransferList extends LitElement {
     }
     
     tbody tr:hover {
-      background-color: #f8f9fa;
-    }
-    
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: var(--radius-full, 9999px);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .status-completed {
-      background-color: var(--success-light, #ecfdf5);
-      color: var(--success-color, #10b981);
-    }
-    
-    .status-failed {
-      background-color: var(--error-light, #fef2f2);
-      color: var(--error-color, #ef4444);
-    }
-    
-    .status-running {
-      background-color: var(--info-light, #eff6ff);
-      color: var(--info-color, #3b82f6);
-    }
-    
-    .status-pending {
-      background-color: var(--warning-light, #fffbeb);
-      color: var(--warning-color, #f59e0b);
+      background-color: var(--ff-gray-50);
     }
 
     .progress-bar-container {
       width: 100%;
       min-width: 80px;
       height: 6px;
-      background-color: #e5e7eb;
+      background-color: var(--ff-gray-200);
       border-radius: 3px;
       overflow: hidden;
     }
 
     .progress-bar-fill {
       height: 100%;
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       border-radius: 3px;
       transition: width 0.3s ease;
     }
 
     .progress-text {
       font-size: 12px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
       margin-top: 2px;
     }
     
@@ -247,11 +199,11 @@ export class TransferList extends LitElement {
       align-items: center;
       margin-top: 16px;
       padding-top: 16px;
-      border-top: 1px solid #f0f0f0;
+      border-top: 1px solid var(--ff-gray-100);
     }
     
     .pagination-info {
-      color: #6c757d;
+      color: var(--ff-gray-500);
       font-size: 14px;
     }
     
@@ -262,7 +214,7 @@ export class TransferList extends LitElement {
     
     .pagination-button {
       padding: 4px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       background-color: white;
       border-radius: 4px;
       cursor: pointer;
@@ -274,16 +226,12 @@ export class TransferList extends LitElement {
     }
     
     .pagination-button.active {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
-      border-color: var(--primary-color, #4f46e5);
+      border-color: var(--ff-primary, #4f46e5);
     }
     
-    .empty-message {
-      text-align: center;
-      padding: 24px;
-      color: #6c757d;
-    }
+
   `;
 
   connectedCallback() {
@@ -510,16 +458,6 @@ export class TransferList extends LitElement {
     }));
   }
 
-  _formatStatus(status) {
-    switch (status) {
-      case 'completed': return 'Abgeschlossen';
-      case 'failed': return 'Fehlgeschlagen';
-      case 'running': return 'Wird ausgeführt';
-      case 'pending': return 'Ausstehend';
-      default: return status;
-    }
-  }
-
   _formatDateTime(dateStr) {
     if (!dateStr) return '-';
     
@@ -604,11 +542,7 @@ export class TransferList extends LitElement {
             </select>
           </div>
           
-          ${this.isLoading ? html`
-            <div class="loading-container">
-              <div class="loading-spinner"></div>
-            </div>
-          ` : ''}
+          ${this.isLoading ? html`<ff-loading-spinner></ff-loading-spinner>` : ''}
           
           ${this.error ? html`
             <div class="error-container">
@@ -619,9 +553,7 @@ export class TransferList extends LitElement {
           
           ${!this.isLoading && !this.error ? html`
             ${this.filteredTransfers.length === 0 ? html`
-              <div class="empty-message">
-                <p>Keine Transfers gefunden.</p>
-              </div>
+              <ff-empty-state icon="↗" title="Keine Transfers gefunden"></ff-empty-state>
             ` : html`
               <table>
                 <thead>
@@ -673,9 +605,7 @@ export class TransferList extends LitElement {
                         `}
                       </td>
                       <td>
-                        <span class="status-badge status-${transfer.status}">
-                          ${this._formatStatus(transfer.status)}
-                        </span>
+                        <ff-status-badge status="${transfer.status}"></ff-status-badge>
                       </td>
                     </tr>
                   `)}

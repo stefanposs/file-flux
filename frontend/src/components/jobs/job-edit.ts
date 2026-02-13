@@ -20,16 +20,12 @@ export class JobEdit extends LitElement {
       margin-bottom: 24px;
     }
     .header h1 {
-      font-size: 24px; color: var(--gray-900, #111827); margin: 0; font-weight: 700;
+      font-size: 24px; color: var(--ff-gray-900, #111827); margin: 0; font-weight: 700;
     }
-    .back-link {
-      color: var(--primary-color, #4f46e5); cursor: pointer; font-size: 14px;
-      text-decoration: none; font-weight: 500;
-    }
-    .back-link:hover { text-decoration: underline; }
+
 
     .form-card {
-      background: #fff; border-radius: 8px;
+      background: var(--ff-surface); border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px;
     }
     .form-group {
@@ -42,50 +38,44 @@ export class JobEdit extends LitElement {
 
     label {
       display: block; margin-bottom: 6px; font-weight: 500;
-      font-size: 14px; color: var(--gray-700, #374151);
+      font-size: 14px; color: var(--ff-gray-700, #374151);
     }
     .form-input {
-      width: 100%; padding: 8px 12px; border: 1px solid #dee2e6;
+      width: 100%; padding: 8px 12px; border: 1px solid var(--ff-border);
       border-radius: 6px; font-size: 14px; box-sizing: border-box;
       transition: border-color 0.2s;
     }
     .form-input:focus {
-      outline: none; border-color: var(--primary-color, #4f46e5);
-      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+      outline: none; border-color: var(--ff-primary, #4f46e5);
+      box-shadow: 0 0 0 3px var(--ff-primary-light);
     }
     textarea.form-input { resize: vertical; }
     select.form-input { appearance: auto; }
 
     .form-actions {
       display: flex; justify-content: flex-end; gap: 12px;
-      margin-top: 24px; padding-top: 20px; border-top: 1px solid #e9ecef;
+      margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--ff-border);
     }
     .btn {
       padding: 10px 20px; border-radius: 6px; font-size: 14px;
       font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
     .btn-secondary {
-      background: #fff; border: 1px solid #dee2e6; color: var(--gray-700, #374151);
+      background: var(--ff-surface); border: 1px solid var(--ff-border); color: var(--ff-gray-700, #374151);
     }
-    .btn-secondary:hover { background: var(--gray-50, #f9fafb); }
+    .btn-secondary:hover { background: var(--ff-gray-50, #f9fafb); }
     .btn-primary {
-      background: var(--primary-color, #4f46e5); border: none; color: #fff;
+      background: var(--ff-primary, #4f46e5); border: none; color: #fff;
     }
-    .btn-primary:hover { background: var(--primary-hover, #4338ca); }
+    .btn-primary:hover { background: var(--ff-primary-hover, #4338ca); }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .loading-container, .error-container {
+    .error-container {
       display: flex; justify-content: center; align-items: center;
-      padding: 48px; background: #fff; border-radius: 8px;
+      padding: 48px; background: var(--ff-surface); border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    .loading-spinner {
-      width: 40px; height: 40px;
-      border: 4px solid rgba(79,70,229,0.1); border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .error-message { color: #dc3545; text-align: center; }
+    .error-message { color: var(--ff-error); text-align: center; }
   `;
 
   connectedCallback() {
@@ -145,16 +135,20 @@ export class JobEdit extends LitElement {
     }
   }
 
-  _navigateBack() {
+  _navigate(path: string) {
     this.dispatchEvent(new CustomEvent('navigate', {
-      detail: { path: `/jobs/${this.jobId}` },
+      detail: { path },
       bubbles: true, composed: true
     }));
   }
 
+  _navigateBack() {
+    this._navigate(`/jobs/${this.jobId}`);
+  }
+
   render() {
     if (this.isLoading) {
-      return html`<div class="loading-container"><div class="loading-spinner"></div></div>`;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
     if (this.error || !this.job) {
       return html`<div class="error-container"><div class="error-message">${this.error || 'Job nicht gefunden'}</div></div>`;
@@ -162,9 +156,14 @@ export class JobEdit extends LitElement {
 
     const j = this.job;
     return html`
+      <ff-breadcrumb .items=${[
+        { label: 'Jobs', path: '/jobs' },
+        { label: this.job?.name || 'Job', path: `/jobs/${this.jobId}` },
+        { label: 'Bearbeiten' }
+      ]} @navigate=${(e: CustomEvent) => this._navigate(e.detail.path)}></ff-breadcrumb>
+
       <div class="header">
         <h1>Job bearbeiten</h1>
-        <a class="back-link" @click=${this._navigateBack}>← Zurück zum Job</a>
       </div>
 
       <div class="form-card">

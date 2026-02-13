@@ -37,7 +37,7 @@ export class AgentList extends LitElement {
     
     .title {
       font-size: 24px;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       margin: 0;
       font-weight: 700;
     }
@@ -53,14 +53,14 @@ export class AgentList extends LitElement {
     }
     
     .primary-button {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       border: none;
       transition: background 0.2s;
     }
 
     .primary-button:hover {
-      background-color: var(--primary-hover, #4338ca);
+      background-color: var(--ff-primary-hover, #4338ca);
     }
     
     .filters {
@@ -74,14 +74,14 @@ export class AgentList extends LitElement {
       flex: 1;
       min-width: 200px;
       padding: 8px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 14px;
     }
     
     .filter-select {
       padding: 8px 12px;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       font-size: 14px;
       background-color: white;
@@ -95,9 +95,9 @@ export class AgentList extends LitElement {
     
     .agent-card {
       background-color: white;
-      border-radius: var(--radius-md, 8px);
-      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-      border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: var(--ff-radius-md, 8px);
+      box-shadow: var(--ff-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+      border: 1px solid var(--ff-gray-200, #e5e7eb);
       padding: 20px;
       display: flex;
       flex-direction: column;
@@ -107,7 +107,7 @@ export class AgentList extends LitElement {
     
     .agent-card:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+      box-shadow: var(--ff-shadow-md, 0 4px 6px rgba(0,0,0,0.1));
     }
     
     .agent-header {
@@ -121,37 +121,12 @@ export class AgentList extends LitElement {
       font-size: 18px;
       font-weight: 600;
       margin: 0 0 4px 0;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
     }
     
     .agent-type {
       font-size: 14px;
-      color: #6c757d;
-    }
-    
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: var(--radius-full, 9999px);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .status-online {
-      background-color: var(--success-light, #ecfdf5);
-      color: var(--success-color, #10b981);
-    }
-    
-    .status-offline {
-      background-color: var(--gray-100, #f3f4f6);
-      color: var(--gray-500, #6b7280);
-    }
-    
-    .status-error {
-      background-color: var(--error-light, #fef2f2);
-      color: var(--error-color, #ef4444);
+      color: var(--ff-gray-500);
     }
     
     .agent-info {
@@ -163,55 +138,28 @@ export class AgentList extends LitElement {
     
     .info-label {
       font-size: 12px;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .info-value {
       font-size: 14px;
-      color: #212529;
+      color: var(--ff-gray-900);
     }
     
     .agent-description {
       font-size: 14px;
-      color: #495057;
+      color: var(--ff-gray-600);
       margin-top: auto;
-      border-top: 1px solid #f0f0f0;
+      border-top: 1px solid var(--ff-gray-100);
       padding-top: 12px;
     }
     
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 48px;
-    }
-    
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--gray-200, #e5e7eb);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .empty-message {
-      text-align: center;
-      padding: 48px;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      color: #6c757d;
-    }
+
     
     .error-message {
       padding: 16px;
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
+      background-color: var(--ff-error-light);
+      color: var(--ff-error);
       border-radius: 4px;
       margin-bottom: 20px;
       text-align: center;
@@ -237,7 +185,7 @@ export class AgentList extends LitElement {
       z-index: 1000;
     }
     .modal-content {
-      background: #fff;
+      background: var(--ff-surface);
       border-radius: 8px;
       width: 100%;
       max-width: 560px;
@@ -248,20 +196,20 @@ export class AgentList extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 16px 20px;
-      border-bottom: 1px solid #e9ecef;
+      border-bottom: 1px solid var(--ff-border);
     }
-    .modal-header h2 { margin: 0; font-size: 18px; color: var(--gray-900, #111827); }
+    .modal-header h2 { margin: 0; font-size: 18px; color: var(--ff-gray-900, #111827); }
     .modal-close {
-      background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;
+      background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ff-gray-500);
     }
     .modal-body {
       padding: 20px;
     }
     .modal-body p {
-      margin: 0 0 12px 0; color: #495057; font-size: 14px; line-height: 1.5;
+      margin: 0 0 12px 0; color: var(--ff-gray-600); font-size: 14px; line-height: 1.5;
     }
     .modal-body h3 {
-      margin: 20px 0 8px 0; font-size: 15px; color: var(--primary-color, #4f46e5);
+      margin: 20px 0 8px 0; font-size: 15px; color: var(--ff-primary, #4f46e5);
     }
     .modal-body h3:first-child { margin-top: 0; }
     .code-block {
@@ -293,7 +241,7 @@ export class AgentList extends LitElement {
       background: rgba(255,255,255,0.25);
     }
     .config-block {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
       padding: 14px 16px;
       border-radius: 6px;
       font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
@@ -302,18 +250,18 @@ export class AgentList extends LitElement {
       margin-bottom: 12px;
       line-height: 1.5;
       white-space: pre;
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--ff-border);
     }
     .modal-footer {
       display: flex;
       justify-content: flex-end;
       padding: 12px 20px;
-      border-top: 1px solid #e9ecef;
+      border-top: 1px solid var(--ff-border);
     }
     .btn-close-modal {
       padding: 8px 20px;
-      border: 1px solid #dee2e6;
-      background: #fff;
+      border: 1px solid var(--ff-border);
+      background: var(--ff-surface);
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
@@ -458,29 +406,11 @@ export class AgentList extends LitElement {
     }
   }
 
-  _formatStatus(status) {
-    switch (status) {
-      case 'online': return 'Online';
-      case 'offline': return 'Offline';
-      case 'error': return 'Fehler';
-      default: return status;
-    }
-  }
-
   _formatAgentType(type) {
     switch (type) {
       case 'server': return 'Server';
       case 'client': return 'Client';
       default: return type;
-    }
-  }
-
-  _getStatusClass(status) {
-    switch (status) {
-      case 'online': return 'status-online';
-      case 'offline': return 'status-offline';
-      case 'error': return 'status-error';
-      default: return '';
     }
   }
 
@@ -584,11 +514,7 @@ paths:
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -643,16 +569,11 @@ paths:
         </div>
         
         ${this.filteredAgents.length === 0 ? html`
-          <div class="empty-message">
-            <p>Keine Agents gefunden. Richten Sie einen neuen Agent ein, um zu beginnen.</p>
-            <button class="action-button primary-button" @click=${() => { this.isOnboardingOpen = true; }}>
-              Agent einrichten
-            </button>
-            
-            <div class="install-code">
-              <code>curl -sSL https://get.fileflux.io | bash</code>
-            </div>
-          </div>
+          <ff-empty-state
+            icon="🖥"
+            title="Keine Agents gefunden"
+            description="Richten Sie einen neuen Agent ein, um zu beginnen."
+          ></ff-empty-state>
         ` : html`
           <div class="agents-container">
             ${this.filteredAgents.map(agent => html`
@@ -662,9 +583,7 @@ paths:
                     <h3 class="agent-name">${agent.name}</h3>
                     <div class="agent-type">${this._formatAgentType(agent.type)}</div>
                   </div>
-                  <span class="status-badge ${this._getStatusClass(agent.status)}">
-                    ${this._formatStatus(agent.status)}
-                  </span>
+                  <ff-status-badge status="${agent.status}"></ff-status-badge>
                 </div>
                 
                 <div class="agent-info">

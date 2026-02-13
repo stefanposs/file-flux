@@ -27,13 +27,8 @@ export class AgentDetail extends LitElement {
       height: 200px;
       font-size: 18px;
     }
-    
-    .token-status-expiring_soon {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
-    }
 
-    .loading-container, .error-container {
+    .error-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -43,78 +38,9 @@ export class AgentDetail extends LitElement {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(18, 46, 83, 0.1);
-      border-left-color: var(--primary-color, #4f46e5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     .error-message {
-      color: #dc3545;
+      color: var(--ff-error);
       text-align: center;
-    }
-    
-    .confirm-delete-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .confirm-delete-dialog {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 24px;
-      width: 400px;
-      max-width: 90%;
-    }
-
-    .confirm-delete-title {
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 16px;
-      color: #dc3545;
-    }
-
-    .confirm-delete-message {
-      margin-bottom: 24px;
-    }
-
-    .confirm-delete-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .confirm-delete-cancel {
-      padding: 8px 16px;
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .confirm-delete-confirm {
-      padding: 8px 16px;
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
     }
     
     .header {
@@ -126,22 +52,10 @@ export class AgentDetail extends LitElement {
       gap: 16px;
     }
     
-    .back-button {
-      background: none;
-      border: none;
-      color: var(--primary-color, #4f46e5);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      text-decoration: underline;
-    }
-    
     .agent-name {
       font-size: 24px;
       margin: 0;
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
     }
     
     .agent-actions {
@@ -152,34 +66,34 @@ export class AgentDetail extends LitElement {
     .agent-action-button {
       padding: 8px 12px;
       background-color: white;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       cursor: pointer;
     }
     
     .agent-action-button:hover {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
     }
     
     .delete-button {
-      color: #dc3545;
+      color: var(--ff-error);
     }
     
     .tabs {
       display: flex;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid var(--ff-border);
       margin-bottom: 20px;
     }
     
     .tab {
       padding: 12px 20px;
       cursor: pointer;
-      color: #6c757d;
+      color: var(--ff-gray-500);
     }
     
     .tab.active {
-      color: var(--primary-color, #4f46e5);
-      border-bottom: 2px solid var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
+      border-bottom: 2px solid var(--ff-primary, #4f46e5);
       font-weight: 500;
     }
     
@@ -191,7 +105,7 @@ export class AgentDetail extends LitElement {
     }
     
     .section-title {
-      color: var(--primary-color, #4f46e5);
+      color: var(--ff-primary, #4f46e5);
       margin-top: 0;
     }
     
@@ -203,13 +117,13 @@ export class AgentDetail extends LitElement {
     }
     
     .info-item {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
       padding: 16px;
       border-radius: 8px;
     }
     
     .info-label {
-      color: #6c757d;
+      color: var(--ff-gray-500);
       font-size: 14px;
       margin-bottom: 8px;
     }
@@ -217,43 +131,6 @@ export class AgentDetail extends LitElement {
     .info-value {
       font-size: 16px;
       font-weight: 500;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .status-online {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .status-offline {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
-    }
-    
-    .status-completed {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .status-failed {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .status-running {
-      background-color: rgba(0, 123, 255, 0.1);
-      color: #007bff;
-    }
-    
-    .status-pending {
-      background-color: rgba(217, 119, 6, 0.1);
-      color: #92400e;
     }
     
     .agent-type-badge {
@@ -264,13 +141,13 @@ export class AgentDetail extends LitElement {
     }
     
     .type-upload {
-      background-color: rgba(23, 162, 184, 0.1);
-      color: #17a2b8;
+      background-color: var(--ff-secondary-light);
+      color: var(--ff-secondary);
     }
     
     .type-download {
-      background-color: rgba(111, 66, 193, 0.1);
-      color: #6f42c1;
+      background-color: var(--ff-primary-light);
+      color: var(--ff-primary);
     }
     
     .transfers-table, .tokens-table {
@@ -282,38 +159,16 @@ export class AgentDetail extends LitElement {
     .tokens-table th, .tokens-table td {
       padding: 12px;
       text-align: left;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid var(--ff-border);
     }
     
     .transfers-table th, .tokens-table th {
-      color: #6c757d;
+      color: var(--ff-gray-500);
       font-weight: 500;
     }
     
     .transfers-table tr:hover, .tokens-table tr:hover {
-      background-color: #f8f9fa;
-    }
-    
-    .token-status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .token-status-active {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .token-status-expired {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
-    }
-    
-    .token-status-expiring_soon {
-      background-color: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
+      background-color: var(--ff-gray-50);
     }
     
     .token-actions {
@@ -328,25 +183,25 @@ export class AgentDetail extends LitElement {
       align-items: center;
       justify-content: center;
       background: none;
-      border: 1px solid #dee2e6;
+      border: 1px solid var(--ff-border);
       border-radius: 4px;
       cursor: pointer;
     }
     
     .action-button:hover {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
     }
     
     .renew-button:hover {
-      color: #28a745;
+      color: var(--ff-success);
     }
     
     .revoke-button:hover {
-      color: #dc3545;
+      color: var(--ff-error);
     }
     
     .config-example {
-      background-color: #f8f9fa;
+      background-color: var(--ff-gray-50);
       padding: 16px;
       border-radius: 8px;
       font-family: monospace;
@@ -357,7 +212,7 @@ export class AgentDetail extends LitElement {
     
     .copy-button {
       padding: 8px 16px;
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       border: none;
       border-radius: 4px;
@@ -372,7 +227,7 @@ export class AgentDetail extends LitElement {
     .error-details {
       margin-top: 4px;
       font-size: 14px;
-      color: #dc3545;
+      color: var(--ff-error);
     }
   `;
 
@@ -484,11 +339,7 @@ export class AgentDetail extends LitElement {
 
   render() {
     if (this.isLoading) {
-      return html`
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
+      return html`<ff-loading-spinner></ff-loading-spinner>`;
     }
 
     if (this.error) {
@@ -515,11 +366,12 @@ export class AgentDetail extends LitElement {
 
     return html`
       <div>
+        <ff-breadcrumb .items=${[
+          { label: 'Agents', path: '/agents' },
+          { label: this.agent?.name || 'Agent' }
+        ]} @navigate=${(e: CustomEvent) => this._navigate(e.detail.path)}></ff-breadcrumb>
+
         <div class="header">
-          <button class="back-button" @click=${this._navigateBack}>
-            ← Zurück zur Agentenliste
-          </button>
-          
           <h1 class="agent-name">${this.agent.name}</h1>
           
           <div class="agent-actions">
@@ -550,23 +402,15 @@ export class AgentDetail extends LitElement {
         ${this.activeTab === 'tokens' ? this._renderTokensTab() : ''}
         ${this.activeTab === 'configuration' ? this._renderConfigurationTab() : ''}
         
-        ${this.showConfirmDelete ? html`
-          <div class="confirm-delete-overlay">
-            <div class="confirm-delete-dialog">
-              <div class="confirm-delete-title">Agent löschen?</div>
-              <div class="confirm-delete-message">
-                Sind Sie sicher, dass Sie den Agenten "${this.agent.name}" löschen möchten? 
-                Diese Aktion kann nicht rückgängig gemacht werden.
-                
-                <p>Alle zugehörigen Tokens werden widerrufen und der Agent wird keine Verbindung mehr herstellen können.</p>
-              </div>
-              <div class="confirm-delete-actions">
-                <button class="confirm-delete-cancel" @click=${this._cancelDelete}>Abbrechen</button>
-                <button class="confirm-delete-confirm" @click=${this._confirmDelete}>Löschen</button>
-              </div>
-            </div>
-          </div>
-        ` : ''}
+        <ff-confirm-dialog
+          ?open=${this.showConfirmDelete}
+          title="Agent löschen?"
+          message="Sind Sie sicher, dass Sie den Agenten '${this.agent.name}' löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden. Alle zugehörigen Tokens werden widerrufen und der Agent wird keine Verbindung mehr herstellen können."
+          confirmLabel="Löschen"
+          type="danger"
+          @confirm=${this._confirmDelete}
+          @cancel=${() => this.showConfirmDelete = false}
+        ></ff-confirm-dialog>
       </div>
     `;
   }
@@ -578,9 +422,7 @@ export class AgentDetail extends LitElement {
           <div class="info-item">
             <div class="info-label">Status</div>
             <div class="info-value">
-              <span class="status-badge status-${this.agent?.status}">
-                ${this.agent?.status === 'online' ? 'Online' : 'Offline'}
-              </span>
+              <ff-status-badge status="${this.agent?.status}"></ff-status-badge>
             </div>
           </div>
           
@@ -637,9 +479,7 @@ export class AgentDetail extends LitElement {
                   <td>${this._formatDateTime(transfer.startTime)}</td>
                   <td>${transfer.endTime ? this._formatDateTime(transfer.endTime) : '-'}</td>
                   <td>
-                    <span class="status-badge status-${transfer.status}">
-                      ${this._formatStatus(transfer.status)}
-                    </span>
+                    <ff-status-badge status="${transfer.status}"></ff-status-badge>
                   </td>
                 </tr>
               `)}
@@ -678,9 +518,7 @@ export class AgentDetail extends LitElement {
                   <td>${transfer.endTime ? this._formatDateTime(transfer.endTime) : '-'}</td>
                   <td>${transfer.speed > 0 ? this._formatSpeed(transfer.speed) : '-'}</td>
                   <td>
-                    <span class="status-badge status-${transfer.status}">
-                      ${this._formatStatus(transfer.status)}
-                    </span>
+                    <ff-status-badge status="${transfer.status}"></ff-status-badge>
                     ${transfer.error ? html`
                       <div class="error-details">${transfer.error}</div>
                     ` : ''}
@@ -726,9 +564,7 @@ export class AgentDetail extends LitElement {
                   <td>${this._formatDate(token.lastUsed)}</td>
                   <td>${this._formatDate(token.expiresAt)}</td>
                   <td>
-                    <span class="token-status-badge token-status-${token.status}">
-                      ${this._formatTokenStatus(token.status)}
-                    </span>
+                    <ff-status-badge status="${token.status}"></ff-status-badge>
                   </td>
                   <td>
                     <div class="token-actions">
@@ -836,25 +672,6 @@ transfers:
     }
   }
 
-  _formatStatus(status) {
-    switch (status) {
-      case 'completed': return 'Erfolgreich';
-      case 'failed': return 'Fehlgeschlagen';
-      case 'running': return 'Wird ausgeführt';
-      case 'pending': return 'Ausstehend';
-      default: return status;
-    }
-  }
-
-  _formatTokenStatus(status) {
-    switch (status) {
-      case 'active': return 'Aktiv';
-      case 'expired': return 'Abgelaufen';
-      case 'expiring_soon': return 'Läuft bald ab';
-      default: return status;
-    }
-  }
-
   _formatDateTime(dateStr) {
     if (!dateStr) return '-';
     
@@ -923,12 +740,16 @@ transfers:
     return this._formatFileSize(bytesPerSecond) + '/s';
   }
 
-  _navigateBack() {
+  _navigate(path: string) {
     this.dispatchEvent(new CustomEvent('navigate', {
-      detail: { path: '/agents' },
+      detail: { path },
       bubbles: true,
       composed: true
     }));
+  }
+
+  _navigateBack() {
+    this._navigate('/agents');
   }
 
   _testConnection() {
