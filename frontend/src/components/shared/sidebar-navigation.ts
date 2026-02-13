@@ -93,7 +93,7 @@ export class SidebarNavigation extends LitElement {
     }
 
     .nav-link.active {
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: #ffffff;
       font-weight: 600;
       border-radius: 6px;

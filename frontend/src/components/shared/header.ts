@@ -35,7 +35,7 @@ export class Header extends LitElement {
     .logo {
       font-size: 18px;
       font-weight: 700;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
       display: flex;
       align-items: center;
       margin-right: 40px;
@@ -44,7 +44,7 @@ export class Header extends LitElement {
     
     .logo-icon {
       margin-right: 10px;
-      background: var(--primary-color, #4f46e5);
+      background: var(--ff-primary, #4f46e5);
       color: white;
       width: 30px;
       height: 30px;
@@ -83,21 +83,21 @@ export class Header extends LitElement {
     .nav-link {
       padding: 8px 14px;
       text-decoration: none;
-      color: var(--gray-500, #6b7280);
-      border-radius: var(--radius-sm, 6px);
+      color: var(--ff-gray-500, #6b7280);
+      border-radius: var(--ff-radius-sm, 6px);
       font-weight: 500;
       font-size: 14px;
       transition: all 0.2s;
     }
     
     .nav-link:hover {
-      background-color: var(--gray-100, #f3f4f6);
-      color: var(--gray-700, #374151);
+      background-color: var(--ff-gray-100, #f3f4f6);
+      color: var(--ff-gray-700, #374151);
     }
     
     .nav-link.active {
-      background-color: var(--primary-light, #eef2ff);
-      color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary-light, #eef2ff);
+      color: var(--ff-primary, #4f46e5);
       font-weight: 600;
     }
     
@@ -149,7 +149,7 @@ export class Header extends LitElement {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background-color: var(--primary-color, #4f46e5);
+      background-color: var(--ff-primary, #4f46e5);
       color: white;
       display: flex;
       justify-content: center;
@@ -186,12 +186,12 @@ export class Header extends LitElement {
 
     .user-menu-header .menu-name {
       font-weight: 600;
-      color: var(--gray-900, #111827);
+      color: var(--ff-gray-900, #111827);
     }
 
     .user-menu-header .menu-email {
       font-size: 13px;
-      color: var(--gray-500, #6b7280);
+      color: var(--ff-gray-500, #6b7280);
       margin-top: 2px;
     }
 
@@ -200,8 +200,8 @@ export class Header extends LitElement {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      color: var(--primary-color, #4f46e5);
-      background: var(--primary-light, #eef2ff);
+      color: var(--ff-primary, #4f46e5);
+      background: var(--ff-primary-light, #eef2ff);
       padding: 2px 8px;
       border-radius: 4px;
       margin-top: 6px;
