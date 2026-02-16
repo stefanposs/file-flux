@@ -101,7 +101,7 @@ jobs:
             > fileflux-agent-${{ matrix.suffix }}${{ matrix.ext }}.sha256
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: agent-${{ matrix.suffix }}
           path: |
